@@ -1,0 +1,132 @@
+---
+title: "analysis qPCR for Ex009.1b, test"
+author: "Bin He"
+date: '2017-08-22'
+tags: Ex009
+---
+
+Summary
+------------------
+### Goal  
+
+- Validate gene induction, $pho80 \Delta$ vs $pho80 \Delta \space\space pho4 \Delta$
+- Evaluate the extent of gDNA contamination (Epicentre MasterPure Yeast RNA prep)
+
+### Materials
+
+#### Samples
+ ID	    | Sample			    | Note
+:-------|:--------------- |:-----------
+170822a | HY3, DNase, RT  | positive
+170822b | HY3, DNase,-RT  | no RT
+170822c | HY3,-DNase, RT  | no Dnase
+170822d | HY3,-DNase,-RT  | no RT/DNase
+170822e | HY6, DNase, RT  | positive
+170822f | HY6, DNase,-RT  | no RT
+170822g | HY6,-DNase, RT  | no Dnase
+170822h | HY6,-DNase,-RT  | no RT/DNase
+
+#### Assays
+  1. ACT1
+  2. PHO84
+  
+##### qPCR plate design
+  any comments on things such as dilution ratio for samples.
+
+### Results
+
+1. Pho84 is induced > 600 fold
+2. gDNA contamination exists, but it's a very small amount, about 1-2% based on ACT1 and PHO84 estimates
+3. DNase I treatment is very effective. It reduces the amount of gDNA below qPCR detection threshold in the no RT samples.
+
+Setup Parameters
+---------------------
+```{r library_n_parameters, message=FALSE}
+require(ggplot2)
+require(cowplot)
+#require(Hmisc)
+require(plyr)
+require(reshape2)
+require(stringr)
+```
+Read & Format data
+---------------------
+```{r Read_data}
+data <- read.table("../data/20170822_Ex009-1b_test_qPCR.csv", sep=",", as.is=T, head=TRUE, fill=T, na.strings = "NA")
+data$Ct <- as.numeric(data$Ct)
+data$Group <- with(data, paste("DNase",DNase," RT",RT,sep = ""))
+```
+
+> **of note**, I arbitrarily set the Ct value for NTC and d170822b (DNase+ RT-) samples to 42, so as to include them in the plots. In the assay, these reactions fail to generate amplicons, indicating absence of the suitable templates
+
+```{r Data_overview_1, echo=FALSE, fig.width=9}
+pd <- position_dodge(width=0.8)
+p <- ggplot( na.omit(data), aes(Strain, Ct, fill=Group, ymax=max(Ct)*1.05) )
+p <- p + geom_point(position=pd, shape=23, size=4, alpha=0.75) + facet_wrap( ~Assay)
+print( p )
+```
+
+Summarize data
+---------------------
+### Standard curve and efficiency calculation
+To calculate efficiency, use linear regression
+$$ n_t = D_i n_0 E^{C_{T,i}} $$ 
+
+```{r standard_curve_1, eval=TRUE, echo=FALSE, comment=NA, fig.width=9, warning=FALSE}
+# Calc primer amplification efficiency
+linmod <- function(df) {
+  if( sum(!is.na(df$Ct)) == 0 ) { # if no non-NA data
+    return( c("intercept"=NA, "slope"=NA, "p.value"=NA, "r.squared"=NA) )
+  }
+  lm <- lm( log2(Dilution) ~ Ct, data=df, na.action = "na.omit")
+  intercept <- as.numeric(coef(lm)[1])
+  slope <- as.numeric(coef(lm)[2])
+  efficiency <- 2^(slope)
+  sum <- summary(lm)
+  p <- coef(sum)[2,4]
+  R2 <- sum$r.squared
+  return( c("efficiency"=efficiency, "intercept"=intercept, "slope"=slope, "p.value"=p, "r.squared"=R2) )
+}
+eff <- ddply( subset(data,Sample == "d170822a"), .(Assay), linmod)
+print(eff, digits=3)
+
+# Standard curve
+p <- ggplot( subset(data, Sample == "d170822a"), aes(Ct, log2(Dilution)) ) 
+p <- p + geom_abline(data=eff, aes(intercept=intercept, slope=slope))
+p + geom_point() + facet_wrap( ~ Assay )
+```
+
+### Summarize Ct
+```{r delta_Ct, echo=TRUE, comment=NA, fig.width=9, warning=FALSE}
+## !! new code, match the replicate, form ratio, then calculate mean and sd !! ##
+# 1. Mean and sd
+res <- ddply( data, .(Strain, Group, Assay), summarize, 
+              mean = mean(Ct-log2(Dilution), na.rm=T), 
+              sem = sd(Ct-log2(Dilution), na.rm=T) / sqrt(length(Ct)), 
+              .drop=TRUE )
+
+# 2. Fold induction
+## create a sub dataset with just the DNase+ RT+ samples
+fold <- subset(res, Group == "DNase+ RT+")
+## use dcast to make a table with ACT1 and PHO84 Ct values as columns
+fold.d <- dcast(fold, Strain ~ Assay, value.var = "mean")
+## calculate dCt for PHO84 using ACT1 as control, within each Strain
+fold.d$dCt <- fold.d$ACT1 - fold.d$PHO84
+## calculate ddCt
+ddCt <- with(fold.d, dCt[Strain == "HY3"] - dCt[Strain == "HY6"])
+## print results
+sprintf("Pho84 was induced %.0f fold in pho80∆ relative to pho80∆ pho4∆", 2^ddCt)
+
+# 3. Evaluate level of gDNA contamination and efficacy of DNase I treatment
+## use only the ACT1 data for HY3. can use HY6 as well. should get the same result
+g.dna <- subset(res, Strain == "HY3" & Assay == "ACT1")
+## a. DNase I treatment is effective
+print("note that the 'DNase+ RT-' sample actually have no Ct values, as they fail to produce any amplicons, which suggests that after DNase I treatment, the remaining gDNA amount is undetectable in the qPCR reaction")
+## b. amount of gDNA contamination as percentage of total DNA templates
+##    to calculate this, I can compare "DNase- RT-" and "DNase- RT+"
+##    the former = gDNA, latter = cDNA + gDNA
+##    therefore the desired percentage value = former / latter
+x <- 2^( with(g.dna, mean[Group == "DNase- RT+"] - mean[Group == "DNase- RT-"]) )
+sprintf("Based on HY3/ACT1 data, the ratio of gDNA relative to the sum of gDNA and cDNA templates is %.2f", x)
+```
+
