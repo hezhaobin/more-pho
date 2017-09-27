@@ -29,14 +29,11 @@ require(plyr)
 raw <- read.table("../data/20170922_Ex009-3_batch23_estimate_PCR_cycle.csv", sep = "\t", as.is = TRUE, header = TRUE)
 colnames(raw)[3] <- "dRn"
 ## remove unused wells
-blank <- c(paste(LETTERS[3:8],"1",sep=""))
+blank <- c(paste(LETTERS[1:8],"1",sep=""))
 dat <- subset(raw, !is.na(dRn) & !(Well %in% blank))
-## plot raw results
-p <- ggplot( data = dat, aes( x = Cycle, y = dRn, color = Well ) ) + geom_line() + geom_point( size = 0.5 )
-print(p)
 ```
 
-```{r determine 50% threshold}
+```{r determine_50pct_threshold}
 ## idea: transform the dRn series to the empirical first order derivative by calculating the difference between the two consecutive cycles
 first.driv <- ddply( dat, .(Well), function(X) {
   delta.dRn <- X$dRn[2:30] - X$dRn[1:29]
@@ -45,7 +42,7 @@ first.driv <- ddply( dat, .(Well), function(X) {
 })
 ## plot the first derivative
 p <- ggplot( data = first.driv, aes( x = Cycle, y = delta.dRn, color = Well ) ) + geom_line() + geom_point( size = 0.5 )
-print(p)
+print( p )
 
 ## now locate the cycle number that has the greatest first.driv for each well. Use that cycle # + 3 as the saturation value and normalize the results
 norm.res <- ddply( dat, .(Well), function(X) {
@@ -55,8 +52,7 @@ norm.res <- ddply( dat, .(Well), function(X) {
   res <- data.frame(Cycle = 1:39, n.dRn = X$dRn[1:39] / sat)
   return(res)
 })
-p <- ggplot( data = norm.res, aes( x = Cycle, y = n.dRn*100, color = Well ) ) + geom_line() + geom_point( size = 0.5 )
-print(p)
+p1 <- ggplot( data = norm.res, aes( x = Cycle, y = n.dRn*100, color = Well ) ) + geom_line() + geom_point( size = 0.5 )
 
 ## finally, identify the cycle number that is closest to 50%
 half.point <- ddply( norm.res, .(Well), function(X) {
@@ -64,5 +60,9 @@ half.point <- ddply( norm.res, .(Well), function(X) {
   half <- which.min( diff )
   return(c(Cycle = half, n.dRn = X$n.dRn[half]))
 })
-print(p + geom_point( data = half.point, aes( x = Cycle, y = n.dRn*100, color = Well ), size = 3, shape = 1 ))
+print(p1 + geom_point( data = half.point, aes( x = Cycle, y = n.dRn*100, color = Well ), size = 3, shape = 1 ) + xlim(c(5,25)))
+cycle.50pct <- matrix(half.point$Cycle, byrow = TRUE, ncol = 4)
+dimnames(cycle.50pct) <- list(LETTERS[1:8],2:5)
+print("RESULTS")
+print(cycle.50pct)
 ```
