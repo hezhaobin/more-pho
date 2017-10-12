@@ -4,11 +4,9 @@ author: Bin He
 date: 10 oct 2017
 ---
 
-This folder contains raw sequencing data and processed data from the experiment Ex009
-
-# Goal
-
 # Sample
+
+This folder contains raw sequencing data and processed data from the experiment Ex009
 40 samples pooled into 2 pools, using 20 adapter indices for each 
 
 # Notes
