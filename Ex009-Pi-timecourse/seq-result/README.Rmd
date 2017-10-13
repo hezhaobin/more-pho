@@ -11,11 +11,17 @@ This folder contains raw sequencing data and processed data from the experiment 
 
 # Notes
 
-## [11 oct 2017] Sequencing completed
+## [13 oct 2017] Bowtie mapping
 
-- Data available on HTSEQ.princeton.edu
+_Goal_
 
-- The HTSEQ website is essentially a front end for a MySQL database. It organizes all the sample information and run results using concepts including _Sample_, _Assay_, _Dataset_ etc. A sample is what users submit to the core. An assay refers to a run on the Illumina machine. Note that for the Rapid Flowcell run on HiSeq 2500, each run has two assays, although it would be the same pooled samples sequenced in both. They result in a "merged" fastq.
+- Perform bowtie mapping for all 40 samples against the latest Cgla genome
+
+_Notes_
+
+1. bowtie 0.12.7 is installed on gen-comp1. bowtie2 2.2.0 is also installed. According to the software's developers ["bowtie2 is not a drop-in replacement for bowtie 1"](http://bowtie-bio.sourceforge.net/bowtie2/faq.shtml). I decided to use bowtie 0.12.7 first, as all the parameters I used before work.
+
+1. `samtools sort` often fails in my previous experience. after looking at the [documentation](http://www.htslib.org/doc/samtools-1.3.html), I figured out the problem: use of `-T /tmp/sort_tmp` flag together with submitting array jobs (multiple jobs at the same time) can create conflict between the different jobs -- one job may have just deleted the tmp file it created when another wants to access it. Solution is rather simple: just leave out the flag and let samtools use the default, which is to create temporary files along side the `sam` file. Also, use of `-m 10G` will allocate 10G of memory towards each task such that it can hold enough data in the memory and can thus skip the merging step.
 
 ## [12 oct 2017] Demultiplex
 
@@ -48,4 +54,14 @@ This folder contains raw sequencing data and processed data from the experiment 
 	
 	It is important to realize that allowing more mismatches won't dramatically inflate the rate of index misassignment, i.e. read index 1 as index 2. This is because any index read that is equal distance away from the supplied set of indices used will be discarded.
 
-	On PoolB, which is only multiplexed with one other sample, I used a more stringent cutoff of 1 mismatch, and the percentage of unmatched reads (due to indices mismatch) is < 1%. Totally fine.
+- Results of demultiplex
+
+    - PoolA is co-sequenced with 5 other samples that share the i7 barcodes with 3 of my samples. As a result, I need to utilize the i5 adapter sequence, which was in Read 3. This dual index demultiplexing is more complex and resulted in a higher percentage of unmatched data. When allowing 1 mismatch (on each of i5 and i7 index), ~35% of the reads are dropped into the "unmatched" bin. When allowing 2 mismatches, ~25% fall in the "unmatched" bin.
+
+    - On PoolB, which is only multiplexed with one other sample, I used a more stringent cutoff of 1 mismatch, and the percentage of unmatched reads (due to indices mismatch) is &lt 1%. Totally fine.
+
+## [11 oct 2017] Sequencing completed
+
+- Data available on HTSEQ.princeton.edu
+
+- The HTSEQ website is essentially a front end for a MySQL database. It organizes all the sample information and run results using concepts including _Sample_, _Assay_, _Dataset_ etc. A sample is what users submit to the core. An assay refers to a run on the Illumina machine. Note that for the Rapid Flowcell run on HiSeq 2500, each run has two assays, although it would be the same pooled samples sequenced in both. They result in a "merged" fastq.
