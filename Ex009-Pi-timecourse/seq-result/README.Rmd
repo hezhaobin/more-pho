@@ -11,6 +11,20 @@ This folder contains raw sequencing data and processed data from the experiment 
 
 # Notes
 
+## [17 oct 2017] IGV browser, gene counting with bedtools
+
+- managed to get x11 forwarding working
+
+	- initially I got the "error locking $HOME/.Xauthority" error. after googling, I understand that this file must have 600 permission (read/write only by user). But mine is correct. Then I found there is another `.Xauthority-c` file. After moving it to `.Xauthority-c.bk` and reconnecting with `ssh -X gen-comp1`, x11 forwarding is now working. Tested with `xterm`
+	- downloaded the latest igv browser from [broad institute](http://software.broadinstitute.org/software/igv/LoadGenome) and unzipped the folder under `$HOME/src`
+	- created hard links for `igv.sh` and `igv.jar` in the `$HOME/bin` directory, and successfully launched the app
+	- launched IGV and loaded the genome file I made before under `$HOME/data/NGS/Genome_Annotation/C_glabrata`
+	- the GUI is very sluggish, barely usable
+
+- bedtools is installed on the head node, version v2.23.0
+
+	- I would like to install v2.25.0 or newer
+	-
 ## [13 oct 2017] Bowtie mapping
 
 _Goal_
@@ -22,6 +36,10 @@ _Notes_
 1. bowtie 0.12.7 is installed on gen-comp1. bowtie2 2.2.0 is also installed. According to the software's developers ["bowtie2 is not a drop-in replacement for bowtie 1"](http://bowtie-bio.sourceforge.net/bowtie2/faq.shtml). I decided to use bowtie 0.12.7 first, as all the parameters I used before work.
 
 1. `samtools sort` often fails in my previous experience. after looking at the [documentation](http://www.htslib.org/doc/samtools-1.3.html), I figured out the problem: use of `-T /tmp/sort_tmp` flag together with submitting array jobs (multiple jobs at the same time) can create conflict between the different jobs -- one job may have just deleted the tmp file it created when another wants to access it. Solution is rather simple: just leave out the flag and let samtools use the default, which is to create temporary files along side the `sam` file. Also, use of `-m 10G` will allocate 10G of memory towards each task such that it can hold enough data in the memory and can thus skip the merging step.
+
+_Results_
+
+- average uniquely mapped reads percentage is ~90%. The lowest (S10) is 82%
 
 ## [12 oct 2017] Demultiplex
 
