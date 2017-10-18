@@ -11,7 +11,19 @@ This folder contains raw sequencing data and processed data from the experiment 
 
 # Notes
 
-## [17 oct 2017] IGV browser, gene counting with bedtools
+## [18 oct 2017] Gene counting with bedtools, summary (finish work on the server's side)
+
+- bedtools is installed on the head node, version v2.23.0
+
+	- I would like to install v2.25.0 or newer to take advantage of the `-sorted` option, which both speeds up the process and also outputs results in the order given in the annotation file
+	- After consulting with csgenomes, I was able to use 2.26.0 by calling `/usr/local/BEDTools/2.26.0/bin/bedtools`
+	- I need to make a few modification on the command-line, but nothing major.
+	- Resulting output files were then processed by the `Post_bedtools_analysis.R` script, which I also modified to fit the current need.
+	- Manually checked _PHO84_ and _PMU2_ induction levels. Results largely are as expected, although there appears to be a very low level of induction in _$pho4 \Delta$_ strains, which is not expected.
+	- Sync the results to my local folder for further analysis. 
+
+- 
+## [17 oct 2017] IGV browser, look at raw data
 
 - managed to get x11 forwarding working
 
@@ -21,10 +33,6 @@ This folder contains raw sequencing data and processed data from the experiment 
 	- launched IGV and loaded the genome file I made before under `$HOME/data/NGS/Genome_Annotation/C_glabrata`
 	- the GUI is very sluggish, barely usable
 
-- bedtools is installed on the head node, version v2.23.0
-
-	- I would like to install v2.25.0 or newer
-	-
 ## [13 oct 2017] Bowtie mapping
 
 _Goal_

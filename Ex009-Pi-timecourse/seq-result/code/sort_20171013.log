@@ -1,0 +1,190 @@
+==> sort0.err <==
+
+==> sort0.out <==
+
+==> sort10.err <==
+
+==> sort10.out <==
+
+==> sort11.err <==
+
+==> sort11.out <==
+
+==> sort12.err <==
+
+==> sort12.out <==
+
+==> sort13.err <==
+
+==> sort13.out <==
+
+==> sort14.err <==
+
+==> sort14.out <==
+
+==> sort15.err <==
+
+==> sort15.out <==
+
+==> sort16.err <==
+
+==> sort16.out <==
+
+==> sort17.err <==
+
+==> sort17.out <==
+
+==> sort18.err <==
+
+==> sort18.out <==
+
+==> sort19.err <==
+slurmstepd: error: Exceeded step memory limit at some point. Step may have been partially swapped out to disk.
+
+==> sort19.out <==
+
+==> sort1.err <==
+
+==> sort1.out <==
+
+==> sort20.err <==
+
+==> sort20.out <==
+
+==> sort21.err <==
+
+==> sort21.out <==
+
+==> sort22.err <==
+
+==> sort22.out <==
+
+==> sort23.err <==
+
+==> sort23.out <==
+
+==> sort24.err <==
+
+==> sort24.out <==
+
+==> sort25.err <==
+
+==> sort25.out <==
+
+==> sort26.err <==
+
+==> sort26.out <==
+
+==> sort27.err <==
+
+==> sort27.out <==
+
+==> sort28.err <==
+
+==> sort28.out <==
+
+==> sort29.err <==
+
+==> sort29.out <==
+
+==> sort2.err <==
+
+==> sort2.out <==
+
+==> sort30.err <==
+
+==> sort30.out <==
+
+==> sort31.err <==
+
+==> sort31.out <==
+
+==> sort32.err <==
+
+==> sort32.out <==
+
+==> sort33.err <==
+
+==> sort33.out <==
+
+==> sort34.err <==
+
+==> sort34.out <==
+
+==> sort35.err <==
+
+==> sort35.out <==
+
+==> sort36.err <==
+
+==> sort36.out <==
+
+==> sort37.err <==
+
+==> sort37.out <==
+
+==> sort38.err <==
+
+==> sort38.out <==
+
+==> sort39.err <==
+
+==> sort39.out <==
+
+==> sort3.err <==
+
+==> sort3.out <==
+
+==> sort4.err <==
+
+==> sort4.out <==
+
+==> sort5.err <==
+
+==> sort5.out <==
+
+==> sort6.err <==
+
+==> sort6.out <==
+
+==> sort7.err <==
+
+==> sort7.out <==
+
+==> sort8.err <==
+
+==> sort8.out <==
+
+==> sort9.err <==
+
+==> sort9.out <==
+
+==> sort.sbh <==
+#!/bin/bash 
+#SBATCH -J sort # A single job name for the array
+#SBATCH -n 1  # Number of cores 
+#SBATCH -N 1  # All cores are on the same machine
+#SBATCH -o sort%a.out
+#SBATCH -e sort%a.err
+#SBATCH --time 0-01:00 --qos=1hr #qos takes value {1hr, 1day, 1wk, long} for different priorities
+#SBATCH --mem=10000 #Memory per node in MB (see also --mem-per-cpu) 
+#SBATCH --mail-user=emptyhb@gmail.com 
+
+# purpose: this script uses samtools to sort and index SAM files from bowtie mapper
+# author: Bin He
+# created: 13 oct 2017
+# to run, type 
+#   SBATCH --array=0-30 sort.sbh
+
+# getting all the SAM files
+f=(../data/bam_files/S*.fastq.gz.sam)
+
+file=${f[$SLURM_ARRAY_TASK_ID]}
+#file=../data/bam_files/S28.fastq.gz.sam
+
+## sort
+## use default temporary files
+samtools sort -m 8G -o ${file/sam/bam} $file
+
+## index
+samtools index ${file/sam/bam}

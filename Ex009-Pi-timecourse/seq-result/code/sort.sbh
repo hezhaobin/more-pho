@@ -1,0 +1,28 @@
+#!/bin/bash 
+#SBATCH -J sort # A single job name for the array
+#SBATCH -n 1  # Number of cores 
+#SBATCH -N 1  # All cores are on the same machine
+#SBATCH -o sort%a.out
+#SBATCH -e sort%a.err
+#SBATCH --time 0-01:00 --qos=1hr #qos takes value {1hr, 1day, 1wk, long} for different priorities
+#SBATCH --mem=10000 #Memory per node in MB (see also --mem-per-cpu) 
+#SBATCH --mail-user=emptyhb@gmail.com 
+
+# purpose: this script uses samtools to sort and index SAM files from bowtie mapper
+# author: Bin He
+# created: 13 oct 2017
+# to run, type 
+#   SBATCH --array=0-30 sort.sbh
+
+# getting all the SAM files
+f=(../data/bam_files/S*.fastq.gz.sam)
+
+file=${f[$SLURM_ARRAY_TASK_ID]}
+#file=../data/bam_files/S28.fastq.gz.sam
+
+## sort
+## use default temporary files
+samtools sort -m 8G -o ${file/sam/bam} $file
+
+## index
+samtools index ${file/sam/bam}

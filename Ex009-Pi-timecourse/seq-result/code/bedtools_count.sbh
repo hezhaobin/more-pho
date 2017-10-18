@@ -1,0 +1,36 @@
+#!/bin/bash 
+#SBATCH -J cov # A single job name for the array
+#SBATCH -n 1  # Number of cores 
+#SBATCH -N 1  # All cores are on the same machine
+#SBATCH -o cov%a.out
+#SBATCH -e cov%a.err
+#SBATCH --time 00-01:00
+#SBATCH --mem=10000 #Memory per node in MB (see also --mem-per-cpu) 
+#SBATCH --mail-user=emptyhb@gmail.com 
+
+# ---
+# title: uses bedtools to count the number of reads per gene
+# input: mapped and sorted bam files
+# output: csv file
+# author: hebin
+# date: 18 fev 2016
+# modified: 3 avr 2016, 17 oct 2017
+# usage: SBATCH --array=0-39 bedtools_count.sbh
+# ---
+
+# set up the environment to use BEDTools 2.26.0
+dir=/usr/local/BEDTools/2.26.0/bin
+
+# annotation files directory
+anno=/Genomics/grid/users/binhe/data/NGS-seq/Genome_Annotation/C.glabrata
+
+# files
+files=(../data/bam_files/S*.bam)
+File=${files[$SLURM_ARRAY_TASK_ID]}
+#File=../data/bam_files/S1.fastq.gz.bam
+bname=$(basename $File)
+
+# counting
+echo "Processing $File..."
+${dir}/bedtools coverage -a ${anno}/C_glabrata_gene_for_mapping_s02-m07-r04.bed -b $File -S -sorted -g ${anno}/C_glabrata_CBS138.genome > ../output/bedtools_cov/${bname/.bam/.cov.txt}
+echo "done."

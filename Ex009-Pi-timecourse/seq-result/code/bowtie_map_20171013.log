@@ -1,0 +1,791 @@
+==> map0.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:05:06
+# reads processed: 11778260
+# reads with at least one reported alignment: 9732654 (82.63%)
+# reads that failed to align: 1858689 (15.78%)
+# reads with alignments suppressed due to -m: 186917 (1.59%)
+Reported 9732654 alignments to 1 output stream(s)
+Time searching: 00:05:07
+Overall time: 00:05:07
+[bam_sort_core] merging from 5 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+
+==> map0.out <==
+Mapping ../data/fastq/S10.fastq.gz ...
+Processing ../data/fastq/S10.fastq.gz...
+done.
+
+==> map10.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:01:10
+# reads processed: 5754956
+# reads with at least one reported alignment: 5268205 (91.54%)
+# reads that failed to align: 420024 (7.30%)
+# reads with alignments suppressed due to -m: 66727 (1.16%)
+Reported 5268205 alignments to 1 output stream(s)
+Time searching: 00:02:29
+Overall time: 00:02:29
+[bam_sort_core] merging from 3 files...
+
+==> map10.out <==
+Mapping ../data/fastq/S19.fastq.gz ...
+Processing ../data/fastq/S19.fastq.gz...
+done.
+
+==> map11.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:00:29
+# reads processed: 3021703
+# reads with at least one reported alignment: 2750890 (91.04%)
+# reads that failed to align: 206196 (6.82%)
+# reads with alignments suppressed due to -m: 64617 (2.14%)
+Reported 2750890 alignments to 1 output stream(s)
+Time searching: 00:01:18
+Overall time: 00:01:18
+[bam_sort_core] merging from 2 files...
+
+==> map11.out <==
+Mapping ../data/fastq/S1.fastq.gz ...
+Processing ../data/fastq/S1.fastq.gz...
+done.
+
+==> map12.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:09
+# reads processed: 7794228
+# reads with at least one reported alignment: 7031139 (90.21%)
+# reads that failed to align: 678372 (8.70%)
+# reads with alignments suppressed due to -m: 84717 (1.09%)
+Reported 7031139 alignments to 1 output stream(s)
+Time searching: 00:03:31
+Overall time: 00:03:31
+[bam_sort_core] merging from 4 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S20.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S20.fastq.gz.bam": No such file or directory
+
+==> map12.out <==
+Mapping ../data/fastq/S20.fastq.gz ...
+Processing ../data/fastq/S20.fastq.gz...
+done.
+
+==> map13.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:01
+Seeded quality full-index search: 00:03:52
+# reads processed: 9869954
+# reads with at least one reported alignment: 9035957 (91.55%)
+# reads that failed to align: 727018 (7.37%)
+# reads with alignments suppressed due to -m: 106979 (1.08%)
+Reported 9035957 alignments to 1 output stream(s)
+Time searching: 00:03:59
+Overall time: 00:03:59
+[bam_sort_core] merging from 5 files...
+[bam_merge_core] '/tmp/sort_temp.0004.bam' is truncated. Continue anyway.
+
+==> map13.out <==
+Mapping ../data/fastq/S20prime.fastq.gz ...
+Processing ../data/fastq/S20prime.fastq.gz...
+done.
+
+==> map14.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:01
+Seeded quality full-index search: 00:03:13
+# reads processed: 7717365
+# reads with at least one reported alignment: 7030883 (91.10%)
+# reads that failed to align: 595845 (7.72%)
+# reads with alignments suppressed due to -m: 90637 (1.17%)
+Reported 7030883 alignments to 1 output stream(s)
+Time searching: 00:03:59
+Overall time: 00:03:59
+[bam_sort_core] merging from 4 files...
+
+==> map14.out <==
+Mapping ../data/fastq/S21.fastq.gz ...
+Processing ../data/fastq/S21.fastq.gz...
+done.
+
+==> map15.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:01
+Seeded quality full-index search: 00:03:37
+# reads processed: 8769781
+# reads with at least one reported alignment: 7822595 (89.20%)
+# reads that failed to align: 850217 (9.69%)
+# reads with alignments suppressed due to -m: 96969 (1.11%)
+Reported 7822595 alignments to 1 output stream(s)
+Time searching: 00:03:59
+Overall time: 00:03:59
+[bam_sort_core] merging from 4 files...
+
+==> map15.out <==
+Mapping ../data/fastq/S22.fastq.gz ...
+Processing ../data/fastq/S22.fastq.gz...
+done.
+
+==> map16.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:01
+Seeded quality full-index search: 00:04:09
+# reads processed: 11821956
+# reads with at least one reported alignment: 10777409 (91.16%)
+# reads that failed to align: 916739 (7.75%)
+# reads with alignments suppressed due to -m: 127808 (1.08%)
+Reported 10777409 alignments to 1 output stream(s)
+Time searching: 00:04:10
+Overall time: 00:04:10
+[bam_sort_core] merging from 5 files...
+[W::bam_hdr_read] EOF marker is absent. The input is probably truncated.
+
+==> map16.out <==
+Mapping ../data/fastq/S23.fastq.gz ...
+Processing ../data/fastq/S23.fastq.gz...
+done.
+
+==> map17.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:01
+Seeded quality full-index search: 00:05:13
+# reads processed: 15519987
+# reads with at least one reported alignment: 14303757 (92.16%)
+# reads that failed to align: 1007059 (6.49%)
+# reads with alignments suppressed due to -m: 209171 (1.35%)
+Reported 14303757 alignments to 1 output stream(s)
+Time searching: 00:05:16
+Overall time: 00:05:16
+[bam_sort_core] merging from 7 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S24.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S24.fastq.gz.bam": No such file or directory
+
+==> map17.out <==
+Mapping ../data/fastq/S24.fastq.gz ...
+Processing ../data/fastq/S24.fastq.gz...
+done.
+
+==> map18.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:02:27
+# reads processed: 7161794
+# reads with at least one reported alignment: 6580866 (91.89%)
+# reads that failed to align: 497122 (6.94%)
+# reads with alignments suppressed due to -m: 83806 (1.17%)
+Reported 6580866 alignments to 1 output stream(s)
+Time searching: 00:03:23
+Overall time: 00:03:23
+[bam_sort_core] merging from 3 files...
+
+==> map18.out <==
+Mapping ../data/fastq/S25.fastq.gz ...
+Processing ../data/fastq/S25.fastq.gz...
+done.
+
+==> map19.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:04:44
+# reads processed: 16813370
+# reads with at least one reported alignment: 15272391 (90.83%)
+# reads that failed to align: 1389349 (8.26%)
+# reads with alignments suppressed due to -m: 151630 (0.90%)
+Reported 15272391 alignments to 1 output stream(s)
+Time searching: 00:04:46
+Overall time: 00:04:46
+[bam_sort_core] merging from 7 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S26.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S26.fastq.gz.bam": No such file or directory
+
+==> map19.out <==
+Mapping ../data/fastq/S26.fastq.gz ...
+Processing ../data/fastq/S26.fastq.gz...
+done.
+
+==> map1.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:04:04
+# reads processed: 8261668
+# reads with at least one reported alignment: 7408112 (89.67%)
+# reads that failed to align: 736043 (8.91%)
+# reads with alignments suppressed due to -m: 117513 (1.42%)
+Reported 7408112 alignments to 1 output stream(s)
+Time searching: 00:04:08
+Overall time: 00:04:08
+[bam_sort_core] merging from 4 files...
+
+==> map1.out <==
+Mapping ../data/fastq/S11.fastq.gz ...
+Processing ../data/fastq/S11.fastq.gz...
+done.
+
+==> map20.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:29
+# reads processed: 10032401
+# reads with at least one reported alignment: 9207780 (91.78%)
+# reads that failed to align: 697721 (6.95%)
+# reads with alignments suppressed due to -m: 126900 (1.26%)
+Reported 9207780 alignments to 1 output stream(s)
+Time searching: 00:03:47
+Overall time: 00:03:47
+[bam_sort_core] merging from 5 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S27.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S27.fastq.gz.bam": No such file or directory
+
+==> map20.out <==
+Mapping ../data/fastq/S27.fastq.gz ...
+Processing ../data/fastq/S27.fastq.gz...
+done.
+
+==> map21.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:43
+# reads processed: 10691004
+# reads with at least one reported alignment: 9740440 (91.11%)
+# reads that failed to align: 833765 (7.80%)
+# reads with alignments suppressed due to -m: 116799 (1.09%)
+Reported 9740440 alignments to 1 output stream(s)
+Time searching: 00:04:00
+Overall time: 00:04:00
+[bam_sort_core] merging from 5 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S28.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S28.fastq.gz.bam": No such file or directory
+
+==> map21.out <==
+Mapping ../data/fastq/S28.fastq.gz ...
+Processing ../data/fastq/S28.fastq.gz...
+done.
+
+==> map22.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:04:04
+# reads processed: 10743588
+# reads with at least one reported alignment: 9713470 (90.41%)
+# reads that failed to align: 921525 (8.58%)
+# reads with alignments suppressed due to -m: 108593 (1.01%)
+Reported 9713470 alignments to 1 output stream(s)
+Time searching: 00:04:06
+Overall time: 00:04:06
+[bam_sort_core] merging from 5 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S29.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S29.fastq.gz.bam": No such file or directory
+
+==> map22.out <==
+Mapping ../data/fastq/S29.fastq.gz ...
+Processing ../data/fastq/S29.fastq.gz...
+done.
+
+==> map23.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:02:49
+# reads processed: 8822433
+# reads with at least one reported alignment: 7814180 (88.57%)
+# reads that failed to align: 805141 (9.13%)
+# reads with alignments suppressed due to -m: 203112 (2.30%)
+Reported 7814180 alignments to 1 output stream(s)
+Time searching: 00:03:12
+Overall time: 00:03:12
+[bam_sort_core] merging from 4 files...
+
+==> map23.out <==
+Mapping ../data/fastq/S2.fastq.gz ...
+Processing ../data/fastq/S2.fastq.gz...
+done.
+
+==> map24.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:04:17
+# reads processed: 15862126
+# reads with at least one reported alignment: 14300124 (90.15%)
+# reads that failed to align: 1358397 (8.56%)
+# reads with alignments suppressed due to -m: 203605 (1.28%)
+Reported 14300124 alignments to 1 output stream(s)
+Time searching: 00:04:21
+Overall time: 00:04:21
+[bam_sort_core] merging from 7 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S30.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S30.fastq.gz.bam": No such file or directory
+
+==> map24.out <==
+Mapping ../data/fastq/S30.fastq.gz ...
+Processing ../data/fastq/S30.fastq.gz...
+done.
+
+==> map25.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:51
+# reads processed: 13211570
+# reads with at least one reported alignment: 11946545 (90.42%)
+# reads that failed to align: 1117497 (8.46%)
+# reads with alignments suppressed due to -m: 147528 (1.12%)
+Reported 11946545 alignments to 1 output stream(s)
+Time searching: 00:03:56
+Overall time: 00:03:56
+[bam_sort_core] merging from 6 files...
+[W::bam_hdr_read] EOF marker is absent. The input is probably truncated.
+
+==> map25.out <==
+Mapping ../data/fastq/S31.fastq.gz ...
+Processing ../data/fastq/S31.fastq.gz...
+done.
+
+==> map26.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:13
+# reads processed: 9111382
+# reads with at least one reported alignment: 8190478 (89.89%)
+# reads that failed to align: 826477 (9.07%)
+# reads with alignments suppressed due to -m: 94427 (1.04%)
+Reported 8190478 alignments to 1 output stream(s)
+Time searching: 00:03:48
+Overall time: 00:03:48
+[bam_sort_core] merging from 4 files...
+[W::bam_hdr_read] EOF marker is absent. The input is probably truncated.
+
+==> map26.out <==
+Mapping ../data/fastq/S32.fastq.gz ...
+Processing ../data/fastq/S32.fastq.gz...
+done.
+
+==> map27.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:04:03
+# reads processed: 13054106
+# reads with at least one reported alignment: 11741719 (89.95%)
+# reads that failed to align: 1137796 (8.72%)
+# reads with alignments suppressed due to -m: 174591 (1.34%)
+Reported 11741719 alignments to 1 output stream(s)
+Time searching: 00:04:08
+Overall time: 00:04:08
+[bam_sort_core] merging from 6 files...
+
+==> map27.out <==
+Mapping ../data/fastq/S33.fastq.gz ...
+Processing ../data/fastq/S33.fastq.gz...
+done.
+
+==> map28.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:34
+# reads processed: 11020413
+# reads with at least one reported alignment: 9991322 (90.66%)
+# reads that failed to align: 896300 (8.13%)
+# reads with alignments suppressed due to -m: 132791 (1.20%)
+Reported 9991322 alignments to 1 output stream(s)
+Time searching: 00:03:48
+Overall time: 00:03:48
+[bam_sort_core] merging from 5 files...
+
+==> map28.out <==
+Mapping ../data/fastq/S34.fastq.gz ...
+Processing ../data/fastq/S34.fastq.gz...
+done.
+
+==> map29.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:02:44
+# reads processed: 9484062
+# reads with at least one reported alignment: 8629111 (90.99%)
+# reads that failed to align: 749132 (7.90%)
+# reads with alignments suppressed due to -m: 105819 (1.12%)
+Reported 8629111 alignments to 1 output stream(s)
+Time searching: 00:03:11
+Overall time: 00:03:11
+[bam_sort_core] merging from 4 files...
+
+==> map29.out <==
+Mapping ../data/fastq/S35.fastq.gz ...
+Processing ../data/fastq/S35.fastq.gz...
+done.
+
+==> map2.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:43
+# reads processed: 7041484
+# reads with at least one reported alignment: 6247000 (88.72%)
+# reads that failed to align: 694293 (9.86%)
+# reads with alignments suppressed due to -m: 100191 (1.42%)
+Reported 6247000 alignments to 1 output stream(s)
+Time searching: 00:04:03
+Overall time: 00:04:03
+[bam_sort_core] merging from 3 files...
+[W::bam_hdr_read] EOF marker is absent. The input is probably truncated.
+
+==> map2.out <==
+Mapping ../data/fastq/S12.fastq.gz ...
+Processing ../data/fastq/S12.fastq.gz...
+done.
+
+==> map30.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:33
+# reads processed: 11893724
+# reads with at least one reported alignment: 10834734 (91.10%)
+# reads that failed to align: 913821 (7.68%)
+# reads with alignments suppressed due to -m: 145169 (1.22%)
+Reported 10834734 alignments to 1 output stream(s)
+Time searching: 00:03:40
+Overall time: 00:03:40
+[bam_sort_core] merging from 5 files...
+
+==> map30.out <==
+Mapping ../data/fastq/S36.fastq.gz ...
+Processing ../data/fastq/S36.fastq.gz...
+done.
+
+==> map31.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:02:54
+# reads processed: 9742704
+# reads with at least one reported alignment: 8890671 (91.25%)
+# reads that failed to align: 649060 (6.66%)
+# reads with alignments suppressed due to -m: 202973 (2.08%)
+Reported 8890671 alignments to 1 output stream(s)
+Time searching: 00:02:59
+Overall time: 00:02:59
+[bam_sort_core] merging from 4 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S37.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S37.fastq.gz.bam": No such file or directory
+
+==> map31.out <==
+Mapping ../data/fastq/S37.fastq.gz ...
+Processing ../data/fastq/S37.fastq.gz...
+done.
+
+==> map32.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:14
+# reads processed: 10961742
+# reads with at least one reported alignment: 9952465 (90.79%)
+# reads that failed to align: 765931 (6.99%)
+# reads with alignments suppressed due to -m: 243346 (2.22%)
+Reported 9952465 alignments to 1 output stream(s)
+Time searching: 00:04:00
+Overall time: 00:04:00
+[bam_sort_core] merging from 5 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S38.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S38.fastq.gz.bam": No such file or directory
+
+==> map32.out <==
+Mapping ../data/fastq/S38.fastq.gz ...
+Processing ../data/fastq/S38.fastq.gz...
+done.
+
+==> map33.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:01:00
+# reads processed: 5310327
+# reads with at least one reported alignment: 4796204 (90.32%)
+# reads that failed to align: 395723 (7.45%)
+# reads with alignments suppressed due to -m: 118400 (2.23%)
+Reported 4796204 alignments to 1 output stream(s)
+Time searching: 00:02:38
+Overall time: 00:02:38
+[bam_sort_core] merging from 3 files...
+
+==> map33.out <==
+Mapping ../data/fastq/S3.fastq.gz ...
+Processing ../data/fastq/S3.fastq.gz...
+done.
+
+==> map34.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:02:08
+# reads processed: 6662172
+# reads with at least one reported alignment: 5958316 (89.44%)
+# reads that failed to align: 559195 (8.39%)
+# reads with alignments suppressed due to -m: 144661 (2.17%)
+Reported 5958316 alignments to 1 output stream(s)
+Time searching: 00:02:53
+Overall time: 00:02:53
+[bam_sort_core] merging from 3 files...
+
+==> map34.out <==
+Mapping ../data/fastq/S4.fastq.gz ...
+Processing ../data/fastq/S4.fastq.gz...
+done.
+
+==> map35.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:02:08
+# reads processed: 6795982
+# reads with at least one reported alignment: 6034941 (88.80%)
+# reads that failed to align: 620361 (9.13%)
+# reads with alignments suppressed due to -m: 140680 (2.07%)
+Reported 6034941 alignments to 1 output stream(s)
+Time searching: 00:02:45
+Overall time: 00:02:45
+[bam_sort_core] merging from 3 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S5.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S5.fastq.gz.bam": No such file or directory
+
+==> map35.out <==
+Mapping ../data/fastq/S5.fastq.gz ...
+Processing ../data/fastq/S5.fastq.gz...
+done.
+
+==> map36.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:02:23
+# reads processed: 7262772
+# reads with at least one reported alignment: 6515791 (89.71%)
+# reads that failed to align: 594834 (8.19%)
+# reads with alignments suppressed due to -m: 152147 (2.09%)
+Reported 6515791 alignments to 1 output stream(s)
+Time searching: 00:02:47
+Overall time: 00:02:47
+[bam_sort_core] merging from 3 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S6.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S6.fastq.gz.bam": No such file or directory
+
+==> map36.out <==
+Mapping ../data/fastq/S6.fastq.gz ...
+Processing ../data/fastq/S6.fastq.gz...
+done.
+
+==> map37.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:02:05
+# reads processed: 6366477
+# reads with at least one reported alignment: 5729310 (89.99%)
+# reads that failed to align: 530527 (8.33%)
+# reads with alignments suppressed due to -m: 106640 (1.68%)
+Reported 5729310 alignments to 1 output stream(s)
+Time searching: 00:02:47
+Overall time: 00:02:47
+[bam_sort_core] merging from 3 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S7.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S7.fastq.gz.bam": No such file or directory
+
+==> map37.out <==
+Mapping ../data/fastq/S7.fastq.gz ...
+Processing ../data/fastq/S7.fastq.gz...
+done.
+
+==> map38.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:00:39
+# reads processed: 3880742
+# reads with at least one reported alignment: 3559612 (91.73%)
+# reads that failed to align: 254732 (6.56%)
+# reads with alignments suppressed due to -m: 66398 (1.71%)
+Reported 3559612 alignments to 1 output stream(s)
+Time searching: 00:02:07
+Overall time: 00:02:07
+[bam_sort_core] merging from 2 files...
+
+==> map38.out <==
+Mapping ../data/fastq/S8.fastq.gz ...
+Processing ../data/fastq/S8.fastq.gz...
+done.
+
+==> map39.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:00:43
+# reads processed: 4228950
+# reads with at least one reported alignment: 3892987 (92.06%)
+# reads that failed to align: 256861 (6.07%)
+# reads with alignments suppressed due to -m: 79102 (1.87%)
+Reported 3892987 alignments to 1 output stream(s)
+Time searching: 00:01:34
+Overall time: 00:01:34
+[bam_sort_core] merging from 2 files...
+
+==> map39.out <==
+Mapping ../data/fastq/S9.fastq.gz ...
+Processing ../data/fastq/S9.fastq.gz...
+done.
+
+==> map3.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:02:56
+# reads processed: 6096240
+# reads with at least one reported alignment: 5269644 (86.44%)
+# reads that failed to align: 734088 (12.04%)
+# reads with alignments suppressed due to -m: 92508 (1.52%)
+Reported 5269644 alignments to 1 output stream(s)
+Time searching: 00:03:51
+Overall time: 00:03:51
+[bam_sort_core] merging from 3 files...
+[W::bam_hdr_read] EOF marker is absent. The input is probably truncated.
+
+==> map3.out <==
+Mapping ../data/fastq/S13.fastq.gz ...
+Processing ../data/fastq/S13.fastq.gz...
+done.
+
+==> map4.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:41
+# reads processed: 7831334
+# reads with at least one reported alignment: 7241932 (92.47%)
+# reads that failed to align: 476365 (6.08%)
+# reads with alignments suppressed due to -m: 113037 (1.44%)
+Reported 7241932 alignments to 1 output stream(s)
+Time searching: 00:03:52
+Overall time: 00:03:52
+[bam_sort_core] merging from 4 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S13prime.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S13prime.fastq.gz.bam": No such file or directory
+
+==> map4.out <==
+Mapping ../data/fastq/S13prime.fastq.gz ...
+Processing ../data/fastq/S13prime.fastq.gz...
+done.
+
+==> map5.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:44
+# reads processed: 7117389
+# reads with at least one reported alignment: 6202367 (87.14%)
+# reads that failed to align: 802393 (11.27%)
+# reads with alignments suppressed due to -m: 112629 (1.58%)
+Reported 6202367 alignments to 1 output stream(s)
+Time searching: 00:03:52
+Overall time: 00:03:52
+[bam_sort_core] merging from 3 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S14.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S14.fastq.gz.bam": No such file or directory
+
+==> map5.out <==
+Mapping ../data/fastq/S14.fastq.gz ...
+Processing ../data/fastq/S14.fastq.gz...
+done.
+
+==> map6.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:02:28
+# reads processed: 5173675
+# reads with at least one reported alignment: 4550777 (87.96%)
+# reads that failed to align: 565372 (10.93%)
+# reads with alignments suppressed due to -m: 57526 (1.11%)
+Reported 4550777 alignments to 1 output stream(s)
+Time searching: 00:02:40
+Overall time: 00:02:40
+[bam_sort_core] merging from 3 files...
+
+==> map6.out <==
+Mapping ../data/fastq/S15.fastq.gz ...
+Processing ../data/fastq/S15.fastq.gz...
+done.
+
+==> map7.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:03:57
+# reads processed: 7808908
+# reads with at least one reported alignment: 7066107 (90.49%)
+# reads that failed to align: 655192 (8.39%)
+# reads with alignments suppressed due to -m: 87609 (1.12%)
+Reported 7066107 alignments to 1 output stream(s)
+Time searching: 00:04:05
+Overall time: 00:04:05
+[bam_sort_core] merging from 4 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S16.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S16.fastq.gz.bam": No such file or directory
+
+==> map7.out <==
+Mapping ../data/fastq/S16.fastq.gz ...
+Processing ../data/fastq/S16.fastq.gz...
+done.
+
+==> map8.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:01:07
+# reads processed: 5270012
+# reads with at least one reported alignment: 4770651 (90.52%)
+# reads that failed to align: 411113 (7.80%)
+# reads with alignments suppressed due to -m: 88248 (1.67%)
+Reported 4770651 alignments to 1 output stream(s)
+Time searching: 00:02:29
+Overall time: 00:02:29
+[bam_sort_core] merging from 3 files...
+
+==> map8.out <==
+Mapping ../data/fastq/S17.fastq.gz ...
+Processing ../data/fastq/S17.fastq.gz...
+done.
+
+==> map9.err <==
+Time loading forward index: 00:00:00
+Time loading mirror index: 00:00:00
+Seeded quality full-index search: 00:00:42
+# reads processed: 3505811
+# reads with at least one reported alignment: 3195690 (91.15%)
+# reads that failed to align: 266842 (7.61%)
+# reads with alignments suppressed due to -m: 43279 (1.23%)
+Reported 3195690 alignments to 1 output stream(s)
+Time searching: 00:02:29
+Overall time: 00:02:29
+[bam_sort_core] merging from 2 files...
+[E::hts_open_format] fail to open file '/tmp/sort_temp.0000.bam'
+[bam_merge_core] fail to open file /tmp/sort_temp.0000.bam
+[E::hts_open_format] fail to open file '../data/fastq/S18.fastq.gz.bam'
+samtools index: failed to open "../data/fastq/S18.fastq.gz.bam": No such file or directory
+
+==> map9.out <==
+Mapping ../data/fastq/S18.fastq.gz ...
+Processing ../data/fastq/S18.fastq.gz...
+done.

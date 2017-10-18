@@ -1,0 +1,46 @@
+#!/bin/bash 
+#SBATCH -J bowtie # A single job name for the array
+#SBATCH -n 4  # Number of cores 
+#SBATCH -N 1  # All cores are on the same machine
+#SBATCH -o map%a.out
+#SBATCH -e map%a.err
+#SBATCH --time 0-03:00 --qos=1day #qos takes value {1hr, 1day, 1wk, long} for different priorities
+#SBATCH --mem=30000 #Memory per node in MB (see also --mem-per-cpu) 
+#SBATCH --mail-user=emptyhb@gmail.com 
+
+# purpose: this script uses bowtie to align fastq files to the reference genome
+# author: hebin
+# created: 13 nov 2013
+# modified: 17 mar 2016
+# modified: 13 oct 2017 to use on gen-comp1.princeton.edu
+# to run, type 
+#   SBATCH --array=0-30 bowtie_map.sbh
+
+# load bowtie (no need on gen-comp1. bowtie 0.12.7 and samtools 1.3 are installed)
+# module load bowtie/1.1.1-fasrc01
+# module load samtools/1.2-fasrc01
+
+# Export BOWTIE_INDEXES variable to specify the directory for the program
+# to look for index files
+export BOWTIE_INDEXES=/Genomics/grid/users/binhe/data/NGS-seq/BowtieIndex/
+
+# mapping
+f=(../data/fastq/S*.fastq.gz)
+#f=(../data/fastq/S1.fastq.gz ../data/fastq/S10.fastq.gz ../data/fastq/AB5075_wt_DNA_library.fastq.gz)
+
+file=${f[$SLURM_ARRAY_TASK_ID]}
+#file=${f[0]}
+
+echo "Mapping $file ..."
+# Also changed -M 2 to -m 1 so as to enforce uniqueness
+#gunzip -c $file | bowtie -M 2 --best --strata -t -p 16 --chunkmbs 200 Scer03 - $file.bowtie
+gunzip -c $file | bowtie -m 1 --max ${file}.suppressed --best --strata -t -p 4 --chunkmbs 200 -S Cglas02m02r09 - $file.sam
+
+echo "Processing $file..."
+## sort
+samtools sort -T /tmp/sort_temp -O 'bam' -o $file.bam $file.sam
+
+## index
+samtools index $file.bam
+
+echo "done."
