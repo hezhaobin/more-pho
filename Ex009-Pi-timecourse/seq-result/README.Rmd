@@ -11,6 +11,19 @@ This folder contains raw sequencing data and processed data from the experiment 
 
 # Notes
 
+## [19 oct 2017] Plan R analysis
+
+### Agenda
+
+1. QC
+    - check if read coverage is largely uniform across gene bodies
+2. Set up for the analysis
+    - load data
+	- make corresponding annotation table for samples
+	- some rough visualizations
+3. Test adding pseudo-count to the count matrix in order to increase the accuracy in the estimates of fold change
+
+
 ## [18 oct 2017] Gene counting with bedtools, summary (finish work on the server's side)
 
 - bedtools is installed on the head node, version v2.23.0

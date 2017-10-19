@@ -9,9 +9,10 @@
 
 # 1. load packages
 library(data.table)
+library(hexbin)
 
 # 2. load data and annotation
-anno <- fread("~/data/NGS-seq/Genome_Annotation/C.glabrata/C_glabrata_gene_for_mapping_s02-m07-r04.bed")
+anno <- fread("../data/annotation/C_glabrata_gene_for_mapping_s02-m07-r04.bed")
 files <- dir(path="../output/bedtools_cov", pattern="*.cov.txt",full.names=T)
 raw <- lapply( files, fread )
 
@@ -28,7 +29,8 @@ norm.cov <- read * 75 / gene.l
 
 # 5. now plot the actual fraction $frac against the expected $norm.cov
 pdf(file = paste("../output/bedtools_fraction_coverage_QC_", format(Sys.time(), "%Y-%m-%d"), ".pdf", sep = ""))
-plot(norm.cov+0.0001, frac+0.0001, log="x")
+hbin <- hexbin(log(norm.cov+0.0001,10), frac+0.0001, xbins = 40, xlab = "log10 normalized coverage", ylab = "% of gene body covered") 
+plot(hbin, colorcut = c(seq(0,0.1,length=10),1))
 dev.off()
 
 # 6. output the count matrix
