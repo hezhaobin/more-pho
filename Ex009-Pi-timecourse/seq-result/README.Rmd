@@ -11,7 +11,43 @@ This folder contains raw sequencing data and processed data from the experiment 
 
 # Notes
 
-## [19 oct 2017] Plan R analysis
+## [24 oct 2017] Plan R analysis
+
+### Goal
+
+- Identify phosphate starvation responsive genes, both Pho4-dependent and Pho4-independent  
+	-- what criteria will I use to call these genes?
+- Reveal the temporal dynamics of gene induction
+
+### Approach
+
+- Transform the read counts by adding a small pseudo-count to avoid problems with ratio estimate.
+
+- Test several normalization methods (TMM, quantile, upper quantile, and the new method advocated by Terry Speed)
+	
+- Apply voom transformation to remove dependency between expression level and variance
+
+- Follow recipes in the `Limma` package manual on how to analyze time-course data
+
+	Some ideas:
+
+    - Estimate the fold-induction for each gene at every time point.
+	- Manually check the gene-induction kinetics for a few positive and negative control genes. Get a sense of how fast different responses are mounted
+    - Based on the above manual-evaluation, pick a time-point that satisfies the following
+	
+	    1. Most of the known Pho4 targets have been induced
+
+		1. Few of the secondary response genes (how to define?) are turned on
+
+    - To define the PHO responsive genes in _C. glabrata_
+	
+	    a. combine all genes that show significant induction at one or more post-stress time points (the big set), or
+
+		a. select genes that are turned on only at the time-point selected above (first responders)
+
+		and
+
+		a. in both sets, use the _pho4_ deletion strain to distinguish Pho4-dependent vs Pho4-independent targets.
 
 ### Agenda
 
@@ -22,6 +58,7 @@ This folder contains raw sequencing data and processed data from the experiment 
 	- make corresponding annotation table for samples
 	- some rough visualizations
 3. Test adding pseudo-count to the count matrix in order to increase the accuracy in the estimates of fold change
+4. Normalize 
 
 
 ## [18 oct 2017] Gene counting with bedtools, summary (finish work on the server's side)
