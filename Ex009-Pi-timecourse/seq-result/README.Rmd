@@ -11,6 +11,19 @@ This folder contains raw sequencing data and processed data from the experiment 
 
 # Notes
 
+## [25 oct 2017] Normalization and transforming data
+
+### Normalization
+
+_Background_
+
+- the goal, to put it in a simple term, is to make samples comparable. Without normalization, the absolute read count for any gene is not comparable between samples, which are usually derived from different amount of starting materials, and sequenced to different depth, both factors are difficult to control. Many methods of normalization have been proposed. One group of methods share the property that they apply a _single_ scaling factor to each sample, differing among them only in how the scaling factor is estimated. They vary from the simplest library size adjustment, i.e. normalize only by the total number of reads per sample, to more sophisticated ones such as TMM (as implemented in edgeR), which uses the trimmed mean of ratios for individual genes. Another class of methods applies distribution wide adjustment. Quantile normalization is one of them. It forces the distribution of all samples to be the same by projecting each distribution to a single axis, estimated by averaging over all the distributions.
+
+_Test_
+
+- Follow the code snippets in [RUVSeq manual](http://bioconductor.org/packages/release/bioc/vignettes/RUVSeq/inst/doc/RUVSeq.pdf). Upperquartile normalization seems to effectively bring all samples to the same mean in the RLE plot (see manual above for explanation).
+- Tested the TMM method as implemented in edgeR package `calcNormFactors()` function. But it seems it didn't do anything to the data? To be further investigated.
+
 ## [24 oct 2017] Plan R analysis
 
 ### Goal
