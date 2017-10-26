@@ -38,14 +38,17 @@ require(limma)         ## for differential gene expression analysis
 require(data.table)    ## for fast importing and manipulating data tables
 require(edgeR)         ## for DGEList()
 require(RColorBrewer)  ## for plotting
+require(EDASeq)        ## for exploratory analysis
 ```
 
 ```{r load_data}
 # raw data count
 raw <- fread("../data/gene_count/Ex009_reads_per_transcript_2017-10-18.txt")
-setkey(raw, "gene.names")
 # sample sheet
 sample <- fread("../data/sample_sheet/Ex009_experiment_set_up_20171019.csv")
+# rearrange the columns in `raw` according to the samples order in `sample`
+ind <- match( c(sample$Sample, "gene.names"), names(raw) )
+raw <- raw[,ind,with=FALSE]
 # annotation
 anno.file <- fread("../data/annotation/C_glabrata_gene_for_mapping_s02-m07-r04.bed")
 names(anno.file) <- c("Chr","Start","End","GeneID","Not.Use","Strand","GeneName","Type.of.Gene")
@@ -59,17 +62,17 @@ setkey(anno, "GeneID")
 S <- rowSums(raw[,1:40])
 plot(density(log10(S)))
 sprintf("The number of genes with less than 40 total counts across 40 samples, i.e. 1 read per sample on average is %d, and those with less than 100 total counts, or 2.5 reads per sample, is %d", sum(S<=40), sum(S<=100))
-print("Let's try 100 reads as a cutoff for dropping genes with low or no expression")
+print("Let's try 40 reads as a cutoff for dropping genes with low or no expression")
 
 # 2. filter dataset
-isexpr <- (S <= 100)
+isexpr <- (S <= 40)
 use.genes <- grepl("ncRNA|ORF|pseudogene", anno$Type.of.Gene)
 use <- (!isexpr & use.genes)
 mat <- as.matrix(raw[use, 1:40])
 anno.all <- anno; anno <- anno.all[use]
 
-# 3. write out the filtered table
-write.table(as.data.frame(raw[use]), file = paste("../data/gene_count/Ex009_reads_per_transcript_filtered_", Sys.Date(), ".txt", sep = ""), quote = FALSE, row.names = FALSE)
+# 3. write out the filtered table (uncomment if changes are made to the filtering steps above)
+#write.table(as.data.frame(raw[use]), file = paste("../data/gene_count/Ex009_reads_per_transcript_filtered_", Sys.Date(), ".txt", sep = ""), quote = FALSE, row.names = FALSE)
 ```
 
 ## Exploratary analysis
@@ -84,37 +87,49 @@ _Reference_
 
 _Analyses_
 
-```{r explorartory}
-# load necessary packages
-require(RUVSeq)
-require(EDASeq)
-layout( matrix(c(1,2), ncol = 2), widths = c(2,1) )
-# visualize the between sample variation
+```{r explore_normalization, fig.width=10, fig.height=5}
+# visualize the between sample variation pre-normalization
 print("Non-normalized")
 plotRLE(mat, outline=FALSE, ylim= c(-4, 4), cex.axis = 0.5, las = 3)
-plotPCA(mat, cex=1.2)
-# attempt upper quantile normalization
+title(main = "non-normalized", xlab = "sample", ylab = "log2 ratio of expression")
+
+# try upper quantile normalization
 print("Upper-quantile normalized")
-set <- newSeqExpressionSet(counts = mat)
-set <- betweenLaneNormalization(set, which="upper")
-plotRLE(set, outline=FALSE, ylim=c(-4, 4))
-plotPCA(set, cex=1.2)
+set1 <- betweenLaneNormalization(mat, which="upper")
+plotRLE(set1, outline=FALSE, ylim=c(-4, 4), cex.axis = 0.5, las = 3)
+title(main = "upperquartile normalized", xlab = "sample", ylab = "log2 ratio of expression")
+
+# try full quantile normalization
+print("Full-quantile normalized")
+set2 <- betweenLaneNormalization(mat, which="full")
+plotRLE(set2, outline=FALSE, ylim=c(-4, 4), cex.axis = 0.5, las = 3)
+title(main = "full quantile normalized", xlab = "sample", ylab = "log2 ratio of expression")
+
 # try TMM normalization
-print("TMM normalized")
-norm.fact <- calcNormFactors(mat, method = "TMM")
-set1 <- mat * norm.fact
-plotRLE(set1, outline=FALSE, ylim= c(-4, 4), cex.axis = 0.5, las = 3)
-plotPCA(set1, cex=1.2)
-## why isn't TMM "normalizing" across samples?
-```
-
-## LIMMA pipeline
-
-```{r normalize_data}
 # 1. construct count matrix
 dge <- DGEList( counts = mat, genes = anno )
 # 2. perform TMM normalization
 dge <- calcNormFactors(dge)
 # 3. calculate log transformed, normalized counts
-logCPM <- cpm( dge, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 0.5 ) # note that 
+cpm.o <- cpm( dge, normalized.lib.sizes = FALSE, log = FALSE, prior.count = 0.5) # unnormalized
+cpm.n <- cpm( dge, normalized.lib.sizes = TRUE, log = FALSE, prior.count = 0.5 ) # normalized
+plotRLE(cpm.o, outline=FALSE, ylim=c(-4, 4), cex.axis = 0.5, las = 3)
+title(main = "library size normalized", xlab = "sample", ylab = "log2 ratio of expression")
+plotRLE(cpm.n, outline=FALSE, ylim=c(-4, 4), cex.axis = 0.5, las = 3)
+title(main = "TMM normalized", xlab = "sample", ylab = "log2 ratio of expression")
+layout( matrix(1:2, ncol = 2) )
+boxplot(lcpm.o, las = 2, cex = 0.7, main = "Un-normalized data distribution")
+boxplot(lcpm.n, las = 2, cex = 0.7, main = "Normalized data distribution")
+```
+
+**Conclusion**
+
+All three methods tried, i.e. TMM, upperquartile and full quantile normalization effectively homogenizes the distribution of log expression ratios.
+
+## LIMMA pipeline
+
+```{r normalize_data}
+# use TMM to normalize data
+lcpm <- cpm( dge, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 0.5)
+rownames(lcpm) <- anno$GeneID
 ```

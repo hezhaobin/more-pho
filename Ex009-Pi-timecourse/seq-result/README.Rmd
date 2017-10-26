@@ -23,6 +23,20 @@ _Test_
 
 - Follow the code snippets in [RUVSeq manual](http://bioconductor.org/packages/release/bioc/vignettes/RUVSeq/inst/doc/RUVSeq.pdf). Upperquartile normalization seems to effectively bring all samples to the same mean in the RLE plot (see manual above for explanation).
 - Tested the TMM method as implemented in edgeR package `calcNormFactors()` function. But it seems it didn't do anything to the data? To be further investigated.
+- According to [this paper](https://www.frontiersin.org/articles/10.3389/fgene.2016.00164/full), the "normalization factor" as given by the `calcNormFactors()` is not to be directly applied to the raw counts.
+
+_Notes_
+
+1. According to [Maza 2016](https://doi.org/10.3389/fgene.2016.00164), the normalization factor (call it edgeR.F) calculated by edgeR package doesn't mean the same thing as those calculated by other methods. In particular, edgeR.Fs have been adjusted so that they multiply to 1 (divided by the geometric mean of all edgeR.F's).
+
+1. the diagnostic plot I used from the RUVSeq manual is `plotRLE`, which is not the same as a boxplot for the log transformed count data. [Gandolfo and Speed 2017](https://arxiv.org/abs/1704.03590v1) shows the procedures used to construct the RLE plot:
+
+    > 1.  For each gene j,  calculate its median expression across the m samples,  i.e. $Med(y_{∗j})$,  then calculate the deviations from this median, i.e. calculate $y_{ij} − Med( y_{∗j} )$, across the i's.
+	> 2.  For each sample, generate a boxplot of all the deviations for that sample.
+
+1. To understand how edgeR approach the normalization problem, think of it as a two-step process. First it normalizes by the library size alone. Then, to account for biases due to RNA composition differences between samples, e.g. some highly expressed genes in particular samples "artificially suppress" the level of expression of other genes during the first normalization step, it estimates an adjustment factor based on gene-level expression log ratio values (the M values). A trimmed and weighted mean approach was used to produce a robust estimate of this adjustment factor. One can think of it as adjusting the library size to be "effective library size".
+
+1. I found a small mistake in my code and resolved the controversy: basically TMM performs equally well as upperquartile normalization method, both of which produce slightly less homogeneous distribution across samples compared to the full quantile normalization.
 
 ## [24 oct 2017] Plan R analysis
 
