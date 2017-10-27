@@ -1,6 +1,6 @@
 ALT_ID,Sample,Strain,Genotype,Media,Timepoint
 C6,S1,HY6,del4,SC 10 mM Pi,del80
-C7,S2,HY7,del4,SC 10 mM Pi,del90
+C7,S2,HY7,del4,SC 10 mM Pi,del80
 1A,S3,HY1,wt,SC 10 mM Pi,pre
 2A,S4,HY2,wt,SC 10 mM Pi,pre
 5A,S5,HY5,del4,SC 10 mM Pi,pre

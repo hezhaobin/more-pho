@@ -43,7 +43,7 @@ require(EDASeq)        ## for exploratory analysis
 
 ```{r load_data}
 # raw data count
-raw <- fread("../data/gene_count/Ex009_reads_per_transcript_2017-10-18.txt")
+raw <- fread("../data/gene_count/Ex009_reads_per_transcript_2017-10-18.txt", key = "gene.names")
 # sample sheet
 sample <- fread("../data/sample_sheet/Ex009_experiment_set_up_20171019.csv")
 # rearrange the columns in `raw` according to the samples order in `sample`
@@ -129,7 +129,11 @@ All three methods tried, i.e. TMM, upperquartile and full quantile normalization
 ## LIMMA pipeline
 
 ```{r normalize_data}
-# use TMM to normalize data
+# 1. construct count matrix
+dge <- DGEList( counts = mat, genes = anno )
+# 2. perform TMM normalization
+dge <- calcNormFactors(dge)
+# 3. use TMM to normalize data
 lcpm <- cpm( dge, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 0.5)
 rownames(lcpm) <- anno$GeneID
 ```
