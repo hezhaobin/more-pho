@@ -11,6 +11,25 @@ This folder contains raw sequencing data and processed data from the experiment 
 
 # Notes
 
+## [27 oct 2017] Gene induction analysis
+
+### Goal
+
+- Write a function to visualize single gene time course data
+- Perform differential expression (DE) analysis to identify gene sets of interests
+
+### Notes
+
+- used MDS plot to project the high dimensional data (~5000 genes x 40 samples) onto a small number of dimensions, similar to PCA, but using metrics better suited for microarray (or transformed RNAseq) data.
+- from MDS plot, it seems like Pho4-dependent gene expression account for just a small fraction of the transcriptional response (see Rnotebook for details)
+- also wrote a function `myGenePlot` in a separate R script file under `code` directory.
+- examined four groups of Pho4 targets identified in my 2017 eLife paper. The first two, corresponding to the conserved and Cg specific phosphate homeostasis related genes, are clearly induced in a Pho4-dependent manner. group 3 contains genes annotated to be other stress related. perhaps 5/15 tested are likely real targets (induced under stress). group 4 contains genes annotated as cell-wall and adhesion related, of them, just 3 (out of 19) are clearly induced.
+- the analyses I did today only use the normalized log2 count per million data, without voom() transformation and no statistical tests are employed.
+
+### Plan
+
+- employ the LIMMA framework to formally test for differential gene expression. first do it on the pho80Δ background to compare to my previous data, then onto the PHO80 background and use the 30' time point as the post-stress, compare it to the pre-stress sample, to identify both Pho4-dependent and Pho4-independent targets.
+
 ## [25 oct 2017] Normalization and transforming data
 
 ### Normalization
