@@ -42,7 +42,7 @@ Below is a simple chart to show the design:
 
 ### Prepare data
 
-```{r load_libraries}
+```{r load_libraries, message=FALSE}
 require(ggplot2)       ## for plotting
 require(cowplot)       ## for some useful defaults in ggplot2
 require(limma)         ## for differential gene expression analysis
@@ -175,7 +175,7 @@ title(main = "Top 50 differentially expressed genes")
     1. the first dimention still mainly separates the non-stressed from the stressed samples. This time however, it also displays a gradient that matches the time under stress. 
     1. More interestingly, the second dimension now separates the del4 vs PHO4-wt samples. Moreover, it unexpected spreads the different time point samples, but only for del4 ones. The meaning of this is yet unclear.
 
-### Single gene analysis
+3. Single gene analysis
 
 _Goal_
 
@@ -200,3 +200,72 @@ set3 <- c("CAGL0J04202g", "CAGL0M07634g", "CAGL0M12430g", "CAGL0E05940g", "CAGL0
 myGenePlot(genes = set3)
 ```
 
+### Compare pho80∆ gene list with previous results
+
+_Goal_
+
+Check if the gene list under pho80∆ background in this experiment is consistent with previous result
+
+_Steps_
+
+1. Load raw counts from previous result.
+1. Extract the subset of data to be used.
+1. Filter the data using the same gene list as in this analysis.
+1. Normalize the data using the same method, but separately for the 2013 data.
+1. Apply LIMMA-voom to identify top gene lists
+
+_Analyses_
+
+```{r prepare_2013_data, fig.width=10, fig.height=5}
+# I. Load data
+raw13 <- fread("../data/gene_count/2013_Cgla_reads_per_transcript_2016-02-21.txt") # checked to make sure that the gene names align with raw
+sample13 <- fread("../data/sample_sheet/2013_CglaRNAseq_sample_info.csv")
+# what I need is sample N1, N2, O1, O2, which correspond to S37, S38, S1, S2
+# also use the same gene filtering I used for the current analysis
+mat13 <- as.matrix( raw13[use, .(N1,N2,O1,O2)] )
+
+# II. now combine the two experiments into one
+mat.d80 <- cbind( mat[,c("S37","S38","S1","S2")], mat13 )
+# and create the appropriate sample sheet
+sample.d80 <- read.table(strip.white = TRUE, text = "Sample, Pho4, Exp
+                         S37, Cgla4, 2017
+                         S38, Cgla4, 2017
+                         S1, del4, 2017
+                         S2, del4, 2017
+                         N1, Cgla4, 2013
+                         N2, Cgla4, 2013
+                         O1, del4, 2013
+                         O2, del4, 2013", sep = ",", head = TRUE, )
+
+# III. apply TPP normalization
+# 0. visualize the between sample unwanted variation using Relative Log Expression (RLE)
+oldpar <- par( mfcol = c(1,2) )
+plotRLE( mat.d80, outline = FALSE, ylim = c(-2.3,2.3), las = 2, main = "RLE plot before normalization" )
+# 1. construct count matrix
+dge.d80 <- DGEList( counts = mat.d80, genes = anno )
+# 2. perform TMM normalization
+dge.d80 <- calcNormFactors(dge.d80)
+# 3. use TMM to normalize data
+cpm.d80 <- cpm( dge.d80, normalized.lib.sizes = TRUE, log = FALSE, prior.count = 0.5)
+# 4. examine the RLE plot after normalization
+plotRLE( cpm.d80, outline = FALSE, ylim = c(-2.3,2.3), las = 2, main = "RLE plot after normalization" )
+# 5. finish the normalization with log transformation
+lcpm.d80 <- cpm( dge.d80, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 0.5)
+rownames(lcpm.d80) <- anno$GeneID
+
+# IV. bird-eye view of similarity between samples
+plotMDS( lcpm.d80, top = 500, main = "MDS plot with top 500 DE genes")
+plotMDS( lcpm.d80, top = 50,  main = "MDS plot with top 50  DE genes")
+par( oldpar )
+```
+
+```{r DE_analysis}
+# the goal here is to perform differential gene expression analysis, separately for 2013 and 2017 data
+grp <- with(sample.d80, paste(Exp,Pho4,sep="-"))
+dsgn.d80 <- model.matrix(~0+grp)
+colnames(dsgn.d80) <- gsub("grp","",colnames(dsgn.d80))
+# plot the mean-variance relationship before voom transformation
+v.dge.d80 <- voom(dge.d80, design = dsgn.d80, plot = TRUE)
+# voom transformation
+
+```
