@@ -11,13 +11,50 @@ This folder contains raw sequencing data and processed data from the experiment 
 
 # Notes
 
+## [31 oct 2017] Compare gene list in del80 from 2013 and current experiment
+
+_Goal_
+
+Compare the gene lists identified in del80 background from 2013 data and the current data, to see if the results are consistent. The underlying reasoning is to see if any experimental conditions differed between the two experiments so as to give significantly different results
+
+In particular, I want to compare:
+
+
+_Did_
+
+- **Imported** 2013 data and created a new matrix that contains just the del80.PHO4, del80.del4 samples from both 2013 and 2017 data. Also made a corresponding sample info array.
+- **Filtered** the dataset using the same filter used for the 2017 data (see previous notes in this file). This is just for convenience, so that I can have the same genes being included.
+- **Normalization**
+
+    Instead of what I originally intended, which is to normalize the data separately by year, I decided to normalize them as a whole. The rationale is that this will make the comparisons more meaningful. However, it means the genes I identify in this analysis won't be exactly the same as what I'll get in the main analysis just using the 2017 data.
+
+- Applied **voom** transformation
+- **Linear model fitting**
+
+    Performed `lmFit => contrast.Fit => eBayes` under the LIMMA framework. Extracted contrasts that correspond to Pho4-dependent gene induction from the 2013 and 2017 data respectively.
+
+- **DecideTests**
+
+    This step is to extract the top list of DE genes based on the given threshold, using the `decidedTests` function.
+
+    Correction for multiple testing:
+
+    [LIMMA-guide#P63](http://www.bioconductor.org/packages/devel/bioc/vignettes/limma/inst/doc/usersguide.pdf) suggests using "global" setting for multiple testing correction, if one wants to compare the number of DE genes in different contrasts. This method has the advantage that the p-value cutoff across contrasts is consistent.
+
+_Results_
+
+1. Use `decideTest( fit, method = "global", lfc = 1, p.value = 0.05 )`, which determines significance based on both p-value (adjusted for multiple testing globally) and log fold-change > 1 (more than 2 fold), the top induced genes identified from 2013 and 2017 data are quite consistent.
+1. Overall, 2013 data identifies more DE genes, and often produces a higher log fold-change compared with 2017 data.
+    I notice that the del80.PHO4 in 2017 data (S37,S38) have higher variance than other samples. Should look into it a bit more.
+
+
+
 ## [30 oct 2017] Gene induction analysis 2
 
 ### Voom transformation
 
 ***The problem***
-    
-      
+
 "If reads were independently sampled from a population with given, fixed fractions of genes, the read counts would follow a multinomial distribution, which can be approximated by the Poisson distribution." -- Anders and Huber 2010 (DESeq)
 
 However, because Poisson distribution has just a single parameter, which is uniquely determined by its mean and sets the variance to the same value, it couldn't account for the empirically observed "over-dispersion" phenonmenon, that is, in RNAseq, variance positively correlate with the mean.
@@ -88,6 +125,7 @@ DESeq approach:
 ### Plan
 
 - employ the LIMMA framework to formally test for differential gene expression. first do it on the pho80Δ background to compare to my previous data, then onto the PHO80 background and use the 30' time point as the post-stress, compare it to the pre-stress sample, to identify both Pho4-dependent and Pho4-independent targets.
+
 
 ## [25 oct 2017] Normalization and transforming data
 

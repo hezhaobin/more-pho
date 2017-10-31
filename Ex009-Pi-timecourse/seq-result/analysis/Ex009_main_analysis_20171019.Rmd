@@ -51,7 +51,6 @@ require(limma)         ## for differential gene expression analysis
 require(data.table)    ## for fast importing and manipulating data tables
 require(edgeR)         ## for DGEList()
 require(RColorBrewer)  ## for plotting
-require(EDASeq)        ## for exploratory analysis
 ```
 
 ```{r load_data}
@@ -104,7 +103,8 @@ _Reference_
 _Analyses_
 
 1. Explore different normalization methods
-```{r explore_normalization, echo=FALSE, fig.width=9, fig.height=3, fig.keep=TRUE}
+```{r explore_normalization, include=FALSE, fig.width=9, fig.height=3, fig.keep=TRUE}
+require(EDASeq)        ## for exploratory analysis
 # visualize the between sample variation pre-normalization
 print("Non-normalized")
 plotRLE(mat, outline=FALSE, ylim= c(-3, 3), cex.axis = 0.8, las = 3)
@@ -237,7 +237,7 @@ sample.d80 <- read.table(strip.white = TRUE, text = "Sample, Pho4, Exp
                          N1, Cgla4, 2013
                          N2, Cgla4, 2013
                          O1, del4, 2013
-                         O2, del4, 2013", sep = ",", head = TRUE, )
+                         O2, del4, 2013", sep = ",", head = TRUE )
 
 # III. apply TPP normalization
 # 0. visualize the between sample unwanted variation using Relative Log Expression (RLE)
@@ -261,13 +261,39 @@ plotMDS( lcpm.d80, top = 50,  main = "MDS plot with top 50  DE genes")
 par( oldpar )
 ```
 
-```{r DE_analysis}
+```{r DE_analysis, fig.height=10, fig.width=10, fig.keep=TRUE}
+layout(matrix(c(1,2,0,3), ncol = 2))
 # the goal here is to perform differential gene expression analysis, separately for 2013 and 2017 data
-grp <- with(sample.d80, paste(Exp,Pho4,sep="-"))
+# create design matrix
+grp <- with(sample.d80, paste(Pho4,Exp,sep="."))
 dsgn.d80 <- model.matrix(~0+grp)
 colnames(dsgn.d80) <- gsub("grp","",colnames(dsgn.d80))
-# plot the mean-variance relationship before voom transformation
+# voom transformation to account for variance-mean dependence
 v.dge.d80 <- voom(dge.d80, design = dsgn.d80, plot = TRUE)
-# voom transformation
+# v.dge.d80 <- voomWithQualityWeights(dge.d80, design = dsgn.d80, plot = TRUE) # incorporate sample weights
 
+# make contrasts
+contr.d80 <- makeContrasts(
+  Pho4.13 = Cgla4.2013 - del4.2013,
+  Pho4.17 = Cgla4.2017 - del4.2017,
+  levels  = dsgn.d80
+)
+
+# LIMMA fit
+fit.d80 <- lmFit(v.dge.d80, design = dsgn.d80) # this automatically extracts the weights in the v.dge.d80 and uses it to perform a weighted linear regression
+fit.d80 <- contrasts.fit(fit.d80, contrasts = contr.d80)
+fit.d80 <- eBayes( fit.d80 )
+sig.d80 <- decideTests( fit.d80, method = "global", lfc = 1 ) # only include genes more than 2 fold induced
+choose <- rowSums(sig.d80) >= 1 # select genes that are deemed significant in at least one exp.
+test <- coef(fit.d80)[choose,]
+lm <- lm(test[,"Pho4.13"]~test[,"Pho4.17"])
+
+# plot to compare the two results
+plot(coef(fit.d80)[choose,], cex = 0.75, pch = 19, col = rgb(0,0,0,0.6), xlab = "2013", ylab = "2017", main = "log2 fold-change", sub = paste("Pearson's r = ", round(cor(test[,1],test[,2]),2) ,sep="") )
+
+# plot the overlap between the two list
+vennDiagram( sig.d80, include = "up", circle.col = c("turquoise","salmon") )
+
+# finally, just list the top genes
+print(topTable( fit.d80, n = 100 ))
 ```
