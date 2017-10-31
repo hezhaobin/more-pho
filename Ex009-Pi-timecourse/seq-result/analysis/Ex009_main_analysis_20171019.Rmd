@@ -5,8 +5,10 @@ created: 19 oct 2017
 output: html_notebook
 ---
 
-```{r global_options, echo=FALSE}
-knitr::opts_chunk$set(message=FALSE, echo=FALSE, cache=TRUE, comment=NA)
+```{r global_options, include=FALSE}
+rm(list=ls()) ### To clear namespace
+library(knitr)
+opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
 ```
 
 ## Goal
