@@ -2,7 +2,10 @@
 title: "Ex009_main_analysis"
 author: Bin He
 created: 19 oct 2017
-output: html_notebook
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
 ---
 
 ```{r global_options, include=FALSE}
@@ -51,6 +54,8 @@ require(limma)         ## for differential gene expression analysis
 require(data.table)    ## for fast importing and manipulating data tables
 require(edgeR)         ## for DGEList()
 require(RColorBrewer)  ## for plotting
+require(NMF)           ## for heatmap plot
+source("../code/R_subfunctions_20171026.R")  ## custom defined functions
 ```
 
 ```{r load_data}
@@ -71,7 +76,7 @@ setkey(anno, "GeneID")
 ```
 
 ```{r prepare_data}
-e# filter dataset to remove very lowly expressed genes
+# filter dataset to remove very lowly expressed genes
 # 1. examine the distribution of reads for each gene across all samples, to establish a threshold
 S <- rowSums(raw[,1:40])
 plot(density(log10(S)))
@@ -103,8 +108,8 @@ _Reference_
 _Analyses_
 
 1. Explore different normalization methods
-```{r explore_normalization, eval=FALSE, fig.width=9, fig.height=3, fig.keep=TRUE}
-require(EDASeq)        ## for exploratory analysis
+```{r explore_normalization, fig.width=9, fig.height=3, fig.keep=TRUE}
+require(aroma.light)        ## for exploratory analysis
 # visualize the between sample variation pre-normalization
 print("Non-normalized")
 plotRLE(mat, outline=FALSE, ylim= c(-3, 3), cex.axis = 0.8, las = 3)
@@ -112,14 +117,14 @@ title(main = "non-normalized", xlab = "sample", ylab = "log2 ratio of expression
 
 # try upper quantile normalization
 print("Upper-quantile normalized")
-set1 <- betweenLaneNormalization(mat, which="upper")
-plotRLE(set1, outline=FALSE, ylim=c(-3, 3), cex.axis = 0.8, las = 3)
+set1 <- myBetweenLaneNormalization(mat, which="upper")
+myPlotRLE(set1, outline=FALSE, ylim=c(-3, 3), cex.axis = 0.8, las = 3)
 title(main = "upperquartile normalized", xlab = "sample", ylab = "log2 ratio of expression")
 
 # try full quantile normalization
 print("Full-quantile normalized")
-set2 <- betweenLaneNormalization(mat, which="full")
-plotRLE(set2, outline=FALSE, ylim=c(-3, 3), cex.axis = 0.8, las = 3)
+set2 <- myBetweenLaneNormalization(mat, which="full")
+myPlotRLE(set2, outline=FALSE, ylim=c(-3, 3), cex.axis = 0.8, las = 3)
 title(main = "full quantile normalized", xlab = "sample", ylab = "log2 ratio of expression")
 
 # try TMM normalization
@@ -130,16 +135,20 @@ dge <- calcNormFactors(dge)
 # 3. calculate log transformed, normalized counts
 cpm.o <- cpm( dge, normalized.lib.sizes = FALSE, log = FALSE, prior.count = 0.5) # unnormalized
 cpm.n <- cpm( dge, normalized.lib.sizes = TRUE, log = FALSE, prior.count = 0.5 ) # normalized
-plotRLE(cpm.o, outline=FALSE, ylim=c(-4, 4), cex.axis = 0.5, las = 3)
+myPlotRLE(cpm.o, outline=FALSE, ylim=c(-4, 4), cex.axis = 0.5, las = 3)
 title(main = "library size normalized", xlab = "sample", ylab = "log2 ratio of expression")
-plotRLE(cpm.n, outline=FALSE, ylim=c(-4, 4), cex.axis = 0.5, las = 3)
+myPlotRLE(cpm.n, outline=FALSE, ylim=c(-4, 4), cex.axis = 0.5, las = 3)
 title(main = "TMM normalized", xlab = "sample", ylab = "log2 ratio of expression")
-layout( matrix(1:2, ncol = 2) )
 ```
 
 **Conclusion**
 
-All three methods tried, i.e. TMM, upperquartile and full quantile normalization effectively homogenizes the distribution of log expression ratios.
+- All three methods tried, i.e. TMM, upperquartile and full quantile normalization effectively homogenizes the distribution of log expression ratios.
+
+- The distribution of log2 radio of expression is greater for S1-S6, S37 and S38. What they have in common is that all of them were grown in rich (non-Pi-starved) media. S37 and S38 mimics Pi starvation in that it also activates Pho4, which is supposed to turn on its targets, but as my analysis below shows, the majority of the transcriptional responses are likely to be Pho4-independent and thus it is not surprising that S37 and S38 look more like S1-6.
+
+- I also looked at other properties of the samples and sequencing stat, such as the amount of RNA extracted, number of PCR cycles used for making the library, total number of reads obtained and number of reads mapped. None suggested quality differences between S1-6, S37, S38 with the rest samples.
+
 
 ```{r normalize_data}
 # 1. construct count matrix
@@ -188,7 +197,6 @@ _Approach_
 I wrote a sub-function in a separate file and source it here.
 
 ```{r single_gene_analysis, fig.width=12, fig.height=10}
-source("../code/R_subfunctions_20171026.R")
 set1 <- c("CAGL0B02475g", "CAGL0A01243g", "CAGL0L05456g", "CAGL0C02321g", "CAGL0G06952g", "CAGL0L06622g", "CAGL0M12705g", "CAGL0F02145g", "CAGL0J07040g", "CAGL0K12034g") # conserved targets with S. cerevisiae
 myGenePlot(genes = set1)
 
@@ -242,7 +250,7 @@ sample.d80 <- read.table(strip.white = TRUE, text = "Sample, Pho4, Exp
 # III. apply TPP normalization
 # 0. visualize the between sample unwanted variation using Relative Log Expression (RLE)
 oldpar <- par( mfcol = c(1,2) )
-plotRLE( mat.d80, outline = FALSE, ylim = c(-2.3,2.3), las = 2, main = "RLE plot before normalization" )
+myPlotRLE( mat.d80, outline = FALSE, ylim = c(-2.3,2.3), las = 2, main = "RLE plot before normalization" )
 # 1. construct count matrix
 dge.d80 <- DGEList( counts = mat.d80, genes = anno )
 # 2. perform TMM normalization
@@ -250,7 +258,7 @@ dge.d80 <- calcNormFactors(dge.d80)
 # 3. use TMM to normalize data
 cpm.d80 <- cpm( dge.d80, normalized.lib.sizes = TRUE, log = FALSE, prior.count = 0.5)
 # 4. examine the RLE plot after normalization
-plotRLE( cpm.d80, outline = FALSE, ylim = c(-2.3,2.3), las = 2, main = "RLE plot after normalization" )
+myPlotRLE( cpm.d80, outline = FALSE, ylim = c(-2.3,2.3), las = 2, main = "RLE plot after normalization" )
 # 5. finish the normalization with log transformation
 lcpm.d80 <- cpm( dge.d80, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 0.5)
 rownames(lcpm.d80) <- anno$GeneID
@@ -261,7 +269,7 @@ plotMDS( lcpm.d80, top = 50,  main = "MDS plot with top 50  DE genes")
 par( oldpar )
 ```
 
-```{r DE_analysis, fig.height=10, fig.width=10, fig.keep=TRUE}
+```{r del80_DE_analysis, fig.height=10, fig.width=10, fig.keep=TRUE}
 layout(matrix(c(1,2,0,3), ncol = 2))
 # the goal here is to perform differential gene expression analysis, separately for 2013 and 2017 data
 # create design matrix
@@ -276,6 +284,8 @@ v.dge.d80 <- voom(dge.d80, design = dsgn.d80, plot = TRUE)
 contr.d80 <- makeContrasts(
   Pho4.13 = Cgla4.2013 - del4.2013,
   Pho4.17 = Cgla4.2017 - del4.2017,
+  Cgla4.13vs17 = Cgla4.2013 - Cgla4.2017,
+  del4.13vs17 = del4.2013 - del4.2017,
   levels  = dsgn.d80
 )
 
@@ -284,16 +294,25 @@ fit.d80 <- lmFit(v.dge.d80, design = dsgn.d80) # this automatically extracts the
 fit.d80 <- contrasts.fit(fit.d80, contrasts = contr.d80)
 fit.d80 <- eBayes( fit.d80 )
 sig.d80 <- decideTests( fit.d80, method = "global", lfc = 1 ) # only include genes more than 2 fold induced
-choose <- rowSums(sig.d80) >= 1 # select genes that are deemed significant in at least one exp.
+choose <- rowSums(sig.d80[,1:2]) >= 1 # select genes that are deemed significant in at least one exp.
 test <- coef(fit.d80)[choose,]
 lm <- lm(test[,"Pho4.13"]~test[,"Pho4.17"])
 
 # plot to compare the two results
-plot(coef(fit.d80)[choose,], cex = 0.75, pch = 19, col = rgb(0,0,0,0.6), xlab = "2013", ylab = "2017", main = "log2 fold-change", sub = paste("Pearson's r = ", round(cor(test[,1],test[,2]),2) ,sep="") )
+plot(coef(fit.d80)[choose,1:2], cex = 0.75, pch = 19, col = rgb(0,0,0,0.6), xlab = "2013", ylab = "2017", main = "log2 fold-change", sub = paste("Pearson's r = ", round(cor(test[,1],test[,2]),2) ,sep="") )
 
 # plot the overlap between the two list
-vennDiagram( sig.d80, include = "up", circle.col = c("turquoise","salmon") )
+vennDiagram( sig.d80[,1:2], include = "up", circle.col = c("turquoise","salmon") )
 
 # finally, just list the top genes
 print(topTable( fit.d80, n = 100 ))
+```
+
+```{r del80_plot_heatmap, fig.width=8, fig.height=10}
+sprintf("A totle of %d genes were selected because they were significantly induced by more than 2 fold in at least one of the two experiments.", sum(choose))
+mycol <- colorpanel(1000,"blue","black","yellow")
+heatmap.2(v.dge.d80$E, scale="row",Rowv = TRUE,
+   labRow=NA, labCol=colnames(v.dge.d80),
+   col=mycol, trace="none", density.info="none", 
+   margin=c(8,6), lhei=c(2,10), dendrogram="column")
 ```

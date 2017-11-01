@@ -11,6 +11,15 @@ This folder contains raw sequencing data and processed data from the experiment 
 
 # Notes
 
+## [2 nov 2017] Move on to analyze PHO80 time course data
+
+***Plan***
+
+- Make contrasts to compare between each time point with the pre-stress sample, separately for PHO4 and del4 genotypes.
+- Select genes that are turned on in at least two time points in the experiment. (I have replicates except for 90', 150', 240')
+- Make heatmap plots to visualize the gene induction in waves.
+- Fit a linear model that includes Pho4-independent, Pho4-dependent and time point factors.
+
 ## [31 oct 2017] Compare gene list in del80 from 2013 and current experiment
 
 _Goal_
@@ -19,6 +28,8 @@ Compare the gene lists identified in del80 background from 2013 data and the cur
 
 In particular, I want to compare:
 
+1. # of genes identified as up-regulated in both experiments
+1. concordance of estimated log2 fold-change
 
 _Did_
 
@@ -41,13 +52,13 @@ _Did_
 
     [LIMMA-guide#P63](http://www.bioconductor.org/packages/devel/bioc/vignettes/limma/inst/doc/usersguide.pdf) suggests using "global" setting for multiple testing correction, if one wants to compare the number of DE genes in different contrasts. This method has the advantage that the p-value cutoff across contrasts is consistent.
 
+    Use `decideTest( fit, method = "global", lfc = 1, p.value = 0.05 )`, which determines significance based on both p-value (adjusted for multiple testing globally) and log fold-change > 1 (more than 2 fold).
+
 _Results_
 
-1. Use `decideTest( fit, method = "global", lfc = 1, p.value = 0.05 )`, which determines significance based on both p-value (adjusted for multiple testing globally) and log fold-change > 1 (more than 2 fold), the top induced genes identified from 2013 and 2017 data are quite consistent.
+1. The x-y plot for the estimated log2 fold-change for the same set of genes in the two experiments show broad agreement, with a Pearson's r ~ 0.8
 1. Overall, 2013 data identifies more DE genes, and often produces a higher log fold-change compared with 2017 data.
-    I notice that the del80.PHO4 in 2017 data (S37,S38) have higher variance than other samples. Should look into it a bit more.
-
-
+1. Directly comparing the same genotype between the two datasets doesn't seem to reveal any alarming patterns.
 
 ## [30 oct 2017] Gene induction analysis 2
 
