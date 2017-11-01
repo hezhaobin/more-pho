@@ -8,7 +8,7 @@ output: html_notebook
 ```{r global_options, include=FALSE}
 rm(list=ls()) ### To clear namespace
 library(knitr)
-opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE)
+opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE, fig.path="../output/figure")
 ```
 
 ## Goal
@@ -71,7 +71,7 @@ setkey(anno, "GeneID")
 ```
 
 ```{r prepare_data}
-# filter dataset to remove very lowly expressed genes
+e# filter dataset to remove very lowly expressed genes
 # 1. examine the distribution of reads for each gene across all samples, to establish a threshold
 S <- rowSums(raw[,1:40])
 plot(density(log10(S)))
@@ -103,7 +103,7 @@ _Reference_
 _Analyses_
 
 1. Explore different normalization methods
-```{r explore_normalization, include=FALSE, fig.width=9, fig.height=3, fig.keep=TRUE}
+```{r explore_normalization, eval=FALSE, fig.width=9, fig.height=3, fig.keep=TRUE}
 require(EDASeq)        ## for exploratory analysis
 # visualize the between sample variation pre-normalization
 print("Non-normalized")
