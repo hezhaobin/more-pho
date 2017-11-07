@@ -1,0 +1,2 @@
+* task
+** TODO write a one page proposal
