@@ -43,9 +43,8 @@ Below is a simple chart to show the design:
 | wt-2     | pre, 20', 30', 45', 60',      120',       180', 240' | 1 | biol. repl. for wt-1|
 | 4∆-2     | pre, 20', 30', 45', 60',      120',       180'       | 1 | biol. repl. for 4∆-1| 
 
-## Analyses
 
-### Prepare data
+## Prepare data
 
 ```{r load_libraries, message=FALSE}
 require(ggplot2)       ## for plotting
@@ -94,7 +93,7 @@ anno.all <- anno; anno <- anno.all[use]
 #write.table(as.data.frame(raw[use]), file = paste("../data/gene_count/Ex009_reads_per_transcript_filtered_", Sys.Date(), ".txt", sep = ""), quote = FALSE, row.names = FALSE)
 ```
 
-### Exploratary analysis
+## Exploratary analysis
 
 _Goal_
 
@@ -112,7 +111,7 @@ _Analyses_
 require(aroma.light)        ## for exploratory analysis
 # visualize the between sample variation pre-normalization
 print("Non-normalized")
-plotRLE(mat, outline=FALSE, ylim= c(-3, 3), cex.axis = 0.8, las = 3)
+myPlotRLE(mat, outline=FALSE, ylim= c(-3, 3), cex.axis = 0.8, las = 3)
 title(main = "non-normalized", xlab = "sample", ylab = "log2 ratio of expression")
 
 # try upper quantile normalization
@@ -210,7 +209,7 @@ set3 <- c("CAGL0J04202g", "CAGL0M07634g", "CAGL0M12430g", "CAGL0E05940g", "CAGL0
 myGenePlot(genes = set3)
 ```
 
-### Compare pho80∆ gene list with previous results
+## Compare pho80∆ gene list with previous results
 
 _Goal_
 
@@ -316,3 +315,5 @@ heatmap.2(v.dge.d80$E, scale="row",Rowv = TRUE,
    col=mycol, trace="none", density.info="none", 
    margin=c(8,6), lhei=c(2,10), dendrogram="column")
 ```
+
+## Analyze time-course data
