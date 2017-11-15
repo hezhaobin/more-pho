@@ -11,6 +11,9 @@ This folder contains raw sequencing data and processed data from the experiment 
 
 # Notes
 
+## [15 nov 2017] time course analysis
+
+
 ## [2 nov 2017] Move on to analyze PHO80 time course data
 
 ***Plan***

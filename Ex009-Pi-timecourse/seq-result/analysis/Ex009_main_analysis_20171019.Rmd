@@ -62,8 +62,8 @@ source("../code/R_subfunctions_20171026.R")  ## custom defined functions
 raw <- fread("../data/gene_count/Ex009_reads_per_transcript_2017-10-18.txt", key = "gene.names")
 # sample sheet
 sample <- fread("../data/sample_sheet/Ex009_experiment_set_up_20171019.csv")
-sample[,Group:=paste(Genotype,Replicate,Timepoint, sep="-")]
 sample[,Timepoint:=factor(Timepoint, levels = c("pre","20m","30m","45m","60m","90m","120m","150m","180m","240m","del80"))]
+sample[,Group:=paste(Genotype,Timepoint, sep=".")]
 # rearrange the columns in `raw` according to the samples order in `sample`
 ind <- match( c(sample$Sample, "gene.names"), names(raw) )
 raw <- raw[,ind,with=FALSE]
@@ -307,13 +307,80 @@ vennDiagram( sig.d80[,1:2], include = "up", circle.col = c("turquoise","salmon")
 print(topTable( fit.d80, n = 100 ))
 ```
 
-```{r del80_plot_heatmap, fig.width=8, fig.height=10}
+```{r del80_plot_heatmap, fig.height = 8}
+require(gplots)
 sprintf("A totle of %d genes were selected because they were significantly induced by more than 2 fold in at least one of the two experiments.", sum(choose))
 mycol <- colorpanel(1000,"blue","black","yellow")
-heatmap.2(v.dge.d80$E, scale="row",Rowv = TRUE,
+heatmap.2(v.dge.d80$E[choose,], scale="row",Rowv = TRUE,
    labRow=NA, labCol=colnames(v.dge.d80),
    col=mycol, trace="none", density.info="none", 
-   margin=c(8,6), lhei=c(2,10), dendrogram="column")
+   margin=c(8,6), lhei=c(2,10), dendrogram="none")
 ```
 
 ## Analyze time-course data
+
+_Questions_
+
+1. How many genes are turned on at 20', 30', 45', 60', 120', 180'?
+1. What's the overlap between the sets?
+1. What is the temporal dynamics?
+
+### Single time-point analyses
+
+_Goal_
+
+- Compare different post-stress time-point samples to the pre-stress sample, identify gene induction independently.
+
+```{r single_time_point_analyses}
+# 1. collect data and sample sheet
+#    `dge` contains the data, including the count matrix, the sample normalization factors and gene names
+#    `sample` contains the experimental design, including the genotype, pre or post stress (time points if latter)
+#             I've already made one variable that combines both genotype and stress conditions
+#    note that I included the d80 data in this analysis
+
+dsgn <- model.matrix(~0+sample$Group)
+colnames(dsgn) <- gsub("sample$Group","",colnames(dsgn),fixed=TRUE)
+# voom transformation to account for variance-mean dependence
+v.dge <- voom(dge, design = dsgn, plot = TRUE)
+# v.dge.d80 <- voomWithQualityWeights(dge.d80, design = dsgn.d80, plot = TRUE) # incorporate sample weights
+
+# make contrasts
+contr.TC <- makeContrasts(
+  d80 = wt.del80 - del4.del80,
+  wt.t20 = wt.20m - wt.pre,
+  wt.t30 = wt.30m - wt.pre,
+  wt.t45 = wt.45m - wt.pre,
+  wt.t60 = wt.60m - wt.pre,
+  wt.t90 = wt.90m - wt.pre,
+  wt.t120 = wt.120m - wt.pre,
+  wt.t150 = wt.150m - wt.pre,
+  wt.t180 = wt.180m - wt.pre,
+  wt.t240 = wt.240m - wt.pre,
+  del4.t20 = del4.20m - del4.pre,
+  del4.t30 = del4.30m - del4.pre,
+  del4.t45 = del4.45m - del4.pre,
+  del4.t60 = del4.60m - del4.pre,
+  del4.t90 = del4.90m - del4.pre,
+  del4.t120 = del4.120m - del4.pre,
+  del4.t150 = del4.150m - del4.pre,
+  del4.t180 = del4.180m - del4.pre,
+  del4.t240 = del4.240m - del4.pre,
+  dep4.t20 = wt.20m - del4.20m,
+  dep4.t30 = wt.30m - del4.30m,
+  dep4.t45 = wt.45m - del4.45m,
+  dep4.t90 = wt.90m - del4.90m,
+  dep4.t120 = wt.120m - del4.120m,
+  dep4.t180 = wt.180m - del4.180m,
+  levels  = dsgn
+)
+
+# LIMMA fit
+fit <- lmFit(v.dge, design = dsgn) # this automatically extracts the weights in the v.dge and uses it to perform a weighted linear regression
+fit <- contrasts.fit(fit, contrasts = contr.TC)
+fit <- eBayes( fit )
+sig <- decideTests( fit, method = "global", lfc = 1 ) # only include genes more than 2 fold induced
+choose <- rowSums(sig.d80[,1:2]) >= 1 # select genes that are deemed significant in at least one exp.
+test <- coef(fit.d80)[choose,]
+lm <- lm(test[,"Pho4.13"]~test[,"Pho4.17"])
+
+```
