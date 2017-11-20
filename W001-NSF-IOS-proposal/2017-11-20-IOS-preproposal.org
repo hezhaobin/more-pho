@@ -1,0 +1,31 @@
+* task
+** TODO write a one page proposal
+
+ 
+* Title
+
+* Project summary
+
+One page, including Overview / Statement on Intellectual Merit / Statement on Broader Impacts
+
+* Project description
+
+Up to five pages
+
+** Section I. Personnel
+
+List PI, co-PI and other collaborators
+
+** Section II. Project
+
+Up to four pages
+
+*** "Conceptual Framework" or "Specific Aims"
+
+*** "Rationale and Significance" or "Background"
+
+*** "Hypotheses" or "Research Questions"
+
+*** "Experimental Design"
+
+*** "Broader Impacts of the Proposed Work"
