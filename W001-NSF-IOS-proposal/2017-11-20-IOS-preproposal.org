@@ -2,6 +2,21 @@
 ** TODO write a one page proposal
 
  
+* Notes
+1. keywords to hit
+
+   - combine experiments with computation and modeling
+   - must test predictions, e.g. relationship between phenotype and genotype
+   - integrates data across spatial/temporal/biological scales
+   - generate tools, methods, resources
+   - phenotypic plasticity and organismal resilience
+
+1. quantitative understanding of transcriptional regulation
+   
+   - 
+
+
+
 * Title
 
 * Project summary
