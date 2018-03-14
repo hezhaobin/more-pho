@@ -54,6 +54,7 @@ require(data.table)    ## for fast importing and manipulating data tables
 require(edgeR)         ## for DGEList()
 require(RColorBrewer)  ## for plotting
 require(NMF)           ## for heatmap plot
+require(gplots)        ## for heatmap plot
 source("../code/R_subfunctions_20171026.R")  ## custom defined functions
 ```
 
@@ -308,7 +309,6 @@ print(topTable( fit.d80, n = 100 ))
 ```
 
 ```{r del80_plot_heatmap, fig.height = 8}
-require(gplots)
 sprintf("A totle of %d genes were selected because they were significantly induced by more than 2 fold in at least one of the two experiments.", sum(choose))
 mycol <- colorpanel(1000,"blue","black","yellow")
 heatmap.2(v.dge.d80$E[choose,], scale="row",Rowv = TRUE,
