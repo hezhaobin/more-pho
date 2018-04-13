@@ -121,6 +121,7 @@ DESeq approach:
     new("EList", out) # finally this constructs a new "EList" object and return to the user
     ```
 
+
 ## [27 oct 2017] Gene induction analysis 1
 
 ### Goal

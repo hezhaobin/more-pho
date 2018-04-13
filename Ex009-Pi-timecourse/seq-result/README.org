@@ -1,0 +1,623 @@
+* Sample
+  :PROPERTIES:
+  :CUSTOM_ID: sample
+  :END:
+
+This folder contains raw sequencing data and processed data from the
+experiment Ex009 40 samples pooled into 2 pools, using 20 adapter
+indices for each
+
+* Notes
+  :PROPERTIES:
+  :CUSTOM_ID: notes
+  :END:
+
+** [15 nov 2017] time course analysis
+   :PROPERTIES:
+   :CUSTOM_ID: nov-2017-time-course-analysis
+   :END:
+
+** [2 nov 2017] Move on to analyze PHO80 time course data
+   :PROPERTIES:
+   :CUSTOM_ID: nov-2017-move-on-to-analyze-pho80-time-course-data
+   :END:
+
+*/Plan/*
+
+- Make contrasts to compare between each time point with the pre-stress
+  sample, separately for PHO4 and del4 genotypes.
+- Select genes that are turned on in at least two time points in the
+  experiment. (I have replicates except for 90', 150', 240')
+- Make heatmap plots to visualize the gene induction in waves.
+- Fit a linear model that includes Pho4-independent, Pho4-dependent and
+  time point factors.
+
+** [31 oct 2017] Compare gene list in del80 from 2013 and current
+experiment
+   :PROPERTIES:
+   :CUSTOM_ID: oct-2017-compare-gene-list-in-del80-from-2013-and-current-experiment
+   :END:
+
+/Goal/
+
+Compare the gene lists identified in del80 background from 2013 data and
+the current data, to see if the results are consistent. The underlying
+reasoning is to see if any experimental conditions differed between the
+two experiments so as to give significantly different results
+
+In particular, I want to compare:
+
+1. * of genes identified as up-regulated in both experiments
+     :PROPERTIES:
+     :CUSTOM_ID: of-genes-identified-as-up-regulated-in-both-experiments
+     :END:
+
+2. concordance of estimated log2 fold-change
+
+/Did/
+
+- *Imported* 2013 data and created a new matrix that contains just the
+  del80.PHO4, del80.del4 samples from both 2013 and 2017 data. Also made
+  a corresponding sample info array.
+- *Filtered* the dataset using the same filter used for the 2017 data
+  (see previous notes in this file). This is just for convenience, so
+  that I can have the same genes being included.
+- *Normalization*
+
+  Instead of what I originally intended, which is to normalize the data
+  separately by year, I decided to normalize them as a whole. The
+  rationale is that this will make the comparisons more meaningful.
+  However, it means the genes I identify in this analysis won't be
+  exactly the same as what I'll get in the main analysis just using the
+  2017 data.
+
+- Applied *voom* transformation
+- *Linear model fitting*
+
+  Performed =lmFit => contrast.Fit => eBayes= under the LIMMA framework.
+  Extracted contrasts that correspond to Pho4-dependent gene induction
+  from the 2013 and 2017 data respectively.
+
+- *DecideTests*
+
+  This step is to extract the top list of DE genes based on the given
+  threshold, using the =decidedTests= function.
+
+  Correction for multiple testing:
+
+  [[http://www.bioconductor.org/packages/devel/bioc/vignettes/limma/inst/doc/usersguide.pdf][LIMMA-guide#P63]]
+  suggests using "global" setting for multiple testing correction, if
+  one wants to compare the number of DE genes in different contrasts.
+  This method has the advantage that the p-value cutoff across contrasts
+  is consistent.
+
+  Use =decideTest( fit, method = "global", lfc = 1, p.value = 0.05 )=,
+  which determines significance based on both p-value (adjusted for
+  multiple testing globally) and log fold-change > 1 (more than 2 fold).
+
+/Results/
+
+1. The x-y plot for the estimated log2 fold-change for the same set of
+   genes in the two experiments show broad agreement, with a Pearson's r
+   ~ 0.8
+2. Overall, 2013 data identifies more DE genes, and often produces a
+   higher log fold-change compared with 2017 data.
+3. Directly comparing the same genotype between the two datasets doesn't
+   seem to reveal any alarming patterns.
+
+** [30 oct 2017] Gene induction analysis 2
+   :PROPERTIES:
+   :CUSTOM_ID: oct-2017-gene-induction-analysis-2
+   :END:
+
+*** Voom transformation
+    :PROPERTIES:
+    :CUSTOM_ID: voom-transformation
+    :END:
+
+*/The problem/*
+
+"If reads were independently sampled from a population with given, fixed
+fractions of genes, the read counts would follow a multinomial
+distribution, which can be approximated by the Poisson distribution." --
+Anders and Huber 2010 (DESeq)
+
+However, because Poisson distribution has just a single parameter, which
+is uniquely determined by its mean and sets the variance to the same
+value, it couldn't account for the empirically observed
+"over-dispersion" phenonmenon, that is, in RNAseq, variance positively
+correlate with the mean.
+
+Methods like DESeq directly models the count data distribution, which it
+approximates using the negative binomial. To estimate the parameters for
+the distribution on single-gene level is often challenging, due to the
+relatively small number of replicates employed. As a result, most
+methods attempt to borrow information across genes. edgeR does so by
+assuming that mean and variance are related by
+$\sigma^2 = \mu + \alpha \mu^2$, with a single proportionality constant
+$\alpha$ that is the same throughout the experiment and that can be
+estimated from the data. This way only one parameter needs to be
+estimated for each gene, allowing application to experiments with small
+number of replicates.
+
+DESeq approach:
+
+1. Assume the number of reads in sample $j$ that are assigned to gene
+   $i$ can be modeled by a negative binomial (NB) distribution,
+
+   $$K_{ij} \sim NB(\mu_{ij}, \sigma_{ij}^2),$$
+
+2. To estimate the parameters for each gene, It makes the following
+   assumptions
+
+   1. $\mu_{ij} = q_{i,\rho(j)} s_j$, where $q_{i,\rho(j)}$ is a
+      condition-dependent per-gene value (think of it as the true
+      expression level in condition $rho(j)$), and $s_j$ is a size
+      factor for sample $j$ (think of it roughly as the sequencing
+      depth)
+
+   2. $\sigma_{ij}^2 = \mu_{ij} + s_j^2 \nu_{i,\rho(j)}$, where the
+      first term, called "shot variance" is (I think) from Poisson
+      distribution, while the second term is "raw variance term"
+
+   3. $\nu_{i,\rho(j)} = \nu_\rho(q_{i,\rho(j)})$, that is, the per-gene
+      raw variance term is a smooth function of $q_{i,\rho(j)}$. "This
+      assumption allows us to pool the data from genes with similar
+      expression strength for the purpose of variance estimation"
+
+*/Voom procedure/*
+
+- voom takes in either normalized counts (may be given as a DGEList
+  object) or raw counts (with an option to normalize within voom) and a
+  design matrix.
+
+- It first transforms the counts by adding a pseudocount (called
+  prior-count in voom context, default 0.5), then dividing by the
+  (effective) library size and times 1e+6. Essentially it does the same
+  job as the =cpm()= function with =prior.count = 0.5=.
+
+- It then uses =lmFit= to regress the log cpm value against the design
+  matrix, which gives the coefficients (main effect) of each factor and
+  a residual variance for each gene in every sample.
+
+- The plot =voom(plot=TRUE)= generates takes as its x-value (called =sx=
+  in the function) the mean expression level of a gene as calculated by
+  the fitted $\mu$ from the linear model and reverse-transform it into #
+  of reads, and for its y-value (=sy=), it uses the square root of the
+  fitted standard deviation for each gene. The resulting graph typically
+  shows an inverse correlation between the two variables plotted,
+  suggesting that the log2 transformation "stabilized" variance for
+  highly expressed genes but also inflated variance for lowly expressed
+  ones.
+
+- The plot generated by =voom()= uses Lowess regression. The function it
+  estimates is then used to produce a precision weight for each gene x
+  sample. This is calculated in the following way:
+
+  #+BEGIN_SRC R
+      fitted.cpm <- 2^fitted.values # fitted.values is calculated for Y_{g,k} = expression of gene g in sample k from the linear model
+      fitted.count <- 1e-6 * t(t(fitted.cpm)*(lib.sizes+1))
+      fitted.logcount <- log2(fitted.count) # essentially it takes the fitted log count per million data and turn it into log of fitted read counts (not adjusted by library size)
+      # here is where the lowess regression comes in
+      l <- lowess(sx, sy, f = span)
+      f <- approxfun(l, rule = 2) # this stores the lowess fit as an approximated function
+      w <- 1/f(fitted.logcount)^4 # my understanding is that this takes in the fitted log counts (not lcpm though) and predict the square root of standard deviation based on the Lowess fit, then take it to the fourth power to recover the variance. the precision weight is the inverse of the predicted variance
+  #+END_SRC
+
+  Here is what voom actually outputs:
+
+  #+BEGIN_SRC R
+      out$E <- y # this is the log cpm value
+      out$weights <- w
+      out$design <- design # this is input by the user
+      out$targets <- data.frame(lib.size = lib.size) # the "targets" object stores the library size
+      new("EList", out) # finally this constructs a new "EList" object and return to the user
+  #+END_SRC
+
+** [27 oct 2017] Gene induction analysis 1
+   :PROPERTIES:
+   :CUSTOM_ID: oct-2017-gene-induction-analysis-1
+   :END:
+
+*** Goal
+    :PROPERTIES:
+    :CUSTOM_ID: goal
+    :END:
+
+- Write a function to visualize single gene time course data
+- Perform differential expression (DE) analysis to identify gene sets of
+  interests
+
+*** Notes
+    :PROPERTIES:
+    :CUSTOM_ID: notes-1
+    :END:
+
+- used MDS plot to project the high dimensional data (~5000 genes x 40
+  samples) onto a small number of dimensions, similar to PCA, but using
+  metrics better suited for microarray (or transformed RNAseq) data.
+- from MDS plot, it seems like Pho4-dependent gene expression account
+  for just a small fraction of the transcriptional response (see
+  Rnotebook for details)
+- also wrote a function =myGenePlot= in a separate R script file under
+  =code= directory.
+- examined four groups of Pho4 targets identified in my 2017 eLife
+  paper. The first two, corresponding to the conserved and Cg specific
+  phosphate homeostasis related genes, are clearly induced in a
+  Pho4-dependent manner. group 3 contains genes annotated to be other
+  stress related. perhaps 5/15 tested are likely real targets (induced
+  under stress). group 4 contains genes annotated as cell-wall and
+  adhesion related, of them, just 3 (out of 19) are clearly induced.
+- the analyses I did today only use the normalized log2 count per
+  million data, without voom() transformation and no statistical tests
+  are employed.
+
+*** Plan
+    :PROPERTIES:
+    :CUSTOM_ID: plan
+    :END:
+
+- employ the LIMMA framework to formally test for differential gene
+  expression. first do it on the pho80Δ background to compare to my
+  previous data, then onto the PHO80 background and use the 30' time
+  point as the post-stress, compare it to the pre-stress sample, to
+  identify both Pho4-dependent and Pho4-independent targets.
+
+** [25 oct 2017] Normalization and transforming data
+   :PROPERTIES:
+   :CUSTOM_ID: oct-2017-normalization-and-transforming-data
+   :END:
+
+*** Normalization
+    :PROPERTIES:
+    :CUSTOM_ID: normalization
+    :END:
+
+/Background/
+
+- the goal, to put it in a simple term, is to make samples comparable.
+  Without normalization, the absolute read count for any gene is not
+  comparable between samples, which are usually derived from different
+  amount of starting materials, and sequenced to different depth, both
+  factors are difficult to control. Many methods of normalization have
+  been proposed. One group of methods share the property that they apply
+  a /single/ scaling factor to each sample, differing among them only in
+  how the scaling factor is estimated. They vary from the simplest
+  library size adjustment, i.e. normalize only by the total number of
+  reads per sample, to more sophisticated ones such as TMM (as
+  implemented in edgeR), which uses the trimmed mean of ratios for
+  individual genes. Another class of methods applies distribution wide
+  adjustment. Quantile normalization is one of them. It forces the
+  distribution of all samples to be the same by projecting each
+  distribution to a single axis, estimated by averaging over all the
+  distributions.
+
+/Test/
+
+- Follow the code snippets in
+  [[http://bioconductor.org/packages/release/bioc/vignettes/RUVSeq/inst/doc/RUVSeq.pdf][RUVSeq
+  manual]]. Upperquartile normalization seems to effectively bring all
+  samples to the same mean in the RLE plot (see manual above for
+  explanation).
+- Tested the TMM method as implemented in edgeR package
+  =calcNormFactors()= function. But it seems it didn't do anything to
+  the data? To be further investigated.
+- According to
+  [[https://www.frontiersin.org/articles/10.3389/fgene.2016.00164/full][this
+  paper]], the "normalization factor" as given by the
+  =calcNormFactors()= is not to be directly applied to the raw counts.
+
+/Notes/
+
+1. According to [[https://doi.org/10.3389/fgene.2016.00164][Maza 2016]],
+   the normalization factor (call it edgeR.F) calculated by edgeR
+   package doesn't mean the same thing as those calculated by other
+   methods. In particular, edgeR.Fs have been adjusted so that they
+   multiply to 1 (divided by the geometric mean of all edgeR.F's).
+
+2. the diagnostic plot I used from the RUVSeq manual is =plotRLE=, which
+   is not the same as a boxplot for the log transformed count data.
+   [[https://arxiv.org/abs/1704.03590v1][Gandolfo and Speed 2017]] shows
+   the procedures used to construct the RLE plot:
+
+   #+BEGIN_QUOTE
+
+     1. For each gene j, calculate its median expression across the m
+        samples, i.e. $Med(y_{∗j})$, then calculate the deviations from
+        this median, i.e. calculate $y_{ij} − Med( y_{∗j} )$, across the
+        i's.
+     2. For each sample, generate a boxplot of all the deviations for
+        that sample.
+   #+END_QUOTE
+
+3. To understand how edgeR approach the normalization problem, think of
+   it as a two-step process. First it normalizes by the library size
+   alone. Then, to account for biases due to RNA composition differences
+   between samples, e.g. some highly expressed genes in particular
+   samples "artificially suppress" the level of expression of other
+   genes during the first normalization step, it estimates an adjustment
+   factor based on gene-level expression log ratio values (the M
+   values). A trimmed and weighted mean approach was used to produce a
+   robust estimate of this adjustment factor. One can think of it as
+   adjusting the library size to be "effective library size".
+
+4. I found a small mistake in my code and resolved the controversy:
+   basically TMM performs equally well as upperquartile normalization
+   method, both of which produce slightly less homogeneous distribution
+   across samples compared to the full quantile normalization.
+
+** [24 oct 2017] Plan R analysis
+   :PROPERTIES:
+   :CUSTOM_ID: oct-2017-plan-r-analysis
+   :END:
+
+*** Goal
+    :PROPERTIES:
+    :CUSTOM_ID: goal-1
+    :END:
+
+- Identify phosphate starvation responsive genes, both Pho4-dependent
+  and Pho4-independent\\
+  -- what criteria will I use to call these genes?
+- Reveal the temporal dynamics of gene induction
+
+*** Approach
+    :PROPERTIES:
+    :CUSTOM_ID: approach
+    :END:
+
+- Transform the read counts by adding a small pseudo-count to avoid
+  problems with ratio estimate.
+
+- Test several normalization methods (TMM, quantile, upper quantile, and
+  the new method advocated by Terry Speed)
+
+- Apply voom transformation to remove dependency between expression
+  level and variance
+
+- Follow recipes in the =Limma= package manual on how to analyze
+  time-course data
+
+  Some ideas:
+
+  - Estimate the fold-induction for each gene at every time point.
+  - Manually check the gene-induction kinetics for a few positive and
+    negative control genes. Get a sense of how fast different responses
+    are mounted
+  - Based on the above manual-evaluation, pick a time-point that
+    satisfies the following
+
+    1. Most of the known Pho4 targets have been induced
+
+    2. Few of the secondary response genes (how to define?) are turned
+       on
+
+  - To define the PHO responsive genes in /C. glabrata/
+
+    1. combine all genes that show significant induction at one or more
+       post-stress time points (the big set), or
+
+    2. select genes that are turned on only at the time-point selected
+       above (first responders)
+
+    and
+
+    1. in both sets, use the /pho4/ deletion strain to distinguish
+       Pho4-dependent vs Pho4-independent targets.
+
+*** Agenda
+    :PROPERTIES:
+    :CUSTOM_ID: agenda
+    :END:
+
+1. QC
+
+   - check if read coverage is largely uniform across gene bodies
+
+2. Set up for the analysis
+
+   - load data
+   - make corresponding annotation table for samples
+   - some rough visualizations
+
+3. Test adding pseudo-count to the count matrix in order to increase the
+   accuracy in the estimates of fold change
+4. Normalize
+
+** [18 oct 2017] Gene counting with bedtools, summary (finish work on
+the server's side)
+   :PROPERTIES:
+   :CUSTOM_ID: oct-2017-gene-counting-with-bedtools-summary-finish-work-on-the-servers-side
+   :END:
+
+- bedtools is installed on the head node, version v2.23.0
+
+  - I would like to install v2.25.0 or newer to take advantage of the
+    =-sorted= option, which both speeds up the process and also outputs
+    results in the order given in the annotation file
+  - After consulting with csgenomes, I was able to use 2.26.0 by calling
+    =/usr/local/BEDTools/2.26.0/bin/bedtools=
+  - I need to make a few modification on the command-line, but nothing
+    major.
+  - Resulting output files were then processed by the
+    =Post_bedtools_analysis.R= script, which I also modified to fit the
+    current need.
+  - Manually checked /PHO84/ and /PMU2/ induction levels. Results
+    largely are as expected, although there appears to be a very low
+    level of induction in /$pho4 \Delta$/ strains, which is not
+    expected.
+  - Sync the results to my local folder for further analysis.
+
+- ** [17 oct 2017] IGV browser, look at raw data
+     :PROPERTIES:
+     :CUSTOM_ID: oct-2017-igv-browser-look-at-raw-data
+     :END:
+
+- managed to get x11 forwarding working
+
+  - initially I got the "error locking $HOME/.Xauthority" error. after
+    googling, I understand that this file must have 600 permission
+    (read/write only by user). But mine is correct. Then I found there
+    is another =.Xauthority-c= file. After moving it to
+    =.Xauthority-c.bk= and reconnecting with =ssh -X gen-comp1=, x11
+    forwarding is now working. Tested with =xterm=
+  - downloaded the latest igv browser from
+    [[http://software.broadinstitute.org/software/igv/LoadGenome][broad
+    institute]] and unzipped the folder under =$HOME/src=
+  - created hard links for =igv.sh= and =igv.jar= in the =$HOME/bin=
+    directory, and successfully launched the app
+  - launched IGV and loaded the genome file I made before under
+    =$HOME/data/NGS/Genome_Annotation/C_glabrata=
+  - the GUI is very sluggish, barely usable
+
+** [13 oct 2017] Bowtie mapping
+   :PROPERTIES:
+   :CUSTOM_ID: oct-2017-bowtie-mapping
+   :END:
+
+/Goal/
+
+- Perform bowtie mapping for all 40 samples against the latest Cgla
+  genome
+
+/Notes/
+
+1. bowtie 0.12.7 is installed on gen-comp1. bowtie2 2.2.0 is also
+   installed. According to the software's developers
+   [[http://bowtie-bio.sourceforge.net/bowtie2/faq.shtml]["bowtie2 is
+   not a drop-in replacement for bowtie 1"]]. I decided to use bowtie
+   0.12.7 first, as all the parameters I used before work.
+
+2. =samtools sort= often fails in my previous experience. after looking
+   at the
+   [[http://www.htslib.org/doc/samtools-1.3.html][documentation]], I
+   figured out the problem: use of =-T /tmp/sort_tmp= flag together with
+   submitting array jobs (multiple jobs at the same time) can create
+   conflict between the different jobs -- one job may have just deleted
+   the tmp file it created when another wants to access it. Solution is
+   rather simple: just leave out the flag and let samtools use the
+   default, which is to create temporary files along side the =sam=
+   file. Also, use of =-m 10G= will allocate 10G of memory towards each
+   task such that it can hold enough data in the memory and can thus
+   skip the merging step.
+
+/Results/
+
+- average uniquely mapped reads percentage is ~90%. The lowest (S10) is
+  82%
+
+** [12 oct 2017] Demultiplex
+   :PROPERTIES:
+   :CUSTOM_ID: oct-2017-demultiplex
+   :END:
+
+- To demultiplex, one needs to go to the individual assay page, find the
+  button that says "create custom barcodes", and follow the
+  instructions.
+
+- Pool A is sequenced together with 5 other samples. The i7 adapter,
+  which contains the TruSeq index, conflicts between my sample and those
+  5 samples. Wang Wei at the core pointed out that my sample and the
+  other person's differ in the i5 index, which is read as Read 3, and
+  can be used to distinguish our samples from each other. My i5 index is
+  TCTTTCCC, while the other party's is GGTTGAGA.
+
+- The HTSEQ server most likely uses
+  [[https://support.illumina.com/content/dam/illumina-support/documents/downloads/software/bcl2fastq/bcl2fastq2-v2-18-software-guide-15051736-01.pdf][bcl2fastq2]]
+  from illumina to do the demultiplexing. This software has a flag
+  =--barcode-mismatches= that can be set to 0, 1 or 2, with the default
+  being 1. Wei suggested using 2 for both i5 and i7 adapters.
+
+- Some thoughts on the mismatches allowed:
+
+  Calculate hamming distance between TruSeq adapter indices 1-20
+
+  #+BEGIN_SRC R
+      require(stringdist)
+  #+END_SRC
+
+  #+BEGIN_EXAMPLE
+      ## Loading required package: stringdist
+  #+END_EXAMPLE
+
+  #+BEGIN_EXAMPLE
+      ## Warning in library(package, lib.loc = lib.loc, character.only = TRUE,
+      ## logical.return = TRUE, : there is no package called 'stringdist'
+  #+END_EXAMPLE
+
+  #+BEGIN_SRC R
+      seq <- c("ATCACG", "CGATGT", "TTAGGC", "TGACCA", "ACAGTG", "GCCAAT", "CAGATC", "ACTTGA", "GATCAG", "TAGCTT", "GGCTAC", "CTTGTA", "AGTCAA", "AGTTCC", "ATGTCA", "CCGTCC", "GTCCGC", "GTGAAA", "GTGGCC", "GTTTCG")
+      dist <- stringdistmatrix(seq, seq, method = "hamming")
+  #+END_SRC
+
+  #+BEGIN_EXAMPLE
+      ## Error in stringdistmatrix(seq, seq, method = "hamming"): could not find function "stringdistmatrix"
+  #+END_EXAMPLE
+
+  #+BEGIN_SRC R
+      print("The distribution of pairwise hamming distance is:")
+  #+END_SRC
+
+  #+BEGIN_EXAMPLE
+      ## [1] "The distribution of pairwise hamming distance is:"
+  #+END_EXAMPLE
+
+  #+BEGIN_SRC R
+      print(table(dist))
+  #+END_SRC
+
+  #+BEGIN_EXAMPLE
+      ## Error in unique.default(x, nmax = nmax): unique() applies only to vectors
+  #+END_EXAMPLE
+
+  #+BEGIN_SRC R
+      print("Note that the 20 zeros are self-distance")
+  #+END_SRC
+
+  #+BEGIN_EXAMPLE
+      ## [1] "Note that the 20 zeros are self-distance"
+  #+END_EXAMPLE
+
+  output
+
+  #+BEGIN_EXAMPLE
+      dist
+      0   3   4   5   6 
+      20  56  98 166  60
+  #+END_EXAMPLE
+
+  It is important to realize that allowing more mismatches won't
+  dramatically inflate the rate of index misassignment, i.e. read index
+  1 as index 2. This is because any index read that is equal distance
+  away from the supplied set of indices used will be discarded.
+
+- Results of demultiplex
+
+  - PoolA is co-sequenced with 5 other samples that share the i7
+    barcodes with 3 of my samples. As a result, I need to utilize the i5
+    adapter sequence, which was in Read 3. This dual index
+    demultiplexing is more complex and resulted in a higher percentage
+    of unmatched data. When allowing 1 mismatch (on each of i5 and i7
+    index), ~35% of the reads are dropped into the "unmatched" bin. When
+    allowing 2 mismatches, ~25% fall in the "unmatched" bin.
+
+  - On PoolB, which is only multiplexed with one other sample, I used a
+    more stringent cutoff of 1 mismatch, and the percentage of unmatched
+    reads (due to indices mismatch) is &lt 1%. Totally fine.
+
+** [11 oct 2017] Sequencing completed
+   :PROPERTIES:
+   :CUSTOM_ID: oct-2017-sequencing-completed
+   :END:
+
+- Data available on HTSEQ.princeton.edu
+
+- The HTSEQ website is essentially a front end for a MySQL database. It
+  organizes all the sample information and run results using concepts
+  including /Sample/, /Assay/, /Dataset/ etc. A sample is what users
+  submit to the core. An assay refers to a run on the Illumina machine.
+  Note that for the Rapid Flowcell run on HiSeq 2500, each run has two
+  assays, although it would be the same pooled samples sequenced in
+  both. They result in a "merged" fastq.
+
+

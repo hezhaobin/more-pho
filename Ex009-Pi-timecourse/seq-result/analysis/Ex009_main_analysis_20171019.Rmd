@@ -34,10 +34,10 @@ The sample sheet is documented [here](../data/sample_sheet/Ex009_experiment_set_
 
 Below is a simple chart to show the design:
 
-| Genotype | Time point                | Replicates | Comment |
-| -------- | :------------------------ | :--------: | ------- |
-| 80∆      | rich media                | 2          | for consistency check with my previous data |
-| 80∆ 4∆   | rich media                | 2          | for consistency check with my previous data |
+| Genotype | Time point  | Replicates | Comment |
+| -------- | :---------- | :--------: | ------- |
+| 80∆      | rich media  | 2          | for consistency check with my previous data |
+| 80∆ 4∆   | rich media  | 2          | for consistency check with my previous data |
 | wt-1     | pre, 20', 30', 45', 60', 90', 120', 150', 180', 240' | 1 | time course for wt  |
 | 4∆-1     | pre, 20', 30', 45', 60', 90', 120', 150', 180', 240' | 1 | time course for 4∆  | 
 | wt-2     | pre, 20', 30', 45', 60',      120',       180', 240' | 1 | biol. repl. for wt-1|
