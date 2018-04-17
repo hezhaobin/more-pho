@@ -55,6 +55,7 @@ require(edgeR)         ## for DGEList()
 require(RColorBrewer)  ## for plotting
 require(NMF)           ## for heatmap plot
 require(gplots)        ## for heatmap plot
+require(aroma.light)   ## for exploratory analysis
 source("../code/R_subfunctions_20171026.R")  ## custom defined functions
 ```
 
@@ -108,8 +109,15 @@ _Reference_
 _Analyses_
 
 1. Explore different normalization methods
+
+**RLE**: log ratio of read count per gene to median read count across sample
+
+    as such, the RLE plot visualizes both the deviation in mean 
+
 ```{r explore_normalization, fig.width=9, fig.height=3, fig.keep=TRUE}
-require(aroma.light)        ## for exploratory analysis
+# Print sample information
+print(sample[,.(Sample, Strain, Genotype, Timepoint, Replicate)])
+
 # visualize the between sample variation pre-normalization
 print("Non-normalized")
 myPlotRLE(mat, outline=FALSE, ylim= c(-3, 3), cex.axis = 0.8, las = 3)
@@ -135,15 +143,15 @@ dge <- calcNormFactors(dge)
 # 3. calculate log transformed, normalized counts
 cpm.o <- cpm( dge, normalized.lib.sizes = FALSE, log = FALSE, prior.count = 0.5) # unnormalized
 cpm.n <- cpm( dge, normalized.lib.sizes = TRUE, log = FALSE, prior.count = 0.5 ) # normalized
-myPlotRLE(cpm.o, outline=FALSE, ylim=c(-4, 4), cex.axis = 0.5, las = 3)
+myPlotRLE(cpm.o, outline=FALSE, ylim=c(-3, 3), cex.axis = 0.5, las = 3)
 title(main = "library size normalized", xlab = "sample", ylab = "log2 ratio of expression")
-myPlotRLE(cpm.n, outline=FALSE, ylim=c(-4, 4), cex.axis = 0.5, las = 3)
+myPlotRLE(cpm.n, outline=FALSE, ylim=c(-3, 3), cex.axis = 0.5, las = 3)
 title(main = "TMM normalized", xlab = "sample", ylab = "log2 ratio of expression")
 ```
 
 **Conclusion**
 
-- All three methods tried, i.e. TMM, upperquartile and full quantile normalization effectively homogenizes the distribution of log expression ratios.
+- All three methods tried, i.e. TMM, upperquartile and full quantile normalization similarly removed the position differences in the box plots.
 
 - The distribution of log2 radio of expression is greater for S1-S6, S37 and S38. What they have in common is that all of them were grown in rich (non-Pi-starved) media. S37 and S38 mimics Pi starvation in that it also activates Pho4, which is supposed to turn on its targets, but as my analysis below shows, the majority of the transcriptional responses are likely to be Pho4-independent and thus it is not surprising that S37 and S38 look more like S1-6.
 
