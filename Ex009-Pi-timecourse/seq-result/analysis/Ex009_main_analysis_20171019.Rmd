@@ -106,13 +106,12 @@ _Reference_
 
 [RUVSeq manual on Bioconductor](http://bioconductor.org/packages/release/bioc/vignettes/RUVSeq/inst/doc/RUVSeq.pdf)
 
-_Analyses_
 
-1. Explore different normalization methods
+### 1. Explore different normalization methods
 
-**RLE**: log ratio of read count per gene to median read count across sample
+    **RLE**: log ratio of read count per gene to median read count across sample, plotted as the distribution of the ratios for each gene within a sample. It visualizes two types of variation between samples: first one is the sequencing depth, reflected by the mean postion of the boxes, and the second one the normalized transcriptome variance as compared to the median of all samples, reflected by the width of the boxes.
 
-    as such, the RLE plot visualizes both the deviation in mean 
+    Note that the resulting distribution has different meaning from a simple boxplot of the read counts in each sample. In RLE plot, the values represent the deviation of the read count of a gene in that sample from the median of all samples. If the samples are largely made up of 
 
 ```{r explore_normalization, fig.width=9, fig.height=3, fig.keep=TRUE}
 # Print sample information
@@ -121,19 +120,19 @@ print(sample[,.(Sample, Strain, Genotype, Timepoint, Replicate)])
 # visualize the between sample variation pre-normalization
 print("Non-normalized")
 myPlotRLE(mat, outline=FALSE, ylim= c(-3, 3), cex.axis = 0.8, las = 3)
-title(main = "non-normalized", xlab = "sample", ylab = "log2 ratio of expression")
+title(main = "non-normalized", xlab = "sample", ylab = "log ratio of expression relative to median")
 
 # try upper quantile normalization
 print("Upper-quantile normalized")
 set1 <- myBetweenLaneNormalization(mat, which="upper")
 myPlotRLE(set1, outline=FALSE, ylim=c(-3, 3), cex.axis = 0.8, las = 3)
-title(main = "upperquartile normalized", xlab = "sample", ylab = "log2 ratio of expression")
+title(main = "upperquartile normalized", xlab = "sample", ylab = "log ratio of expression relative to median")
 
 # try full quantile normalization
 print("Full-quantile normalized")
 set2 <- myBetweenLaneNormalization(mat, which="full")
 myPlotRLE(set2, outline=FALSE, ylim=c(-3, 3), cex.axis = 0.8, las = 3)
-title(main = "full quantile normalized", xlab = "sample", ylab = "log2 ratio of expression")
+title(main = "full quantile normalized", xlab = "sample", ylab = "log ratio of expression relative to median")
 
 # try TMM normalization
 # 1. construct count matrix
@@ -141,19 +140,26 @@ dge <- DGEList( counts = mat, genes = anno )
 # 2. perform TMM normalization
 dge <- calcNormFactors(dge)
 # 3. calculate log transformed, normalized counts
-cpm.o <- cpm( dge, normalized.lib.sizes = FALSE, log = FALSE, prior.count = 0.5) # unnormalized
-cpm.n <- cpm( dge, normalized.lib.sizes = TRUE, log = FALSE, prior.count = 0.5 ) # normalized
+cpm.o <- cpm( dge, normalized.lib.sizes = FALSE, log = FALSE) # unnormalized
+cpm.n <- cpm( dge, normalized.lib.sizes = TRUE, log = FALSE) # normalized
 myPlotRLE(cpm.o, outline=FALSE, ylim=c(-3, 3), cex.axis = 0.5, las = 3)
-title(main = "library size normalized", xlab = "sample", ylab = "log2 ratio of expression")
+title(main = "library size normalized", xlab = "sample", ylab = "log ratio of expression relative to median")
 myPlotRLE(cpm.n, outline=FALSE, ylim=c(-3, 3), cex.axis = 0.5, las = 3)
-title(main = "TMM normalized", xlab = "sample", ylab = "log2 ratio of expression")
+title(main = "TMM normalized", xlab = "sample", ylab = "log ratio of expression relative to median")
 ```
 
-**Conclusion**
+Sample S1-6 and S37,38 have larger variance than the rest of the samples. One thing in common about these 8 samples is that they were grown in rich media, although some of the strains are supposed to have PHO activated just as the starved samples are. I suspect the higher variance is a result of the 40 samples being dominated by starved conditions (both wt and _pho4∆_), which may share a general transcriptional profile compared to the high Pi samples. Since RLE compares each sample to the median of all samples, the dominance by starved samples would cause high deviation for the minority samples collected in high Pi. To test this hypothesis, I predict that an RLE plot with 6 high Pi and 6 low Pi samples would look much more similar to each other. And that's what I saw below.
+
+```{r investigate_higher_variance_in_high_Pi_samples}
+myPlotRLE( cpm.n[,c(1:12)], outline=FALSE, ylim=c(-3, 3), cex.axis = 0.5, las = 3)
+title(main = "RLE plot for 6 high Pi and 6 low Pi samples", xlab = "sample", ylab = "log ratio of expression relative to median")
+```
+
+*Conclusion*
 
 - All three methods tried, i.e. TMM, upperquartile and full quantile normalization similarly removed the position differences in the box plots.
 
-- The distribution of log2 radio of expression is greater for S1-S6, S37 and S38. What they have in common is that all of them were grown in rich (non-Pi-starved) media. S37 and S38 mimics Pi starvation in that it also activates Pho4, which is supposed to turn on its targets, but as my analysis below shows, the majority of the transcriptional responses are likely to be Pho4-independent and thus it is not surprising that S37 and S38 look more like S1-6.
+- The distribution of log radio of expression is greater for S1-S6, S37 and S38. The reason is because the 40 samples are dominated by starved cells, which probably share a lot of transcriptional changes (independent of Pho4). The way RLE is calculated means that the median value, which is the denominator in the ratio, is largely determined by the majority sample type. Consequently, the minority sample type will show large variances. This does suggest that the assumption of the RLE plot, namely the majority of genes are not differentially expressed, is not satisfied, and that Pi starvation induces a large transcriptional response, most of which are not Pho4-dependent.
 
 - I also looked at other properties of the samples and sequencing stat, such as the amount of RNA extracted, number of PCR cycles used for making the library, total number of reads obtained and number of reads mapped. None suggested quality differences between S1-6, S37, S38 with the rest samples.
 
@@ -168,7 +174,7 @@ lcpm <- cpm( dge, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 0.5)
 rownames(lcpm) <- anno$GeneID
 ```
 
-2. MDS plot
+### 2. MDS plot
 ```{r MDS_plot, fig.width=10, fig.height=5, echo=FALSE}
 # the goal here is to perform unsupervised clustering to project the different samples, including biological and technical replicates, on a lower dimention that capture most of the variation
 tp <- factor(sample[match(Sample, colnames(lcpm)), Timepoint])
@@ -191,7 +197,7 @@ title(main = "Top 50 differentially expressed genes")
 
 - I reasoned that the more strongly a gene is induced, the more likely it is under direct Pho4 regulation. Based on this assumption, I used the top 50 genes to construct the MDS plot (right). Here it indeed changed some of the features. Specifically, 
 
-    1. the first dimention still mainly separates the non-stressed from the stressed samples. This time however, it also displays a gradient that matches the time under stress. 
+    1. the first dimention still mainly separates the non-stressed from the stressed samples. This time however, it also displays a progression that matches the time under stress. 
     1. More interestingly, the second dimension now separates the del4 vs PHO4-wt samples. Moreover, it unexpected spreads the different time point samples, but only for del4 ones. The meaning of this is yet unclear.
 
 3. Single gene analysis
