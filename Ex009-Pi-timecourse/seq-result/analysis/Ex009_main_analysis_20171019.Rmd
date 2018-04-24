@@ -74,6 +74,9 @@ anno.file <- fread("../data/annotation/C_glabrata_gene_for_mapping_s02-m07-r04.b
 names(anno.file) <- c("Chr","Start","End","GeneID","Not.Use","Strand","GeneName","Type.of.Gene")
 anno <- anno.file[,c("Chr","GeneID","GeneName","Type.of.Gene")]
 setkey(anno, "GeneID")
+cgToSc <- fread("../data/annotation/C_glabrata_CBS138_S_cerevisiae_orthologs.txt")
+names(cgToSc) <- c("cgid","cgname","cgid2","scid","scname","scid2")
+setkey(cgToSc, "cgid")
 ```
 
 ```{r prepare_data}
@@ -200,7 +203,7 @@ title(main = "Top 50 differentially expressed genes")
     1. the first dimention still mainly separates the non-stressed from the stressed samples. This time however, it also displays a progression that matches the time under stress. 
     1. More interestingly, the second dimension now separates the del4 vs PHO4-wt samples. Moreover, it unexpected spreads the different time point samples, but only for del4 ones. The meaning of this is yet unclear.
 
-3. Single gene analysis
+### 3. Single gene analysis
 
 _Goal_
 
@@ -212,15 +215,19 @@ I wrote a sub-function in a separate file and source it here.
 
 ```{r single_gene_analysis, fig.width=12, fig.height=10}
 set1 <- c("CAGL0B02475g", "CAGL0A01243g", "CAGL0L05456g", "CAGL0C02321g", "CAGL0G06952g", "CAGL0L06622g", "CAGL0M12705g", "CAGL0F02145g", "CAGL0J07040g", "CAGL0K12034g") # conserved targets with S. cerevisiae
+print( cgToSc[set1, .(cgid, cgname, scid,scname)])
 myGenePlot(genes = set1)
 
 set1.1 <- c("CAGL0K07546g", "CAGL0M11660g", "CAGL0B02453g", "CAGL0F02387g", "CAGL0K07524g", "CAGL0M12430g") # Cg. specific PHO related
+print( cgToSc[set1.1, .(cgid, cgname, scid,scname)])
 myGenePlot(genes = set1.1)
 
 set2 <- c("CAGL0E05588g", "CAGL0C04741g", "CAGL0M13189g", "CAGL0E05566g", "CAGL0E05984g", "CAGL0M11660g", "CAGL0G01540g", "CAGL0K10604g", "CAGL0J04202g", "CAGL0L06644g", "CAGL0K10164g", "CAGL0M06325g") # other stress related
+print( cgToSc[set2, .(cgid, cgname, scid,scname)])
 myGenePlot(genes = set2)
 
 set3 <- c("CAGL0J04202g", "CAGL0M07634g", "CAGL0M12430g", "CAGL0E05940g", "CAGL0K10164g", "CAGL0L06424g", "CAGL0L07502g", "CAGL0M08514g", "CAGL0J06050g", "CAGL0F00649g", "CAGL0M06325g", "CAGL0C04741g", "CAGL0B02926g", "CAGL0B02970g", "CAGL0I00726g") # cell wall and adhesion
+print( cgToSc[set3, .(cgid, cgname, scid,scname)])
 myGenePlot(genes = set3)
 ```
 
