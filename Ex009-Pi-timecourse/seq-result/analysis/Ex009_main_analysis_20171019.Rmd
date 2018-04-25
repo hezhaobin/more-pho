@@ -231,11 +231,30 @@ print( cgToSc[set3, .(cgid, cgname, scid,scname)])
 myGenePlot(genes = set3)
 ```
 
+_Conclusion_
+
+- For the conserved PHO genes between Sc and Cg, all showed strong Pho4-dependent induction.
+
+- For the Cg-specific PHO genes related to phosphate homeostasis, all except RHR2 showed Pho4-dependent induction.
+
+- For the other stress associated genes, while all of them were induced during phosphate starvation, all except RTT107 were induced regardless of the presence or absence of Pho4. There are two possible explanations:
+
+    1. They are false positives from my earlier attempt to identify CgPho4-dependent genes.
+    1. There are redundant regulation, i.e. other TFs may induce these genes independent of Pho4. If true, it would be very interesting to understand what those factors are and what is the logic gate that integrates the different regulatory factors at the level of the promoter.
+    
+    Another gene worth noting is M11660g, whose best-hit in _S. cerevisiae_ is _GPP1_. It encodes a DL-glycerol-3-phosphate phosphatase. SGD annotation suggests that it is involved in glycerol biosynthesis, and is induced upon osmotic stress. Xu's 2011 paper identified _GPP1_ as a ScPho4 targets, although binding of ScPho4 at its promoter is rather weak. In _C. glabrata_, my ChIP-exo showed very strong signals of binding, and more than 10 fold induction in a Pho4-dependent manner. Therefore, while the evidence for _GPP1_ being a target of ScPho4 is relatively weak, the counterpart (not sure if it is a true homolog) in _C. glabrata_ appears to be Pho4-dependent. However, the results here suggest that Pho4 is not the only activator for the gene. Since the RNA-seq was done during a short time window after phosphate starvation, it is unlikely that the nature of the stress has changed due to linked metabolism network. So any Pho4-dependent induction has to come as a direct result of phosphate starvation.
+    
+- The other remification of this analysis is how I should go forward to validate CgPho4's targets identified previously. I realized that 
+
+    1. the starvation time course analyzed here is not conclusive about the involvement of Pho4 in the induction of the gene in question. Rather, it tests if Pho4 is the _sole_ inducer of the gene under phosphate starvation.
+    
+    1. when doing binding site ablation in order to add a third piece of evidence for a direct regulatory relationship, the experiment should be done under both starvation and in the _pho80∆_ background so as to assess the sufficiency and necessity of Pho4 in the gene's induction. 
+
 ## Compare pho80∆ gene list with previous results
 
 _Goal_
 
-Check if the gene list under pho80∆ background in this experiment is consistent with previous result
+Check if the gene list under pho80∆ background in this experiment is consistent with previous results.
 
 _Steps_
 
@@ -268,7 +287,7 @@ sample.d80 <- read.table(strip.white = TRUE, text = "Sample, Pho4, Exp
                          O1, del4, 2013
                          O2, del4, 2013", sep = ",", head = TRUE )
 
-# III. apply TPP normalization
+# III. apply TMM normalization
 # 0. visualize the between sample unwanted variation using Relative Log Expression (RLE)
 oldpar <- par( mfcol = c(1,2) )
 myPlotRLE( mat.d80, outline = FALSE, ylim = c(-2.3,2.3), las = 2, main = "RLE plot before normalization" )
@@ -324,6 +343,16 @@ plot(coef(fit.d80)[choose,1:2], cex = 0.75, pch = 19, col = rgb(0,0,0,0.6), xlab
 
 # plot the overlap between the two list
 vennDiagram( sig.d80[,1:2], include = "up", circle.col = c("turquoise","salmon") )
+
+# Mean-difference plots to visualize the differences
+layout(matrix(c(1,3,2,4), ncol = 2))
+name.contr.d80 <- c("Pho4-dependent gene induction, 2013",
+                    "Pho4-dependent gene induction, 2017",
+                    "DE between 2013 and 2017 with Pho4",
+                    "DE between 2013 and 2017 w/o Pho4")
+for( i in 1:4 ){
+  plotMD(fit.d80, coef = i, status = sig.d80[,i], main = name.contr.d80[i], ylim = c(-10,10))
+}
 
 # finally, just list the top genes
 print(topTable( fit.d80, n = 100 ))
