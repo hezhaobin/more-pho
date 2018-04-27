@@ -250,7 +250,7 @@ _Conclusion_
     
     1. when doing binding site ablation in order to add a third piece of evidence for a direct regulatory relationship, the experiment should be done under both starvation and in the _pho80∆_ background so as to assess the sufficiency and necessity of Pho4 in the gene's induction. 
 
-## Compare pho80∆ gene list with previous results
+## Compare with 2013 data ( _pho80∆_ )
 
 _Goal_
 
@@ -320,6 +320,9 @@ colnames(dsgn.d80) <- gsub("grp","",colnames(dsgn.d80))
 v.dge.d80 <- voom(dge.d80, design = dsgn.d80, plot = TRUE)
 # v.dge.d80 <- voomWithQualityWeights(dge.d80, design = dsgn.d80, plot = TRUE) # incorporate sample weights
 
+# LIMMA fit
+fit.d80 <- lmFit(v.dge.d80, design = dsgn.d80) # this automatically extracts the weights in the v.dge.d80 and uses it to perform a weighted linear regression
+
 # make contrasts
 contr.d80 <- makeContrasts(
   Pho4.13 = Cgla4.2013 - del4.2013,
@@ -328,9 +331,6 @@ contr.d80 <- makeContrasts(
   del4.13vs17 = del4.2013 - del4.2017,
   levels  = dsgn.d80
 )
-
-# LIMMA fit
-fit.d80 <- lmFit(v.dge.d80, design = dsgn.d80) # this automatically extracts the weights in the v.dge.d80 and uses it to perform a weighted linear regression
 fit.d80 <- contrasts.fit(fit.d80, contrasts = contr.d80)
 fit.d80 <- eBayes( fit.d80 )
 sig.d80 <- decideTests( fit.d80, method = "global", lfc = 1 ) # only include genes more than 2 fold induced
@@ -344,6 +344,14 @@ plot(coef(fit.d80)[choose,1:2], cex = 0.75, pch = 19, col = rgb(0,0,0,0.6), xlab
 # plot the overlap between the two list
 vennDiagram( sig.d80[,1:2], include = "up", circle.col = c("turquoise","salmon") )
 
+# plot heatmap
+sprintf("A totle of %d genes were selected because they were significantly induced by more than 2 fold in at least one of the two experiments.", sum(choose))
+mycol <- colorpanel(1000,"blue","black","yellow")
+heatmap.2(v.dge.d80$E[choose,], scale="row",Rowv = TRUE,
+   labRow=NA, labCol=colnames(v.dge.d80),
+   col=mycol, trace="none", density.info="none", 
+   margin=c(8,6), lhei=c(2,10), dendrogram="none")
+
 # Mean-difference plots to visualize the differences
 layout(matrix(c(1,3,2,4), ncol = 2))
 name.contr.d80 <- c("Pho4-dependent gene induction, 2013",
@@ -353,84 +361,80 @@ name.contr.d80 <- c("Pho4-dependent gene induction, 2013",
 for( i in 1:4 ){
   plotMD(fit.d80, coef = i, status = sig.d80[,i], main = name.contr.d80[i], ylim = c(-10,10))
 }
-
-# finally, just list the top genes
-print(topTable( fit.d80, n = 100 ))
 ```
 
-```{r del80_plot_heatmap, fig.height = 8}
-sprintf("A totle of %d genes were selected because they were significantly induced by more than 2 fold in at least one of the two experiments.", sum(choose))
-mycol <- colorpanel(1000,"blue","black","yellow")
-heatmap.2(v.dge.d80$E[choose,], scale="row",Rowv = TRUE,
-   labRow=NA, labCol=colnames(v.dge.d80),
-   col=mycol, trace="none", density.info="none", 
-   margin=c(8,6), lhei=c(2,10), dendrogram="none")
+_Conclusion_ 
+
+Overall the two experiments are fairly consistent with each other, with 2013 data showing less down-regulated genes in _80∆_ background, which I consider as a sign for better quality.
+
+```{r combine_2017_2013_d80_data}
+print(topTable( fit.d80, coef = c(1,2), n = 50 )) # by specifying coef=c(1,2), I'm including the estimates of Pho4 effect in both 2017 and 2013 data. topTable will perform a F-test by calling topTalbeF to identify genes that are differentially expressed in at least one of the two comparisons, ranked by the overall evidence of DE.
+
+# same procedure as the analysis above, but pooling 2013 and 2017 datasets
+grp2 <- sample.d80$Pho4
+dsgn.d80.2 <- model.matrix(~0+grp2)
+colnames(dsgn.d80.2) <- gsub("grp2","",colnames(dsgn.d80.2))
+# voom transformation to account for variance-mean dependence
+v.dge.d80.2 <- voom(dge.d80, design = dsgn.d80.2, plot = FALSE)
+
+# LIMMA fit
+fit.d80.2 <- lmFit(v.dge.d80.2, design = dsgn.d80.2) # this automatically extracts the weights in the v.dge.d80 and uses it to perform a weighted linear regression
+
+# make contrasts
+contr.d80.2 <- makeContrasts(
+  Pho4 = Cgla4 - del4,
+  levels  = dsgn.d80.2
+)
+fit.d80.2 <- contrasts.fit(fit.d80.2, contrasts = contr.d80.2)
+fit.d80.2 <- eBayes( fit.d80.2 )
+sig.d80.2 <- decideTests( fit.d80.2, method = "global", lfc = 1 ) # only include genes more than 2 fold induced
+
+topTable(fit.d80.2, n = 50)
 ```
+
+
 
 ## Analyze time-course data
 
+### First timepoint
+
 _Questions_
 
-1. How many genes are turned on at 20', 30', 45', 60', 120', 180'?
-1. What's the overlap between the sets?
-1. What is the temporal dynamics?
+1. How many genes are turned on at 20'? (set1)
+1. How many of them are _exclusively_ dependent on Pho4, meaning that the gene induction is abolished in _pho4∆_? (set 2)
+1. How much does set 2 overlap with the set identified in _pho80∆_?
 
-### Single time-point analyses
+_Analysis_
 
-_Goal_
+```{r first_time_point}
+# 0. Prepare dataset
 
-- Compare different post-stress time-point samples to the pre-stress sample, identify gene induction independently.
-
-```{r single_time_point_analyses}
-# 1. collect data and sample sheet
-#    `dge` contains the data, including the count matrix, the sample normalization factors and gene names
-#    `sample` contains the experimental design, including the genotype, pre or post stress (time points if latter)
-#             I've already made one variable that combines both genotype and stress conditions
-#    note that I included the d80 data in this analysis
+#  `dge` contains the data, including the count matrix, the sample normalization factors and gene names
+#  `sample` contains the experimental design, including the genotype, pre or post stress (time points if latter)
+#  I've already made one variable that combines both genotype and stress conditions
+#  note that I included the d80 data in this analysis
 
 dsgn <- model.matrix(~0+sample$Group)
 colnames(dsgn) <- gsub("sample$Group","",colnames(dsgn),fixed=TRUE)
 # voom transformation to account for variance-mean dependence
-v.dge <- voom(dge, design = dsgn, plot = TRUE)
-# v.dge.d80 <- voomWithQualityWeights(dge.d80, design = dsgn.d80, plot = TRUE) # incorporate sample weights
+v.dge <- voom(dge, design = dsgn, plot = FALSE)
 
-# make contrasts
-contr.TC <- makeContrasts(
+# 1. LIMMA fit the whole dataset
+fit <- lmFit(v.dge, design = dsgn) # this automatically extracts the weights in the v.dge and uses it to perform a weighted linear regression
+
+# 2. make contrasts
+contr.first <- makeContrasts(
   d80 = wt.del80 - del4.del80,
   wt.t20 = wt.20m - wt.pre,
-  wt.t30 = wt.30m - wt.pre,
-  wt.t45 = wt.45m - wt.pre,
-  wt.t60 = wt.60m - wt.pre,
-  wt.t90 = wt.90m - wt.pre,
-  wt.t120 = wt.120m - wt.pre,
-  wt.t150 = wt.150m - wt.pre,
-  wt.t180 = wt.180m - wt.pre,
-  wt.t240 = wt.240m - wt.pre,
   del4.t20 = del4.20m - del4.pre,
-  del4.t30 = del4.30m - del4.pre,
-  del4.t45 = del4.45m - del4.pre,
-  del4.t60 = del4.60m - del4.pre,
-  del4.t90 = del4.90m - del4.pre,
-  del4.t120 = del4.120m - del4.pre,
-  del4.t150 = del4.150m - del4.pre,
-  del4.t180 = del4.180m - del4.pre,
-  del4.t240 = del4.240m - del4.pre,
-  dep4.t20 = wt.20m - del4.20m,
-  dep4.t30 = wt.30m - del4.30m,
-  dep4.t45 = wt.45m - del4.45m,
-  dep4.t90 = wt.90m - del4.90m,
-  dep4.t120 = wt.120m - del4.120m,
-  dep4.t180 = wt.180m - del4.180m,
+  diff.t20 = (wt.20m-wt.pre) - (del4.20m-del4.pre),
   levels  = dsgn
 )
 
-# LIMMA fit
-fit <- lmFit(v.dge, design = dsgn) # this automatically extracts the weights in the v.dge and uses it to perform a weighted linear regression
-fit <- contrasts.fit(fit, contrasts = contr.TC)
-fit <- eBayes( fit )
-sig <- decideTests( fit, method = "global", lfc = 1 ) # only include genes more than 2 fold induced
-choose <- rowSums(sig.d80[,1:2]) >= 1 # select genes that are deemed significant in at least one exp.
-test <- coef(fit.d80)[choose,]
-lm <- lm(test[,"Pho4.13"]~test[,"Pho4.17"])
+fit.first <- contrasts.fit(fit, contrasts = contr.first)
+fit.first <- eBayes( fit.first )
+sig <- decideTests( fit.first, method = "separate", lfc = 1 ) # only include genes more than 2 fold induced
 
+# how many genes are differentially expressed 20 min after starvation?
+topTable( fit.first, coef = "diff.t20", n = 50 )
 ```

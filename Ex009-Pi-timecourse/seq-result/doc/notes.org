@@ -1,0 +1,6 @@
+* <2018-04-27 Fri> time course analysis
+What questions can I ask using this dataset?
+** Focus on the earliest time point
+*** how many DE genes are there at the earliest time point?
+*** which ones are exclusively dependent on Pho4?
+*** how much overlap is there between DE genes at the first time point and the DE genes identified in the /pho80-/ background?
