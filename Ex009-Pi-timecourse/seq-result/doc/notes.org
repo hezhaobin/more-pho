@@ -4,3 +4,5 @@ What questions can I ask using this dataset?
 *** how many DE genes are there at the earliest time point?
 *** which ones are exclusively dependent on Pho4?
 *** how much overlap is there between DE genes at the first time point and the DE genes identified in the /pho80-/ background?
+** TODO create gene ID/name lists based on 2017 eLife paper, and assess the level of support from the time course data
+**   
