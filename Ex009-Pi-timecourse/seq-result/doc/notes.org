@@ -1,3 +1,8 @@
+* <2018-05-02 Wed> CgPho4 target gene annotation, reanalyze 2017 results
+The goal of this analysis is to make a table that summarizes the metadata available for all putative Cgla4 targets
+** Reading notes
+*** CAGL0J08294g(BOR1)
+- according to Nozawa et al 2006, "In plants, borate cross-links the *cell wall* pectic polysaccharide rhamnogalacturonan II"
 * <2018-04-27 Fri> time course analysis
 What questions can I ask using this dataset?
 ** Focus on the earliest time point
