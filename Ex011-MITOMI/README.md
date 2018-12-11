@@ -7,23 +7,23 @@ date: 9 nov 2017
 
 ## Brief
 
-   Ivan Istomin in Sebastian's lab has run two MITOMI chips to measure the binding specificity and affinity of ScPho4 and CgPho4. This note is to document the details of the experiment and prepare for an analysis.
+Ivan Istomin in Sebastian's lab has run two MITOMI chips to measure the binding specificity and affinity of ScPho4 and CgPho4. This note is to document the details of the experiment and prepare for an analysis.
 
 ## Material
 
-Table 1.  Plasmids sent to Ivan and Sebastian on 7 avr 2017
+Table 1. Plasmids sent to Ivan and Sebastian on 7 avr 2017
 
 | Plasmid | Content | Note |
 |---------|---------|------|
-| EB2135 | pRS315-ScPho4_UTR-Chimeric_Pho4_CDS-YFP | CgPho4 TAD, DBD + ScPho4 middle |
-| EB2146 | pRS315-ScPho4_UTR-ScPho4_CDS-YFP | |
-| EB2147 | pRS315-ScPho4_UTR-CgPho4_CDS-YFP | |
-| HB002 | pFA6a-CgPho4_UTR-CgPho4_CDS-3xGS | |
-| HB006 | pFA6a-CgPho4_UTR-ScPho4_CDS-3xGS | |
+| EB2135  | pRS315-ScPho4-UTR-Chimeric-Pho4-CDS-YFP | CgPho4 TAD, DBD + ScPho4 middle |
+| EB2146  | pRS315-ScPho4-UTR-ScPho4-CDS-YFP | |
+| EB2147  | pRS315-ScPho4-UTR-CgPho4-CDS-YFP | |
+| HB002   | pFA6a-CgPho4-UTR-CgPho4-CDS-3xGS | |
+| HB006   | pFA6a-CgPho4-UTR-ScPho4-CDS-3xGS | |
 
 ## Methods
 
-### Below is what was proposed by Sebastian (recorded in an email on 10 avr 2017)
+### Below is what Sebastian proposed (recorded in an email on 10 avr 2017)
 
 1. from EB2147, EB2146 and EB2135 run a 2-step PCR amplifying only the ScPho4, CgPho4, and Pho4 chimera to generate linear expression templates for all three proteins. Don't forget to add a His-tag to these proteins
 
