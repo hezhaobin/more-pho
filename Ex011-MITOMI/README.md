@@ -34,13 +34,13 @@ Optional:
 
 ### Modification based on Ivan's email (3 aout 2017)
 
-1. ScPho4 and CgPho4 CDS were cloned with a C-terminal 3x HIS tag into an in vitro transcription and translation system based on wheat germ lysate (Promega). The protein is cotranslationally labeled with tRNA-lysince-BODIPY.
+1. Only CgPho4 was tested. The CDS from (EB2147) were cloned with a C-terminal 3x HIS tag into an in vitro transcription and translation system based on wheat germ lysate (Promega). The protein is cotranslationally labeled with tRNA-lysine-BODIPY.
 
 2. The labeled TF proteins were bound to the surface of MITOMI using Qiagen biotinylated anti-His antibodies.
 
 3. As for oligos, he used the one-off variants of NNNGTG E-box (10 variants) and all permutations of NNCACGTG flanking of targets (16 variants)
 
-4. The oligos were Cy5 labeled, spotted onto MITOMI from 2 µM - 4.86 nM in 6 dilutions of step size 0.3 (how?)
+4. The oligos were Cy5 labeled, spotted onto MITOMI from 2 µM - 4.86 nM in 6 dilutions of step size 0.3
 
 5. Images were taken using a custom-configured Nikon microscope and analyzed in GenePix.
 
