@@ -7,10 +7,6 @@ date: 17 mai 2017
 
 input: tab-delimited spreadsheet containing motif and flanking sequences under the CgPho4 ChIP peaks
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
 ## Background & Goal
 
 I want to know the nucleotide (A/T/C/G) frequencies at the flanking nucleotides surrounding the E-box motif. 
@@ -52,9 +48,9 @@ myFreq <- function( seq, a=6, b=11 ){
 
 ```{r CgPho4_sites_in_Scer}
 # load data
-chip <- fread("./input/20170107_ChIP_stats_in_Scer.txt")
+chip <- fread("../data/20170107_ChIP_stats_in_Scer.txt")
 chip <- chip[-23] # remove an overlapping range
-motif.seq <- fread("./table_output/20170517_CgPho4_motif_seq_under_peak_in_Scer.txt", skip = "#")
+motif.seq <- fread("../output/table_output/20170517_CgPho4_motif_seq_under_peak_in_Scer.txt", skip = "#")
 
 # map columns from chip to motif.seq using GRanges
 ## build GRanges objects
