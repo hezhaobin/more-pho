@@ -1,0 +1,1 @@
+The goal of this project is to determine if CgPho4 plays a role in oxidative and osmotic stress responses. Currently the approaches are to measure fitness of wild type and _pho4Δ_ cells under oxidative or osmotic stress, and to profile gene expression under those stresses.

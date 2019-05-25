@@ -1,0 +1,145 @@
+qPCR analysis 2019.05.23
+========================================================
+This R markdown file is designed to take in Ct values and plate design as a single table. It expects standard curves for each assay. It also expects a control gene for each sample and a reference sample. Thus the expected result is ddCt
+
+```
+# Data format
+1. Well
+2. Well.Type  = {unknown, std, no RT, NTC}
+3. Sample       (e.g. A1, B1, etc.,no RT,NTC)
+4. Dilution     (e.g. 1,5,10,100,etc.,NA)
+5. Assay        (e.g. ACT1)
+6. Ct           (e.g. 15,23,etc.,NA)
+```  
+* Goal  
+Reanalyze JY's oxidative stress gene expression data
+  
+* Samples  
+Pre-stress (untreated), 30 min in H2O2, 30 min in menadione
+  
+* qPCR primer sets  
+  1. Reference genes
+    ACT1
+  2. Assay
+    CTA1, TSA1, PHO84
+  
+* qPCR plate design  
+[Link](https://docs.google.com/spreadsheets/d/1fe0PRYC4PNx6Gd2BVKCYk2Ph5JkcwkmVK6lYlddwpuk/edit?usp=sharing)
+ 
+Parameters
+---------------------
+```{r parameters}
+ref.assay <- "ACT1"
+ref.sample <- "Untreated"
+dilute <- 1
+```
+
+Read & Format data
+---------------------
+```{r Read_data, echo=FALSE, warning=FALSE, fig.width=9, fig.height=3}
+require(plyr)
+require(ggplot2)
+require(cowplot)
+require(reshape2)
+require(data.table)
+data <- read.table("2018-10-24-oxidative-Ct.csv", sep=",", as.is=T, head=TRUE, strip.white=T)
+data$Ct = as.numeric(data$Ct)
+data$Sample = ordered(data$Sample,levels=unique(data$Sample))
+p <- ggplot( data, aes(Sample, Ct) ) + geom_point(shape=5, aes(color=Genotype)) + facet_wrap( ~Assay, nrow = 1)
+print(p+theme(axis.text.x = element_text(angle = 45, hjust = 1)))
+```
+
+### Delta Ct
+Calculate dCt values and the proper variance
+```{r deltaCt, echo=FALSE, comment=NA, fig.width=9, fig.height=3, warning=FALSE}
+# Mean and sd
+res <- ddply( data, .(Genotype, Sample, Assay), summarize, mean = mean(Ct, na.rm=T), var = var(Ct, na.rm=T), .drop=TRUE )
+
+# Gene induction, mean
+# normalize each assay by the reference assay, then calculate the relative induction level to the reference sample
+# first use dcast{reshape2} to turn the dataframe into a 2-d array
+res1 <- list()
+res1$mean <- dcast( res, Genotype+Sample~Assay, value.var="mean")
+res1$var <- dcast( res, Genotype+Sample~Assay, value.var="var")
+# subtract the Ct values of the reference from the targets
+# and calculate the error propagation, assuming equal sample size in all groups
+assays <- unique(res$Assay)
+no.assays <- length(assays)
+mean <- res1$mean[,assays]
+var <- res1$var[,assays]
+# construct a matrix with repeated *columns* of the ref.assay Ct
+ref.assay.mean <- mean[,ref.assay] %*% t(rep.int(1,no.assays))
+# subtract the Ct value for the ref.assay from the targets, and remove the column for the ref.assay
+dCt.mean <- (mean - ref.assay.mean)[,-which(unique(assays)==ref.assay)]
+# do the same to var, but will sum the variance up instead of subtraction
+ref.assay.var <- var[,ref.assay] %*% t(rep.int(1,no.assays))
+dCt.var <- (var + ref.assay.var)[,-which(unique(assays)==ref.assay)]
+# reconstruct the data frame for dCt
+dCt <- list(mean=with(res1$mean, data.frame(Genotype, Sample, dCt.mean)),
+            var=with(res1$var, data.frame(Genotype, Sample, dCt.var)))
+
+# Plot the resulting dCt values and stdev
+dCt.plot <- list()
+dCt.plot$mean <- melt( dCt$mean, id.vars = c("Genotype", "Sample"), variable.name = "Gene", value.name="dCt" )
+dCt.plot$sdev <- melt( dCt$var, id.vars = c("Genotype", "Sample"), variable.name = "Gene", value.name="var" )
+dCt.plot$sdev <- mutate(dCt.plot$sdev, sdev = sqrt(var))
+dCt.plot <- join(dCt.plot$mean, dCt.plot$sdev)
+p <- ggplot( dCt.plot, aes(Sample, dCt, color=Genotype) )
+p <- p + geom_point(position = position_dodge(0.4)) + facet_wrap( ~ Gene ) +
+  geom_errorbar(aes(ymin = dCt-sdev, ymax = dCt+sdev), width = 0.1, position = position_dodge(0.4)) +  xlab("Treatment") + ylab( expression(Delta*'C'[T]) )
+print(p)
+```
+
+### Delta delta Ct
+Calculate ddCt values and the proper variance
+```{r delta.delta.Ct, echo=FALSE, comment=NA, fig.width=9, fig.height=3, warning=FALSE}
+# subtract the Ct values of the reference sample from the treatment groups
+# and calculate the error propagation, assuming equal sample size in all groups
+sample <- unique(res$Sample)
+no.sample <- length(sample)
+mean <- as.matrix(dCt$mean[,c("CTA1","PHO84","TSA1")])
+rownames(mean) <- with(dCt$mean, paste(Genotype, Sample, sep="."))
+var <- as.matrix(dCt$var[,c("CTA1","PHO84","TSA1")])
+rownames(var) <- with(dCt$var, paste(Genotype, Sample, sep="."))
+# --- --- --- --- --- --- ---
+# Dangerous code, not
+# robust to data structure
+# changes
+# check before reusing
+# 2019.05.24
+# --- --- --- --- --- --- ---
+ref.sample.mean <- matrix( c(rep(mean["pho4Δ.Untreated",], no.sample),
+                             rep(mean["WT.Untreated",], no.sample)),
+                           ncol = ncol(mean),
+                           byrow = T)
+# subtract the Ct value for the ref.assay from the targets, and remove the column for the ref.assay
+ddCt.mean <- (mean - ref.sample.mean)[which(!rownames(mean) %in% c("pho4Δ.Untreated","WT.Untreated")),]
+# do the same to var, but will sum the variance up instead of subtraction
+ref.sample.var <- matrix( c(rep(var["pho4Δ.Untreated",], no.sample),
+                             rep(var["WT.Untreated",], no.sample)),
+                           ncol = ncol(var),
+                           byrow = T)
+ddCt.var <- (var + ref.sample.var)[which(!rownames(mean) %in% c("pho4Δ.Untreated","WT.Untreated")),]
+# reconstruct the data frame for ddCt by putting the sample name back as a column and melting the data frame
+# split the sample name
+sample.split <- matrix(unlist(strsplit(rownames(ddCt.mean), split = ".", fixed = T)), ncol = 2, byrow = T)
+ddCt <- list(mean = data.frame(Genotype=sample.split[,1],
+                               Sample=sample.split[,2],ddCt.mean), 
+             var = data.frame(Genotype=sample.split[,1],
+                              Sample=sample.split[,2],ddCt.var))
+  
+# For plotting
+ddCt.plot <- list()
+ddCt.plot$mean <- melt(ddCt$mean, id.vars = c("Genotype","Sample") , variable.name = "Gene", value.name = "ddCt")
+ddCt.plot$sdev <- melt(ddCt$var, id.vars = c("Genotype","Sample"), variable.name = "Gene", value.name = "var")
+ddCt.plot$sdev <- mutate(ddCt.plot$sdev, sdev = sqrt(var))
+ddCt.plot <- join(ddCt.plot$mean, ddCt.plot$sdev)
+
+# Plotting
+p <- ggplot( ddCt.plot, aes(Sample, -ddCt, color=Genotype) )
+p <- p + geom_point(aes(shape=Genotype), size = 2.5, position = position_dodge(0.4)) +
+  facet_wrap( ~ Gene ) + geom_errorbar(aes(ymin = -ddCt-sdev, ymax = -ddCt+sdev), width = 0.1, position = position_dodge(0.4)) +
+  xlab(NA) + ylab( expression(-Delta*Delta*'C'[T]) )
+print(p+theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.title.x = element_blank()))
+ggsave(filename = paste(format(Sys.time(), "%Y-%m-%d"),"ddCt.png",sep="-"), width = 7, height = 3, units = "in")
+```
