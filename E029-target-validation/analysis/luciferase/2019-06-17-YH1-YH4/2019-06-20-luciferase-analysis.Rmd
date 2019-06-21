@@ -1,0 +1,55 @@
+---
+title: "Luciferase assay analysis"
+author: "Bin He"
+date: "June 20, 2019"
+output:
+  html_document: default
+  pdf_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+# Goal
+Establish the luciferase assay protocol by testing a positive control promoter, i.e. PHO84, and one candidate promoter, i.e. ADR1 (this is the name for the _S. cerevisiae_ homolog)
+
+# Experiment
+Jia transformed the plasmids containing either the wild type or the mutant promoters into either YH1 (_PHO80_) or YH4 (_pho80-_) background. She picked at least four independent colonies from the transformation, grew them up to mid log phase, and then, only for YH1 strains, she starved the cells of phosphate for 30 min, after which both YH1 and YH4 based cells are pelleted, resuspended in Passive Lysis Buffer (1x, Promega). Cells were mechanically lysed by bead beating, and dual luciferase assay was performed using the Dual Luciferase Assay kit from Promega. Three technical replicates were performed for each sample. The reading for both Firefly and Renilla luciferase were recorded.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_library}
+# require(data.table)
+# switch to tidyverse
+require(tidyverse)
+require(cowplot)
+```
+
+```{r load_data}
+dat <- read_csv("2019-06-17-YH1-YH4.csv")
+dat <- mutate(dat, flag = as.logical(flag), f.r.ratio = firefly/renilla)
+```
+
+```{r eda, fig.width=12, fig.height=10}
+# 1. visualize the raw data, separated by host (panel), promoter (column), genotype (color), biol.repl (shape)
+dat1 <- dat %>% gather(firefly, renilla, key = "assay", value = "intensity")
+dat1 %>% filter(flag, host == "YH1") %>% ggplot(aes(x = replicate, y = intensity, color = genotype)) + geom_boxplot() + facet_wrap(assay ~ promoter, scales="free") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# 1.1 leave out problematic data points
+# based on the plot above, AD7 and CTL3 seem particularly problematic.
+# P7 showed large variance in the firefly assay
+
+dat.sel <- dat %>% filter(flag, !replicate %in% c("AD7", "CTL3"))
+dats1 <- dat.sel %>% gather(firefly, renilla, f.r.ratio, key = "variable", value = "value")
+dats1 %>% filter(flag, host == "YH1") %>% ggplot(aes(x = replicate, y = value, color = genotype)) + geom_boxplot() + facet_wrap(variable ~ promoter, scales="free") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# 2. summarize data
+sum <- dat %>% filter(flag) %>% group_by(host, promoter, genotype, replicate) %>%
+  #summarise(f.mean = mean(firefly), f.sd = sd(firefly),
+  #          r.mean = mean(renilla), r.sd = sd(renilla),
+  #          ratio.mean = mean(f.r.ratio), ratio.sd = sd(f.r.ratio))
+  summarise(f.mean = mean(firefly), f.cv = sd(firefly)/f.mean,
+            r.mean = mean(renilla), r.cv = sd(renilla)/r.mean,
+            ratio.mean = mean(f.r.ratio), ratio.cv = sd(f.r.ratio)/ratio.mean)
+```
