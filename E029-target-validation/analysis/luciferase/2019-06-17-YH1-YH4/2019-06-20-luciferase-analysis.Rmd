@@ -34,7 +34,7 @@ dat <- mutate(dat, flag = as.logical(flag), f.r.ratio = firefly/renilla)
 ```{r eda, fig.width=12, fig.height=10}
 # 1. visualize the raw data, separated by host (panel), promoter (column), genotype (color), biol.repl (shape)
 dat1 <- dat %>% gather(firefly, renilla, key = "assay", value = "intensity")
-dat1 %>% filter(flag, host == "YH1") %>% ggplot(aes(x = replicate, y = intensity, color = genotype)) + geom_boxplot() + facet_wrap(assay ~ promoter, scales="free") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dat1 %>% filter(flag, host == "YH1") %>% ggplot(aes(x = replicate, y = intensity, color = genotype)) + geom_point() + facet_wrap(assay ~ promoter, scales="free") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # 1.1 leave out problematic data points
 # based on the plot above, AD7 and CTL3 seem particularly problematic.
@@ -42,7 +42,9 @@ dat1 %>% filter(flag, host == "YH1") %>% ggplot(aes(x = replicate, y = intensity
 
 dat.sel <- dat %>% filter(flag, !replicate %in% c("AD7", "CTL3"))
 dats1 <- dat.sel %>% gather(firefly, renilla, f.r.ratio, key = "variable", value = "value")
-dats1 %>% filter(flag, host == "YH1") %>% ggplot(aes(x = replicate, y = value, color = genotype)) + geom_boxplot() + facet_wrap(variable ~ promoter, scales="free") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dats1 %>% filter(flag, host == "YH1") %>% ggplot(aes(x = replicate, y = value, color = genotype)) + geom_point() + facet_wrap(variable ~ promoter, scales="free") + ggtitle("PHO80 wild type, starved") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+dats1 %>% filter(flag, host == "YH4") %>% ggplot(aes(x = replicate, y = value, color = genotype)) + geom_point() + facet_wrap(variable ~ promoter, scales="free") + ggtitle("pho80- non-starved") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+ggsave("20190624-YH4-ratio-dot-plots.png", width = 12, height = 7)
 
 # 2. summarize data
 sum <- dat %>% filter(flag) %>% group_by(host, promoter, genotype, replicate) %>%
