@@ -1,0 +1,11 @@
+# transferred from ScPho4 annotation based on alignment
+CgPho4	Uniprot	DBD	470	529	.	.	.
+CgPho4	Uniprot	PPI	1	31	.	.	.
+CgPho4	Uniprot	PPI	273	323	.	.	.
+CgPho4	Uniprot	PPI	324	374	.	.	.
+CgPho4	Uniprot	TAD	81	112	.	.	.
+CgPho4	Uniprot	NLS	240	272	.	.	.
+CgPho4	Uniprot	phos	195	195	.	.	.
+CgPho4	Uniprot	phos	199	199	.	.	.
+CgPho4	Uniprot	phos	248	248	.	.	.
+CgPho4	Uniprot	phos	379	379	.	.	.

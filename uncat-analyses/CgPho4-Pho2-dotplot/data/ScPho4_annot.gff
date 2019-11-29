@@ -1,0 +1,11 @@
+# based on Uniprot (https://www.uniprot.org/uniprot/P07270#family_and_domains) and Komeili and O'Shea 1999 Fig. 4
+ScPho4	Uniprot	DBD	250	306	.	.	.
+ScPho4	Uniprot	PPI	1	31	.	.	.
+ScPho4	Uniprot	PPI	156	200	.	.	.
+ScPho4	Uniprot	PPI	201	218	.	.	.
+ScPho4	Uniprot	TAD	75	83	.	.	.
+ScPho4	Uniprot	NLS	140	166	.	.	.
+ScPho4	Uniprot	phos	114	114	.	.	.
+ScPho4	Uniprot	phos	128	128	.	.	.
+ScPho4	Uniprot	phos	152	152	.	.	.
+ScPho4	Uniprot	phos	223	223	.	.	.

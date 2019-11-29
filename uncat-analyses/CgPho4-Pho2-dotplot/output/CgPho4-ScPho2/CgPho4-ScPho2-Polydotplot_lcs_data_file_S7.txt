@@ -1,0 +1,4 @@
+#title1	title2	len_seq1	len_seq2	len_lcs_for	%_min_seq_len	len_lcs_rev	%_min_seq_len
+CgPho4	CgPho4	533	533	533	100.0	26	4.878
+ScPho2	CgPho4	559	533	23	4.315	21	3.94
+ScPho2	ScPho2	559	559	559	100.0	41	7.335

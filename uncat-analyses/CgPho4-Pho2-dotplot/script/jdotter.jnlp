@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jnlp codebase="https://4virology.net" spec="1.0+" version="1.1">
+    <information os="Mac">
+        <title>JDotter: A Java Dot Plot Viewer</title>
+        <vendor>Dr. Chris Upton, University of Victoria, Biochemistry and Microbiology</vendor>
+        <homepage href="https://4virology.net" />
+        <description kind="">Java Dot Plot Viewer</description>
+        <description kind="tooltip">JDotter</description>
+        <icon href="/icons/jdotter-webstart.icns" />
+        <offline-allowed/>
+    </information>
+    
+    <information>
+        <title>JDotter: A Java Dot Plot Viewer</title>
+        <vendor>Dr. Chris Upton, University of Victoria, Biochemistry and Microbiology</vendor>
+        <homepage href="https://4virology.net" />
+        <description kind="">Java Dot Plot Viewer</description>
+        <description kind="tooltip">JDotter</description>
+        <icon href="/icons/jdotter-webstart.png" />
+        <offline-allowed/>
+    </information>
+    
+    <security>
+        <all-permissions/>
+    </security>
+    
+    <resources>
+        <j2se max-heap-size="1024m" version="1.5+" />
+        <jar href="/jar/jdotter.jar" main="true" download= "eager" />
+        <property name="appclient" value="https://4virology.net/ca.virology/xml/appclient.properties"/>
+        <property name="externalapps" value="https://4virology.net/ca.virology/xml/externalapps.properties"/>
+    </resources>
+    
+    <application-desc main-class="ca.virology.jdotter.JDotter">
+        <argument>-javaws</argument>
+        <argument>-defaultdb=none</argument>
+        <argument>-dbprefs=https://4virology.net/ca.virology/xml/DBPrefs.xml</argument>
+        <argument>-jdotterprefs=https://4virology.net/ca.virology/xml/JDotterPrefs.xml</argument>
+        <argument>-appclientprefs=https://4virology.net/ca.virology/xml/AppClientPrefs.xml</argument>
+        <argument>-externalprefs=https://4virology.net/ca.virology/xml/ExternalAppsPrefs.xml</argument>
+        <argument>-username=0</argument>
+        <argument>-userVerificationServer=4virology.net</argument>
+    </application-desc>
+</jnlp>

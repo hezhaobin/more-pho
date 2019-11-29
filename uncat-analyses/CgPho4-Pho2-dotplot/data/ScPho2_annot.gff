@@ -1,0 +1,7 @@
+ScPho2	Stillman	DBD	77	136	.	.	.
+ScPho2	Stillman	IR	244	270	.	.	.	"strongly affect protein level"
+ScPho2	Stillman	IR	343	390	.	.	.
+ScPho2	Stillman	CORE	369	374	.	.	.	"affect all targets"
+ScPho2	Stillman	TAD	404	467	.	.	.
+ScPho2	Stillman	TAD	496	559	.	.	.
+ScPho2	Ao	phos	230	233	.	.	.	"cdc2/CDC28 target"
