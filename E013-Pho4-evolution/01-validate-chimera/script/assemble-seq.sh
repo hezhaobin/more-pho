@@ -1,4 +1,4 @@
-# Use EMBOSS/merger to merge Sanger sequencing results
+# Use EBNOSS/merger to merge Sanger sequencing results
 # 7 oct 2018
 # Bin He
 
