@@ -1,0 +1,9 @@
+# Description | Job id | Hit | Confidence (%) | Sequence identity (%) | Alignment coverage (%) | Hit info 1 | Hit info 2 | Hit info 3
+Scer | 0d82c755f4b3598c | d1a0aa_ | 99.7 | 98 | 19 | HLH-like | HLH, helix-loop-helix DNA-binding domain | HLH, helix-loop-helix DNA-binding domain
+Ncas | 46dca72b9bab3ea9 | d1a0aa_ | 99.4 | 49 | 14 | HLH-like | HLH, helix-loop-helix DNA-binding domain | HLH, helix-loop-helix DNA-binding domain
+Cbra | 0e32f320768ba67c | d1a0aa_ | 99.4 | 62 | 11 | HLH-like | HLH, helix-loop-helix DNA-binding domain | HLH, helix-loop-helix DNA-binding domain
+Cgla | 12cbcc62f45ba65d | c6g1lA_ | 99.5 | 27 | 11 |2.40 | PDB header:transcription | Chain: A: PDB Molecule:microphthalmia-associated transcription factor;
+Ndel | 53985fc8bd4d4f65 | c6g1lA_ | 99.6 | 31 | 14 |2.40 | PDB header:transcription | Chain: A: PDB Molecule:microphthalmia-associated transcription factor;
+Nbac | 430d7a112d9acbcd | d1hloa_ | 99.4 | 20 | 14 | HLH-like | HLH, helix-loop-helix DNA-binding domain | HLH, helix-loop-helix DNA-binding domain
+Cniv | dd72fe49b1ed9ff3 | d1hloa_ | 99.5 | 22 | 14 | HLH-like | HLH, helix-loop-helix DNA-binding domain | HLH, helix-loop-helix DNA-binding domain
+Ccas | db630add7c38d14b | d1hloa_ | 99.5 | 19 | 13 | HLH-like | HLH, helix-loop-helix DNA-binding domain | HLH, helix-loop-helix DNA-binding domain
