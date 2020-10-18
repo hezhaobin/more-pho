@@ -79,8 +79,8 @@ ggsave("imgs/20200830-low-Bmax-for-low-affinity-seq.png", width = 5, height = 3)
 
 Here we would like to assess the reproducibility of the experiments by plotting Kd estimates for the same protein-ligand pair from different batches.
 
-1. $k_d$ estimates across repeats, with semi-transparent background highlighting experiments with low $B_{max}$ estimates
-```{r reproducibility_Bmax, echo=FALSE, fig.width=10, fig.height=5}
+$k_d$ estimates across repeats, with semi-transparent background highlighting experiments with low $B_{max}$ estimates
+```{r reproducibility_Kd, echo=FALSE, fig.width=10, fig.height=5}
 # plot Kd ± 95%CI for each experiment, fill-color by protein source
 dat %>%
   filter(Include, grepl("UASp2", Ligand), Exp != "eH106") %>% 
@@ -111,6 +111,24 @@ Demonstrate inapprpriate titration series:
 
 ![titration series](imgs/20200710-rH017-CgPho4-inappropriate-titration-series.png)
 
+### Compare ScPho4 and CgPho4 DBD binding affinities
+```{r compare_Kd, echo=FALSE, fig.width=10, fig.height=5}
+# plot Kd ± 95%CI for each experiment, fill-color by protein source
+dat %>%
+  filter(Include, Batch %in% c("rH016", "rH016a", "rH017", "rH018"), grepl("UASp2", Ligand), Exp != "eH106") %>% 
+  # remove UASp1 and a falty experiment 071, also remove eH106, which had large variance in Kd estimate
+  mutate(Ligand = str_sub(Ligand, 6,-1)) %>% 
+  ggplot(aes(x = Half_site, y = Kd, fill = Protein)) + 
+  geom_col(position = position_dodge2()) +
+  geom_errorbar(aes(ymin = Kd_95ci_low, ymax = Kd_95ci_high), position = position_dodge2()) +
+  scale_fill_manual(values = c("blue2","green3")) +
+  labs(title = "Kd estimates, error bars represent 95% confidence intervals from non-linear fitting", y = "Kd [nM]") +
+  #scale_alpha_manual(values = c(0.4,1)) +
+  #scale_fill_manual(values = c("blue2","green3")) +
+  scale_y_log10() +
+  theme_minimal()
+ggsave("imgs/20200915-Kd-estimates-comparison.png", width = 8, height = 4.5)
+```
 ### Summary & Next steps
 
 1. Feb 2020 batch of CgPho4 data may lead to higher $B_{max}$ estimates. Its influence on $K_d$ is less clear.
