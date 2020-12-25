@@ -1,0 +1,96 @@
+---
+title: analyze flow cytometry data from 2020-12-23
+author: Bin He
+date: 2020-12-23
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+    df_print: default
+    code_folding: hide
+---
+
+```{r setup}
+require(tidyverse)
+require(cowplot)
+```
+
+## Goal
+
+This is to repeat the 2020-12-21 experiment.
+
+## Material and methods
+See gDoc. This time I reverted to one o/n growth. The second growth was done in the 96-well clear plate (not deep well). Cells were directly diluted into PBS and run on the flow cytometer.
+
+### Table of strains
+![](../20201221-Pho4-GFP-plasmid-leu2-test/img/strains-genotype.png)
+
+## Data and analysis
+```{r}
+dat <- read_csv("20201223-Pho4-GFP-stats.csv")
+dat <- dat %>% mutate(Pho4GFP = factor(Pho4GFP, levels = c("No-GFP","ScPho4-mNeon","ScPho4-EGFP", "CgPho4-mNeon")), Group = factor(Group, levels = c("control", "endogenous", "exogenous", "plasmid")), Pho4 = factor(Pho4, levels = c("pho4-","ScPho4", "CgPho4")))
+```
+
+### Pho4-GFP expression levels
+First look at the level of Pho4-GFP compared with the negative controls.
+```{r, echo = F, fig.height = 6, fig.width = 6}
+gfp.bg <- dat %>% filter(Pho4GFP == "No-GFP", Parameter == "Pho4-GFP") %>% pull(Median) %>% mean()
+p1 <- dat %>% filter(Parameter == "Pho4-GFP") %>% 
+  ggplot(aes(x = Sample, y = Median, fill =  Group)) + 
+  geom_bar(stat = "identity", position = position_dodge2(width = 0.9)) +
+  geom_hline(yintercept = gfp.bg, linetype = "dashed", alpha = 0.6) +
+  facet_grid(Pho4GFP~., scales = "free_y", space = "free_y") +
+  scale_fill_brewer(type = "div", drop = FALSE) + ylab("MFI") +
+  coord_flip() + scale_y_continuous(expand = c(0.01,0)) +
+  theme_bw() + labs(title = "GFP fluorescent intensity (arbitrary units)", subtitle = "dashed line indicates background fluorescence")
+
+p1
+```
+**Figure 1 Pho4-GFP intensity by strain.** Pho4-GFP intensities were quantified on an Attune NxT flow cytometer using 400 mV on the BL1 channel. Acquisition rate is 200 ul/min. At least 10,000 events were collected and the median fluorescent intensity (MFI, arbitrary units) were presented on the x-axis, while strain IDs are listed on the vertical axis.
+
+_Discussion_
+
+- Somewhat surprising to me, the exogenously integrated Pho4-GFP, except for the ScPho4-mNeon, seem to have rather low fluorescent intensity. For example, F1, E2 and E3 all have very low GFP signals.
+- For the plasmid-Pho4-GFP, the two ScPho4-GFP constructs appear to show higher expression in the yH295 background (P, Q) than in the yH296 background (M, N), for reasons I don't fully understand. Could there be some level of feedback due to the lack of Pho2?
+
+Next let's see the population heterogeneity within each strain, using the percent robust CV measure offered by the Attune software.
+```{r plot_robust_CV, fig.height = 6, fig.width = 6}
+# let's also check the "spread" using %CV or %robustCV to see which methods produce more heterogeneity among cells
+dat %>% filter(Parameter == "Pho4-GFP") %>% 
+  ggplot(aes(x = Sample, y = rCV, fill =  Group)) + 
+  geom_bar(stat = "identity", position = position_dodge2(width = 0.9)) +
+  facet_grid(Pho4GFP~., scales = "free_y", space = "free_y") +
+  scale_fill_brewer(type = "div", drop = FALSE) + ylab("%rCV") +
+  coord_flip() + scale_y_continuous(expand = c(0.01,0)) +
+  labs(title = "%rCV for Pho4-GFP fluorescent intensity", subtitle = "Asterisks indicate o/n instead of mid-log phase culture") +
+  theme_bw()
+```
+**Figure 2 Pho4-GFP fluorescence cell-to-cell variability within each strain.** Pho4-GFP intensities were quantified on an Attune NxT flow cytometer using 400 mV on the BL1 channel. Acquisition rate is 200 ul/min. At least 10,000 events were collected. Strain IDs are listed on the vertical axis while the percent robust CV (%rCV) on the horizontal axis.
+
+_Discussion_
+
+- Except for P1-3 and C1, the rest show similar levels of spread
+
+### PHO5pr-mCherry reporter levels
+```{r, fig.height = 8, fig.width = 6}
+rfp.bg <- mean(dat %>% filter(!PHO5RFP, Parameter == "PHO5pr-mCherry") %>% pull(Median))
+rfp.basal <- dat %>% filter(PHO5RFP, Pho4 == "pho4-", Parameter == "PHO5pr-mCherry") %>% pull(Median) %>% mean()
+
+# removed a few outliers with MFI > 20k
+p1 <- dat %>% filter(PHO5RFP, Parameter == "PHO5pr-mCherry", Median < 20000) %>% 
+  ggplot(aes(x = Sample, y = Median, fill =  Pho4GFP, color = PHO2)) + 
+  geom_bar(stat = "identity", position = position_dodge2(width = 0.9)) +
+  geom_hline(yintercept = rfp.basal, linetype = 2, alpha = 0.6) +
+  facet_grid(Pho4 ~ ., scales = "free_y", space = "free_y") + ylab("MFI") +
+  scale_fill_brewer(type = "div") + scale_color_manual(values = c("red", NA)) +
+  coord_flip() + scale_y_continuous(limits = c(0,20000), expand = c(0.01,0.02)) +
+  theme_bw()
+
+p1
+```
+**Figure 3 PHO5pr-mCherry reporter fluorescence intensity strain.** PHO5pr-mCherry intensities were quantified on an Attune NxT flow cytometer using 430 mV on the YL2 channel. Acquisition rate is 200 ul/min. At least 10,000 events were collected and the Median Fluorescent Intensity (MFI, arbitury units) was presented on the horizontal axis, while the strain IDs are listed on the vertical axis. The background fluorescence is just 82 units, i.e. very little background in the YL2 channel. The dashed vertical line indicates the basal level expression from the reporter without Pho4 (average of yH295, yH296, both of which lack Pho4 but has the reporter).
+
+_Discussion_
+
+- This experiment showed a lot of variability among the biological replicates, especially for exogenously integrated CgPho4 (C and F). This wasn't the case in my previous experiment. It will be useful to repeat this again.
+- yH267 doesn't conform to my expectation -- it has ScPho4 and ScPho2 as well as the _PHO5pr-mCherry_ reporter, and thus should give normal levels of RFP, but didn't.
