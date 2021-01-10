@@ -1,8 +1,8 @@
 Sample,Alias,Tube,Growth,Group,Pho4,Pho4GFP,PHO5RFP,PHO2,Parameter,Count,Percent,Mean,Median,CV,rCV
 yH267,NA,1A,dilute,control,ScPho4,No-GFP,T,ScPHO2,Pho4-GFP,30000,52.918,963,916,39.2,36.09
-yH267,NA,1A,dilute,control,ScPHO4,No-GFP,T,ScPHO2,PHO5pr-mCherry,30000,52.918,1206,1049,56.17,51.87
-yH277,NA,1B,dilute,control,ScPHO4,No-GFP,T,pho2-,Pho4-GFP,30000,60.338,773,711,79.48,40.24
-yH277,NA,1B,dilute,control,ScPHO4,No-GFP,T,pho2-,PHO5pr-mCherry,30000,60.338,1135,950,68.1,55.71
+yH267,NA,1A,dilute,control,ScPho4,No-GFP,T,ScPHO2,PHO5pr-mCherry,30000,52.918,1206,1049,56.17,51.87
+yH277,NA,1B,dilute,control,ScPho4,No-GFP,T,pho2-,Pho4-GFP,30000,60.338,773,711,79.48,40.24
+yH277,NA,1B,dilute,control,ScPho4,No-GFP,T,pho2-,PHO5pr-mCherry,30000,60.338,1135,950,68.1,55.71
 yH279,NA,1C,ovn,control,CgPho4,No-GFP,T,ScPHO2,Pho4-GFP,30000,41.32,794,748,55.18,40.04
 yH279,NA,1C,ovn,control,CgPho4,No-GFP,T,ScPHO2,PHO5pr-mCherry,30000,41.32,7993,5349,83.06,74.59
 yH173,NA,1D,ovn,control,pho4-,No-GFP,F,pho2-,Pho4-GFP,30000,38.166,805,748,53.92,38.45
