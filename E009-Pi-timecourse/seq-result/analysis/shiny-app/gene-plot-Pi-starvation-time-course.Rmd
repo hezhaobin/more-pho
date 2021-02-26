@@ -1,0 +1,100 @@
+---
+title: "Plot gene expression time course after Pi starvaiton in _C. glabrata_"
+author: "Bin He"
+date: "02/25/2021"
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+    code_folding: hide
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_data_library, echo=FALSE}
+load("R_obj.RData")
+# install the package if not already available
+suppressMessages(library(tidyverse))
+suppressMessages(library(data.table))
+suppressMessages(library(cowplot))
+# suppressMessages(library(kableExtra))
+# suppressMessages(library(rmarkdown))
+```
+
+```{r plot_gene, echo=FALSE}
+myGenePlot <- function(lc = lcpm, gene = "CAGL0B02475g", sp = sample) {
+  # this function takes in the read count matrix (normalized and transformed) and a gene ID
+  # and plots the values stratified by genotype and timepoint
+  exn <- lc[gene,sp$Sample]  # extract the subset of genes used for plotting
+  dt <- data.table(sp[,.(Sample, Genotype, Timepoint)], exn)
+  p <- ggplot(dt, aes(x = Timepoint, y = exn, color = Genotype))
+  p <- p + geom_point() + geom_smooth(method = "loess", formula = y ~ x, aes(x = as.numeric(Timepoint), y = exn, color = Genotype)) + 
+    ylab("log2 count per million") + theme_cowplot() + theme(axis.text.x = element_text(angle = 45, size = rel(0.75), hjust = 1))
+  print(p + panel_border() + background_grid())
+}
+```
+
+## Search gene ID by gene name
+```{r search_by_gene_name, echo=FALSE}
+# select the subset
+textInput(inputId = "genename", label = "Please enter gene name", value = "pho84")
+
+renderTable({
+  anno %>% filter(GeneName == toupper(input$genename)) %>% head()
+}, caption = c("search by C. glabrata name", "C. glabrata name")) 
+
+renderTable({
+  cgToSc %>% filter(scname == toupper(input$genename)) %>% head()
+}, caption = c("search by S. cerevisiae name", "S. cerevisiae name"))
+```
+
+```{r plot, echo = FALSE, fig.width=6, fig.height=5}
+textInput(inputId = "geneid", label = "Please enter gene ID", value = "CAGL0B02475g")
+
+observeEvent(input$genename, {
+  if(input$genename != ""){
+    # infer gene ID from gene name
+    name = toupper(input$genename)
+    geneid = ""
+    if(name %in% anno$GeneName){
+      geneid = anno[GeneName == name, GeneID]
+    }else if(name %in% cgToSc$scname){
+      geneid = cgToSc[scname == name, cgid]
+    }else{
+      geneid = NA
+    }
+    message(paste("Gene ID is", geneid))
+    # update gene ID variable
+    updateTextInput(session, "geneid", value = geneid)
+  }
+})
+
+renderPlot({
+  if(!is.na(input$geneid))
+    myGenePlot(gene = input$geneid)
+  else
+    print("Gene ID not found.")
+})
+```
+
+## Experiment set up
+
+In Ex009, I performed time-course transcriptome profiling following inorganic phosphate starvation in two genetic background, namely the wild-type and _pho4∆_. The purpose of doing this in _pho4∆_ is to distinguish Pho4-dependent vs Pho4-independent gene induction.
+
+The time-course includes a pre-stress (rich media) condition and a series of post-stress time points. The sampling density on the time axis is denser in the beginning, then gradually becoming sparser, in contrast to the regular interval designed used in Barkai's study. This is so that I can focus on the early time points while restricting the total number of samples I need to collect and process.
+
+The sample sheet is documented [here](../data/sample_sheet/Ex009_experiment_set_up_20171019.csv)
+
+Below is a simple chart to show the design:
+
+| Genotype | Time point  | Replicates | Comment |
+| -------- | :---------- | :--------: | ------- |
+| 80∆      | rich media  | 2          | for consistency check with my previous data |
+| 80∆ 4∆   | rich media  | 2          | for consistency check with my previous data |
+| wt-1     | pre, 20', 30', 45', 60', 90', 120', 150', 180', 240' | 1 | time course for wt  |
+| 4∆-1     | pre, 20', 30', 45', 60', 90', 120', 150', 180', 240' | 1 | time course for 4∆  | 
+| wt-2     | pre, 20', 30', 45', 60',      120',       180', 240' | 1 | biol. repl. for wt-1|
+| 4∆-2     | pre, 20', 30', 45', 60',      120',       180'       | 1 | biol. repl. for 4∆-1| 
