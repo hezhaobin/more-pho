@@ -43,11 +43,19 @@ myGenePlot <- function(lc = lcpm, gene = "CAGL0B02475g", sp = sample) {
 textInput(inputId = "genename", label = "Please enter gene name", value = "pho84")
 
 renderTable({
-  anno %>% filter(GeneName == toupper(input$genename)) %>% head()
+  name = toupper(input$genename)
+  if(name %in% anno$GeneName)
+    anno %>% filter(GeneName == name) %>% head()
+  else
+    anno %>% filter(grepl(toupper(input$genename), GeneName)) %>% head()
 }, caption = c("search by C. glabrata name", "C. glabrata name")) 
 
 renderTable({
-  cgToSc %>% filter(scname == toupper(input$genename)) %>% head()
+  name = toupper(input$genename)
+  if(name %in% cgToSc$scname)
+    cgToSc %>% filter(scname == name) %>% head()
+  else
+    cgToSc %>% filter(grepl(toupper(input$genename), scname)) %>% head()
 }, caption = c("search by S. cerevisiae name", "S. cerevisiae name"))
 ```
 
