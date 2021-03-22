@@ -20,6 +20,7 @@ require(cowplot)
 This is to repeat the 2020-12-21 experiment.
 
 ## Material and methods
+
 See gDoc. This time I reverted to one o/n growth. The second growth was done in the 96-well clear plate (not deep well). Cells were directly diluted into PBS and run on the flow cytometer.
 
 ### Table of strains
@@ -63,7 +64,7 @@ p1
 _Discussion_
 
 - Somewhat surprising to me, the exogenously integrated Pho4-GFP, except for the ScPho4-mNeon, seem to have rather low fluorescent intensity. For example, F1, E2 and E3 all have very low GFP signals.
-- For the plasmid-Pho4-GFP, the two ScPho4-GFP constructs appear to show higher expression in the yH295 background (P, Q) than in the yH296 background (M, N), for reasons I don't fully understand. Could there be some level of feedback due to the lack of Pho2?
+- Last time (see [2020-12-21 report](https://rpubs.com/emptyhb/Pho4-GFP-test-20201221)) I observed higher ScPho4-mNeon and ScPho4-EGFP expression in the yH295 background (P, Q) than in the yH296 background (M, N). I suspected there may be some feedback due to the lack of Pho2. This time however, their expression levels appear to be the same. The main difference in the experimental protocol compared to the last time is that I did one o/n growth before the final growth instead of two.
 
 ### PHO5pr-mCherry reporter levels
 ```{r, fig.height = 7, fig.width = 7}
@@ -97,7 +98,7 @@ gfp.bg <- dat %>% filter(Pho4GFP == "No-GFP", Parameter == "Pho4-GFP") %>% pull(
 dat1 <- dat %>% select(-Count, -CV, -rCV) %>% 
   pivot_wider(names_from = Parameter, values_from = Median) %>% 
   mutate(GFP.noBG = ifelse(Pho4GFP == "No-GFP", NA, `Pho4-GFP` - gfp.bg),
-         RFP.noBG = ifelse(PHO5RFP, `PHO5pr-mCherry` - rfp.bg, 0),
+         RFP.noBG = `PHO5pr-mCherry`, # I didn't include a RFP- strain in this experiment
          RFP.FC = ifelse(PHO5RFP, RFP.noBG / rfp.basal, NA),
          nRFP.FC = RFP.FC / GFP.noBG * median(GFP.noBG, na.rm = T))
 ```
@@ -149,11 +150,11 @@ prow <- plot_grid(
 )
 plot_grid(prow, legend, ncol = 1, rel_heights = c(1, .1))
 ```
-**Figure 3 Composite plot including Pho4 abundance, _PHO5_ reporter strength and fold induction values.** Pho4-GFP and PHO5p-mCherry intensities were quantified as defined above. Strain IDs are listed on the vertical axis. In **(A)**, the x-axis values represent the Median Fluorescent Intensity (MFI, arbitury units) for either Pho4-GFP or PHO5pr-mCherry after subtracting the background (based on strains without the corresponding fluorescent protein). In **(B)**, the fold change for _PHO5_ reporter is calculated as the background-subtracted RFP level divided by the basal expression level, as measured by the mean of the two strains containing the reporter but have _pho4∆_. The normalized induction ratio on the right column is calculated by dividing the induction fold change from the left column by the corresponding Pho4-GFP (background subtracted) levels and multiplied by the median Pho4-GFP levels of all strains. The dashed lines in both columns indicate the induction fold change of 1, i.e. no change compared to the _pho4∆_ strains. In both panels, the x-axes are square-root transformed so as to bring outliers into the plot without compressing the rest of the data range. An asterisk next to a bar indicates an overnight growth instead of a mid-log phase growth was used for quantification. An asterisk next to a bar indicates issues found with the sample (see methods section for details).
+**Figure 3 Composite plot including Pho4 abundance, _PHO5_ reporter strength and fold induction values.** Pho4-GFP and PHO5p-mCherry intensities were quantified as defined above. Strain IDs are listed on the vertical axis. In **(A)**, the x-axis values represent the Median Fluorescent Intensity (MFI, arbitury units) for either Pho4-GFP or PHO5pr-mCherry. For Pho4-GFP, the background level based on strains without Pho4-GFP was subtracted. No background subtraction was done for mCherry, but past results suggest that the background fluorescence is neglegible relative to the positive strains. In **(B)**, the fold change for _PHO5_ reporter is calculated as the background-subtracted RFP level divided by the basal expression level, as measured by the mean of the two strains containing the reporter but have _pho4∆_. The normalized induction ratio on the right column is calculated by dividing the induction fold change from the left column by the corresponding Pho4-GFP (background subtracted) levels and multiplied by the median Pho4-GFP levels of all strains. The dashed lines in both columns indicate the induction fold change of 1, i.e. no change compared to the _pho4∆_ strains. In both panels, the x-axes are square-root transformed so as to bring outliers into the plot without compressing the rest of the data range. An asterisk next to a bar indicates an overnight growth instead of a mid-log phase growth was used for quantification. An asterisk next to a bar indicates issues found with the sample (see methods section for details).
 
 _Discussion_
 
-- Plasmid-born Pho4-GFP strains show more variability in Pho4 abundance, but yields quite consistent fold induction values after normalizing by the GFP intensity. Some issues do exist, e.g. Q1, Q2.
+- Plasmid-born Pho4-GFP strains show more variability in Pho4 abundance, but yields quite consistent fold induction values after normalizing by the GFP intensity. Some issues do exist, e.g. Q1, Q2. B2 and B4's abnormally high induction after normalization is due to the very low GFP intensity.
 - The exogenously integrated strains show more variability, likely due to two reasons: multiple-integration at the time of transformation and spontaneous loop-out leading to loss of the extra copies during the outgrowth (or even on the plates)
 - Based on limited data, the endogenously integrated Pho4-GFP has the lowest clone-to-clone variability. If we could make the reporter construct also endogenous, we would expect highly reproducible data.
 
