@@ -1,0 +1,21 @@
+## gff-version	3
+## seq_name	source	ft_type	start	end	score	strand	frame	attribute
+Chr13:1297469-1299838	ft	limit	1	2370	0	+	.	Name=START_END;Note=.
+Chr13:1297469-1299838	ft	site	1384	1391	6.9	-	.	Name=Pho4p;Note=CTCGTGGG
+Chr13:1297469-1299838	ft	site	1438	1451	7.5	+	.	Name=Rpn4p;Note=CCGCAACCCTCGGC
+Chr13:1297469-1299838	ft	site	1226	1234	7.1	+	.	Name=Yap1p;Note=GCTGACGGA
+Chr13:1297469-1299838	ft	site	2133	2140	7.9	+	.	Name=Rpn4p;Note=CCCCCCAC
+Chr13:1297469-1299838	ft	site	827	835	6.7	+	.	Name=Rpn4p;Note=GGGGGCAAA
+Chr13:1297469-1299838	ft	site	724	730	9.8	-	.	Name=Yap1p;Note=TGACTCA
+Chr13:1297469-1299838	ft	site	1312	1320	6.7	+	.	Name=Yap1p;Note=GATGACCAG
+Chr13:1297469-1299838	ft	site	1469	1476	7.5	+	.	Name=Rpn4p;Note=ACCCCCAC
+Chr13:1297469-1299838	ft	site	228	234	7.8	+	.	Name=Pho4p;Note=GCACGTC
+Chr13:1297469-1299838	ft	site	2042	2048	7.8	-	.	Name=Pho4p;Note=GCACGTC
+Chr13:1297469-1299838	ft	site	1184	1189	5.6	+	.	Name=Msn2p;Note=AGGGGG
+Chr13:1297469-1299838	ft	site	1184	1189	5.6	+	.	Name=Msn2p;Note=AGGGGG
+Chr13:1297469-1299838	ft	site	819	826	7.3	-	.	Name=Rpn4p;Note=CCCCCCGC
+Chr13:1297469-1299838	ft	site	1614	1621	7.3	+	.	Name=Rpn4p;Note=CCCCCCGC
+Chr13:1297469-1299838	ft	site	821	828	7.2	-	.	Name=Rpn4p;Note=CCCCCCCC
+Chr13:1297469-1299838	ft	site	822	829	7.2	-	.	Name=Rpn4p;Note=CCCCCCCC
+Chr13:1297469-1299838	ft	site	823	830	7.2	-	.	Name=Rpn4p;Note=CCCCCCCC
+Chr13:1297469-1299838	ft	site	824	831	7.2	-	.	Name=Rpn4p;Note=CCCCCCCC

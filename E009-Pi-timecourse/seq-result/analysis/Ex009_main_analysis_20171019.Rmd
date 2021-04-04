@@ -9,7 +9,6 @@ output:
 ---
 
 ```{r global_options, include=FALSE}
-rm(list=ls()) ### To clear namespace
 library(knitr)
 opts_chunk$set(echo=TRUE, warning=FALSE, message=FALSE, fig.path="../output/figure")
 ```
@@ -47,7 +46,7 @@ Below is a simple chart to show the design:
 ## Prepare data
 
 ```{r load_libraries, message=FALSE}
-require(ggplot2)       ## for plotting
+require(tidyverse)     ## for plotting
 require(cowplot)       ## for some useful defaults in ggplot2
 require(limma)         ## for differential gene expression analysis
 require(data.table)    ## for fast importing and manipulating data tables
@@ -74,8 +73,9 @@ anno.file <- fread("../data/annotation/C_glabrata_gene_for_mapping_s02-m07-r04.b
 names(anno.file) <- c("Chr","Start","End","GeneID","Not.Use","Strand","GeneName","Type.of.Gene")
 anno <- anno.file[,c("Chr","GeneID","GeneName","Type.of.Gene")]
 setkey(anno, "GeneID")
-cgToSc <- fread("../data/annotation/C_glabrata_CBS138_S_cerevisiae_orthologs.txt")
-names(cgToSc) <- c("cgid","cgname","cgid2","scid","scname","scid2")
+cgToSc <- read_tsv("../data/annotation/C_glabrata_CBS138_S_cerevisiae_orthologs.txt", comment = "#",
+                   col_names = c("cgid","cgname","cgid2","scid","scname","scid2"))
+cgToSc <- as.data.table(cgToSc)
 setkey(cgToSc, "cgid")
 ```
 
@@ -175,6 +175,8 @@ dge <- calcNormFactors(dge)
 # 3. use TMM to normalize data
 lcpm <- cpm( dge, normalized.lib.sizes = TRUE, log = TRUE, prior.count = 0.5)
 rownames(lcpm) <- anno$GeneID
+# 4. save the data for the shiny app
+save(lcpm, anno, cgToSc, sample, file = "./shiny-app/R_obj.RData")
 ```
 
 ### 2. MDS plot
@@ -213,7 +215,7 @@ _Approach_
 
 I wrote a sub-function in a separate file and source it here.
 
-```{r single_gene_analysis, fig.width=12, fig.height=10}
+```{r single_gene_analysis, fig.width=10, fig.height=8}
 # Gene lists based on He et al 2017 eLife
 # 1. conserved (all PHO related) targets with S. cerevisiae
 set1 <- c("CAGL0B02475g", "CAGL0A01243g", "CAGL0L05456g", "CAGL0C02321g", "CAGL0G06952g", "CAGL0L06622g", "CAGL0M12705g", "CAGL0F02145g", "CAGL0J07040g", "CAGL0K12034g") 
@@ -222,9 +224,9 @@ set1.1 <- c("CAGL0K07546g", "CAGL0M11660g", "CAGL0B02453g", "CAGL0F02387g", "CAG
 # 3. Sc. specific PHO related
 set1.2 <- c("CAGL0M09823g","CAGL0K04939g","CAGL0H07359g","CAGL0L04422g","CAGL0F02035g","CAGL0H01815g") 
 # 4. other stress related
-set2 <- c("CAGL0E05588g", "CAGL0C04741g", "CAGL0M13189g", "CAGL0E05566g", "CAGL0E05984g", "CAGL0M11660g", "CAGL0G01540g", "CAGL0K10604g", "CAGL0J04202g", "CAGL0L06644g", "CAGL0K10164g", "CAGL0M06325g") 
+set2 <- c("CAGL0E05588g", "CAGL0M13189g", "CAGL0E05566g", "CAGL0E05984g", "CAGL0M11660g", "CAGL0G01540g", "CAGL0K10604g", "CAGL0J04202g", "CAGL0L06644g", "CAGL0K10164g", "CAGL0M06325g", "CAGL0C04741g", "CAGL0E04356g") 
 # 5. cell wall and adhesion
-set3 <- c("CAGL0J04202g", "CAGL0M07634g", "CAGL0M12430g", "CAGL0E05940g", "CAGL0K10164g", "CAGL0L06424g", "CAGL0L07502g", "CAGL0M08514g", "CAGL0J06050g", "CAGL0F00649g", "CAGL0M06325g", "CAGL0C04741g", "CAGL0B02926g", "CAGL0B02970g", "CAGL0I00726g") 
+set3 <- c("CAGL0J04202g", "CAGL0M07634g", "CAGL0M12430g", "CAGL0E05940g", "CAGL0K10164g", "CAGL0L06424g", "CAGL0L07502g", "CAGL0M08514g", "CAGL0J06050g", "CAGL0F00649g", "CAGL0M06325g", "CAGL0B02926g", "CAGL0B02970g", "CAGL0I00726g") 
 
 print( cgToSc[set1, .(cgid, cgname, scid,scname)])
 myGenePlot(genes = set1)

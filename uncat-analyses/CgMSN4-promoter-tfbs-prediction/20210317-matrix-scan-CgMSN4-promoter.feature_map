@@ -1,0 +1,136 @@
+; matrix-scan  -v 1 -matrix_format transfac -m $RSAT/public_html/tmp/www-data/2021/03/17/matrix-scan_2021-03-17.224457_UD8jDm.matrix -pseudo 1 -decimals 1 -2str -origin start -bgfile $RSAT/public_html/data/genomes/Saccharomyces_cerevisiae/oligo-frequencies/2nt_upstream-noorf_Saccharomyces_cerevisiae-ovlp-1str.freq -bg_pseudo 0.01 -return limits -return sites -return pval -return rank -lth score 1 -uth pval 1e-4 -i $RSAT/public_html/tmp/www-data/2021/03/17/tmp_sequence_2021-03-17.224457_CatFkj.fasta -seq_format fasta -n score
+; Slow counting mode            
+; Input files
+;	bg	$RSAT/public_html/data/genomes/Saccharomyces_cerevisiae/oligo-frequencies/2nt_upstream-noorf_Saccharomyces_cerevisiae-ovlp-1str.freq
+;	input	$RSAT/public_html/tmp/www-data/2021/03/17/tmp_sequence_2021-03-17.224457_CatFkj.fasta
+; Matrix files
+;	matrix 1	$RSAT/public_html/tmp/www-data/2021/03/17/matrix-scan_2021-03-17.224457_UD8jDm.matrix
+; Sequence format      	fasta
+; Pseudo counts        	1
+; Background model
+;	Method        	file
+;	Markov order  	1
+;	Strand        	sensitive
+;	Background pseudo-frequency	0.01
+;	Residue probabilities
+;		a	0.32264
+;		c	0.18134
+;		g	0.17514
+;		t	0.32089
+; Thresholds	lower	upper
+;	pval  	NA	0.0001
+;	score 	1    	NA
+; Output columns
+;	1	seq_id
+;	2	ft_type
+;	3	ft_name
+;	4	strand
+;	5	start
+;	6	end
+;	7	sequence
+;	8	weight
+#seq_id	ft_type	ft_name	strand	start	end	sequence	weight	Pval	ln_Pval	sig	rank	rank_pm
+Chr13:1297469-1299838	limit	START_END	D	1	2370	.	0	0	0	0
+Chr13:1297469-1299838	site	Pho4p	R	1384	1391	CTCGTGGG	6.9	9.0e-06	-11.622	5.047	1	1
+Chr13:1297469-1299838	site	Rpn4p	D	1438	1451	CCGCAACCCTCGGC	7.5	1.1e-05	-11.456	4.975	2	1
+Chr13:1297469-1299838	site	Yap1p	D	1226	1234	GCTGACGGA	7.1	1.2e-05	-11.326	4.919	3	1
+Chr13:1297469-1299838	site	Rpn4p	D	2133	2140	CCCCCCAC	7.9	3.0e-05	-10.427	4.528	4	2
+Chr13:1297469-1299838	site	Rpn4p	D	827	835	GGGGGCAAA	6.7	3.5e-05	-10.272	4.461	5	3
+Chr13:1297469-1299838	site	Yap1p	R	724	730	TGACTCA	9.8	5.3e-05	-9.853	4.279	6	2
+Chr13:1297469-1299838	site	Yap1p	D	1312	1320	GATGACCAG	6.7	5.4e-05	-9.822	4.265	7	3
+Chr13:1297469-1299838	site	Rpn4p	D	1469	1476	ACCCCCAC	7.5	6.2e-05	-9.695	4.211	8	4
+Chr13:1297469-1299838	site	Pho4p	D	228	234	GCACGTC	7.8	7.1e-05	-9.548	4.147	9	2
+Chr13:1297469-1299838	site	Pho4p	R	2042	2048	GCACGTC	7.8	7.1e-05	-9.548	4.147	10	3
+Chr13:1297469-1299838	site	Msn2p	D	1184	1189	AGGGGG	5.6	7.2e-05	-9.542	4.144	11	1
+Chr13:1297469-1299838	site	Msn2p	D	1184	1189	AGGGGG	5.6	7.2e-05	-9.542	4.144	12	2
+Chr13:1297469-1299838	site	Rpn4p	R	819	826	CCCCCCGC	7.3	9.1e-05	-9.306	4.041	13	5
+Chr13:1297469-1299838	site	Rpn4p	D	1614	1621	CCCCCCGC	7.3	9.1e-05	-9.306	4.041	14	6
+Chr13:1297469-1299838	site	Rpn4p	R	821	828	CCCCCCCC	7.2	1.0e-04	-9.201	3.996	15	7
+Chr13:1297469-1299838	site	Rpn4p	R	822	829	CCCCCCCC	7.2	1.0e-04	-9.201	3.996	16	8
+Chr13:1297469-1299838	site	Rpn4p	R	823	830	CCCCCCCC	7.2	1.0e-04	-9.201	3.996	17	9
+Chr13:1297469-1299838	site	Rpn4p	R	824	831	CCCCCCCC	7.2	1.0e-04	-9.201	3.996	18	10
+;
+; Matrices
+;	matrix	name 	ncol	nrow	pseudo	Wmin	Wmax	Wrange
+;	1	Msn2p	5	4	1	-23.100	8.000	31.100	a:0.323 c:0.181 g:0.175 t:0.321 
+;	2	Msn2p	5	4	1	-23.100	8.000	31.100	a:0.323 c:0.181 g:0.175 t:0.321 
+;	3	Msn2p	6	4	1	-15.800	6.000	21.800	a:0.323 c:0.181 g:0.175 t:0.321 
+;	4	Msn2p	6	4	1	-19.800	6.000	25.800	a:0.323 c:0.181 g:0.175 t:0.321 
+;	5	Msn2p	5	4	1	-15.200	6.000	21.200	a:0.323 c:0.181 g:0.175 t:0.321 
+;	6	Msn4p	5	4	1	-23.100	8.000	31.100	a:0.323 c:0.181 g:0.175 t:0.321 
+;	7	Pho2p	7	4	1	-20.500	4.500	25.000	a:0.323 c:0.181 g:0.175 t:0.321 
+;	8	Pho2p	19	4	1	-47.700	16.400	64.100	a:0.323 c:0.181 g:0.175 t:0.321 
+;	9	Pho2p	6	4	1	-27.700	4.800	32.500	a:0.323 c:0.181 g:0.175 t:0.321 
+;	10	Pho4p	6	4	1	-27.700	8.500	36.200	a:0.323 c:0.181 g:0.175 t:0.321 
+;	11	Pho4p	8	4	1	-37.000	12.600	49.600	a:0.323 c:0.181 g:0.175 t:0.321 
+;	12	Pho4p	7	4	1	-24.400	8.400	32.800	a:0.323 c:0.181 g:0.175 t:0.321 
+;	13	Pho4p	7	4	1	-20.500	8.800	29.300	a:0.323 c:0.181 g:0.175 t:0.321 
+;	14	Pho4p	13	4	1	-43.800	14.200	58.000	a:0.323 c:0.181 g:0.175 t:0.321 
+;	15	Pho4p	7	4	1	-28.400	8.600	37.000	a:0.323 c:0.181 g:0.175 t:0.321 
+;	16	Pho4p	8	4	1	-33.000	10.200	43.200	a:0.323 c:0.181 g:0.175 t:0.321 
+;	17	Pho4p	7	4	1	-24.400	8.900	33.300	a:0.323 c:0.181 g:0.175 t:0.321 
+;	18	Pho4p	8	4	1	-33.000	10.300	43.300	a:0.323 c:0.181 g:0.175 t:0.321 
+;	19	Rpn4p	9	4	1	-41.600	13.200	54.800	a:0.323 c:0.181 g:0.175 t:0.321 
+;	20	Rpn4p	7	4	1	-28.400	10.700	39.100	a:0.323 c:0.181 g:0.175 t:0.321 
+;	21	Rpn4p	14	4	1	-40.900	16.300	57.200	a:0.323 c:0.181 g:0.175 t:0.321 
+;	22	Rpn4p	8	4	1	-21.100	9.300	30.400	a:0.323 c:0.181 g:0.175 t:0.321 
+;	23	Rpn4p	8	4	1	-33.000	10.300	43.300	a:0.323 c:0.181 g:0.175 t:0.321 
+;	24	Rpn4p	8	4	1	-33.000	10.300	43.300	a:0.323 c:0.181 g:0.175 t:0.321 
+;	25	Yap1p	7	4	1	-32.400	8.500	40.900	a:0.323 c:0.181 g:0.175 t:0.321 
+;	26	Yap1p	7	4	1	-32.400	9.700	42.100	a:0.323 c:0.181 g:0.175 t:0.321 
+;	27	Yap1p	7	4	1	-32.400	9.100	41.500	a:0.323 c:0.181 g:0.175 t:0.321 
+;	28	Yap1p	7	4	1	-32.400	8.400	40.800	a:0.323 c:0.181 g:0.175 t:0.321 
+;	29	Yap1p	7	4	1	-32.400	9.100	41.500	a:0.323 c:0.181 g:0.175 t:0.321 
+;	30	Yap1p	9	4	1	-21.400	7.600	29.000	a:0.323 c:0.181 g:0.175 t:0.321 
+;	31	Yap1p	18	4	1	-54.200	15.800	70.000	a:0.323 c:0.181 g:0.175 t:0.321 
+;	32	Yap1p	8	4	1	-25.100	7.500	32.600	a:0.323 c:0.181 g:0.175 t:0.321 
+;	33	Yap1p	8	4	1	-29.000	8.200	37.200	a:0.323 c:0.181 g:0.175 t:0.321 
+;	34	Yap1p	8	4	1	-33.000	8.400	41.400	a:0.323 c:0.181 g:0.175 t:0.321 
+; Number of sequences scanned	1
+; Sum of sequence lengths	2370
+; N residues           	0
+; Matches per matrix
+;	matrix	name 	matches	scored
+;	1	Msn2p          	0	4732
+;	2	Msn2p          	0	4732
+;	3	Msn2p          	1	4730
+;	4	Msn2p          	1	4730
+;	5	Msn2p          	0	4732
+;	6	Msn4p          	0	4732
+;	7	Pho2p          	0	4728
+;	8	Pho2p          	0	4704
+;	9	Pho2p          	0	4730
+;	10	Pho4p          	0	4730
+;	11	Pho4p          	1	4726
+;	12	Pho4p          	0	4728
+;	13	Pho4p          	2	4728
+;	14	Pho4p          	0	4716
+;	15	Pho4p          	0	4728
+;	16	Pho4p          	0	4726
+;	17	Pho4p          	0	4728
+;	18	Pho4p          	0	4726
+;	19	Rpn4p          	1	4724
+;	20	Rpn4p          	0	4728
+;	21	Rpn4p          	1	4714
+;	22	Rpn4p          	8	4726
+;	23	Rpn4p          	0	4726
+;	24	Rpn4p          	0	4726
+;	25	Yap1p          	0	4728
+;	26	Yap1p          	1	4728
+;	27	Yap1p          	0	4728
+;	28	Yap1p          	0	4728
+;	29	Yap1p          	0	4728
+;	30	Yap1p          	2	4724
+;	31	Yap1p          	0	4706
+;	32	Yap1p          	0	4726
+;	33	Yap1p          	0	4726
+;	34	Yap1p          	0	4726
+;		TOTAL          	18	160678
+; Host name	rsat-tagc
+; Job started	2021-03-17.224458
+; Job done	2021-03-17.224532
+; Seconds	34.54
+;	user	34.54
+;	system	0.09
+;	cuser	0
+;	csystem	0.01

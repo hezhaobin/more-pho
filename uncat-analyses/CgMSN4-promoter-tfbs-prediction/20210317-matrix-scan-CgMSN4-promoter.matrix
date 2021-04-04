@@ -1,0 +1,989 @@
+AC  Msn2p
+XX
+ID  Msn2p
+XX
+DE  CCCCT
+P0       A     C     G     T
+1        0   100     0     0
+2        0   100     0     0
+3        0   100     0     0
+4        0   100     0     0
+5        0     0     0   100
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 378
+CC  accession: Msn2p
+CC  AC: Msn2p
+CC  id: Msn2p
+CC  name: Msn2p
+CC  version: 
+CC  name: Msn2p
+CC  description: CCCCT
+CC  transfac_consensus: 
+CC  matrix.nb: 378
+XX
+//
+AC  Msn2p
+XX
+ID  Msn2p
+XX
+DE  RGGGG
+P0       A     C     G     T
+1       50     0    50     0
+2        0     0   100     0
+3        0     0   100     0
+4        0     0   100     0
+5        0     0   100     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 379
+CC  accession: Msn2p
+CC  AC: Msn2p
+CC  id: Msn2p
+CC  name: Msn2p
+CC  version: 
+CC  name: Msn2p
+CC  description: RGGGG
+CC  transfac_consensus: 
+CC  matrix.nb: 379
+XX
+//
+AC  Msn2p
+XX
+ID  Msn2p
+XX
+DE  agGgRB
+P0       A     C     G     T
+1       50  16.6  16.6  16.6
+2     16.6  16.6    50  16.6
+3        0     0   100     0
+4     16.6  16.6    50  16.6
+5       50     0    50     0
+6        0  33.3  33.3  33.3
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 380
+CC  accession: Msn2p
+CC  AC: Msn2p
+CC  id: Msn2p
+CC  name: Msn2p
+CC  version: 
+CC  name: Msn2p
+CC  description: agGgRB
+CC  transfac_consensus: 
+CC  matrix.nb: 380
+XX
+//
+AC  Msn2p
+XX
+ID  Msn2p
+XX
+DE  agGRRB
+P0       A     C     G     T
+1       50  16.6  16.6  16.6
+2     16.6  16.6    50  16.6
+3        0     0   100     0
+4       50     0    50     0
+5       50     0    50     0
+6        0  33.3  33.3  33.3
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 381
+CC  accession: Msn2p
+CC  AC: Msn2p
+CC  id: Msn2p
+CC  name: Msn2p
+CC  version: 
+CC  name: Msn2p
+CC  description: agGRRB
+CC  transfac_consensus: 
+CC  matrix.nb: 381
+XX
+//
+AC  Msn2p
+XX
+ID  Msn2p
+XX
+DE  aGGRg
+P0       A     C     G     T
+1       50  16.6  16.6  16.6
+2        0     0   100     0
+3        0     0   100     0
+4       50     0    50     0
+5     16.6  16.6    50  16.6
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 382
+CC  accession: Msn2p
+CC  AC: Msn2p
+CC  id: Msn2p
+CC  name: Msn2p
+CC  version: 
+CC  name: Msn2p
+CC  description: aGGRg
+CC  transfac_consensus: 
+CC  matrix.nb: 382
+XX
+//
+AC  Msn4p
+XX
+ID  Msn4p
+XX
+DE  CCCCT
+P0       A     C     G     T
+1        0   100     0     0
+2        0   100     0     0
+3        0   100     0     0
+4        0   100     0     0
+5        0     0     0   100
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 383
+CC  accession: Msn4p
+CC  AC: Msn4p
+CC  id: Msn4p
+CC  name: Msn4p
+CC  version: 
+CC  name: Msn4p
+CC  description: CCCCT
+CC  transfac_consensus: 
+CC  matrix.nb: 383
+XX
+//
+AC  Pho2p
+XX
+ID  Pho2p
+XX
+DE  tWWATta
+P0       A     C     G     T
+1     16.6  16.6  16.6    50
+2       50     0     0    50
+3       50     0     0    50
+4      100     0     0     0
+5        0     0     0   100
+6     16.6  16.6  16.6    50
+7       50  16.6  16.6  16.6
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 427
+CC  accession: Pho2p
+CC  AC: Pho2p
+CC  id: Pho2p
+CC  name: Pho2p
+CC  version: 
+CC  name: Pho2p
+CC  description: tWWATta
+CC  transfac_consensus: 
+CC  matrix.nb: 427
+XX
+//
+AC  Pho2p
+XX
+ID  Pho2p
+XX
+DE  cgxDDWtTAATTAatgggg
+P0       A     C     G     T
+1     16.6    50  16.6  16.6
+2     16.6  16.6    50  16.6
+3       25    25    25    25
+4     33.3     0  33.3  33.3
+5     33.3     0  33.3  33.3
+6       50     0     0    50
+7     16.6  16.6  16.6    50
+8        0     0     0   100
+9      100     0     0     0
+10     100     0     0     0
+11       0     0     0   100
+12       0     0     0   100
+13     100     0     0     0
+14      50  16.6  16.6  16.6
+15    16.6  16.6  16.6    50
+16    16.6  16.6    50  16.6
+17    16.6  16.6    50  16.6
+18    16.6  16.6    50  16.6
+19    16.6  16.6    50  16.6
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 428
+CC  accession: Pho2p
+CC  AC: Pho2p
+CC  id: Pho2p
+CC  name: Pho2p
+CC  version: 
+CC  name: Pho2p
+CC  description: cgxDDWtTAATTAatgggg
+CC  transfac_consensus: 
+CC  matrix.nb: 428
+XX
+//
+AC  Pho2p
+XX
+ID  Pho2p
+XX
+DE  WTAWTW
+P0       A     C     G     T
+1       50     0     0    50
+2        0     0     0   100
+3      100     0     0     0
+4       50     0     0    50
+5        0     0     0   100
+6       50     0     0    50
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 429
+CC  accession: Pho2p
+CC  AC: Pho2p
+CC  id: Pho2p
+CC  name: Pho2p
+CC  version: 
+CC  name: Pho2p
+CC  description: WTAWTW
+CC  transfac_consensus: 
+CC  matrix.nb: 429
+XX
+//
+AC  Pho4p
+XX
+ID  Pho4p
+XX
+DE  CACGTK
+P0       A     C     G     T
+1        0   100     0     0
+2      100     0     0     0
+3        0   100     0     0
+4        0     0   100     0
+5        0     0     0   100
+6        0     0    50    50
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 430
+CC  accession: Pho4p
+CC  AC: Pho4p
+CC  id: Pho4p
+CC  name: Pho4p
+CC  version: 
+CC  name: Pho4p
+CC  description: CACGTK
+CC  transfac_consensus: 
+CC  matrix.nb: 430
+XX
+//
+AC  Pho4p
+XX
+ID  Pho4p
+XX
+DE  CACGTGGG
+P0       A     C     G     T
+1        0   100     0     0
+2      100     0     0     0
+3        0   100     0     0
+4        0     0   100     0
+5        0     0     0   100
+6        0     0   100     0
+7        0     0   100     0
+8        0     0   100     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 431
+CC  accession: Pho4p
+CC  AC: Pho4p
+CC  id: Pho4p
+CC  name: Pho4p
+CC  version: 
+CC  name: Pho4p
+CC  description: CACGTGGG
+CC  transfac_consensus: 
+CC  matrix.nb: 431
+XX
+//
+AC  Pho4p
+XX
+ID  Pho4p
+XX
+DE  VCACGtg
+P0       A     C     G     T
+1     33.3  33.3  33.3     0
+2        0   100     0     0
+3      100     0     0     0
+4        0   100     0     0
+5        0     0   100     0
+6     16.6  16.6  16.6    50
+7     16.6  16.6    50  16.6
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 432
+CC  accession: Pho4p
+CC  AC: Pho4p
+CC  id: Pho4p
+CC  name: Pho4p
+CC  version: 
+CC  name: Pho4p
+CC  description: VCACGtg
+CC  transfac_consensus: 
+CC  matrix.nb: 432
+XX
+//
+AC  Pho4p
+XX
+ID  Pho4p
+XX
+DE  gCACGtg
+P0       A     C     G     T
+1     16.6  16.6    50  16.6
+2        0   100     0     0
+3      100     0     0     0
+4        0   100     0     0
+5        0     0   100     0
+6     16.6  16.6  16.6    50
+7     16.6  16.6    50  16.6
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 433
+CC  accession: Pho4p
+CC  AC: Pho4p
+CC  id: Pho4p
+CC  name: Pho4p
+CC  version: 
+CC  name: Pho4p
+CC  description: gCACGtg
+CC  transfac_consensus: 
+CC  matrix.nb: 433
+XX
+//
+AC  Pho4p
+XX
+ID  Pho4p
+XX
+DE  gxSCACGTGSttD
+P0       A     C     G     T
+1     16.6  16.6    50  16.6
+2       25    25    25    25
+3        0    50    50     0
+4        0   100     0     0
+5      100     0     0     0
+6        0   100     0     0
+7        0     0   100     0
+8        0     0     0   100
+9        0     0   100     0
+10       0    50    50     0
+11    16.6  16.6  16.6    50
+12    16.6  16.6  16.6    50
+13    33.3     0  33.3  33.3
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 434
+CC  accession: Pho4p
+CC  AC: Pho4p
+CC  id: Pho4p
+CC  name: Pho4p
+CC  version: 
+CC  name: Pho4p
+CC  description: gxSCACGTGSttD
+CC  transfac_consensus: 
+CC  matrix.nb: 434
+XX
+//
+AC  Pho4p
+XX
+ID  Pho4p
+XX
+DE  CRYRYgC
+P0       A     C     G     T
+1        0   100     0     0
+2       50     0    50     0
+3        0    50     0    50
+4       50     0    50     0
+5        0    50     0    50
+6     16.6  16.6    50  16.6
+7        0   100     0     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 435
+CC  accession: Pho4p
+CC  AC: Pho4p
+CC  id: Pho4p
+CC  name: Pho4p
+CC  version: 
+CC  name: Pho4p
+CC  description: CRYRYgC
+CC  transfac_consensus: 
+CC  matrix.nb: 435
+XX
+//
+AC  Pho4p
+XX
+ID  Pho4p
+XX
+DE  aCACGTGB
+P0       A     C     G     T
+1       50  16.6  16.6  16.6
+2        0   100     0     0
+3      100     0     0     0
+4        0   100     0     0
+5        0     0   100     0
+6        0     0     0   100
+7        0     0   100     0
+8        0  33.3  33.3  33.3
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 436
+CC  accession: Pho4p
+CC  AC: Pho4p
+CC  id: Pho4p
+CC  name: Pho4p
+CC  version: 
+CC  name: Pho4p
+CC  description: aCACGTGB
+CC  transfac_consensus: 
+CC  matrix.nb: 436
+XX
+//
+AC  Pho4p
+XX
+ID  Pho4p
+XX
+DE  cACGTGt
+P0       A     C     G     T
+1     16.6    50  16.6  16.6
+2      100     0     0     0
+3        0   100     0     0
+4        0     0   100     0
+5        0     0     0   100
+6        0     0   100     0
+7     16.6  16.6  16.6    50
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 437
+CC  accession: Pho4p
+CC  AC: Pho4p
+CC  id: Pho4p
+CC  name: Pho4p
+CC  version: 
+CC  name: Pho4p
+CC  description: cACGTGt
+CC  transfac_consensus: 
+CC  matrix.nb: 437
+XX
+//
+AC  Pho4p
+XX
+ID  Pho4p
+XX
+DE  CACGTGtV
+P0       A     C     G     T
+1        0   100     0     0
+2      100     0     0     0
+3        0   100     0     0
+4        0     0   100     0
+5        0     0     0   100
+6        0     0   100     0
+7     16.6  16.6  16.6    50
+8     33.3  33.3  33.3     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 438
+CC  accession: Pho4p
+CC  AC: Pho4p
+CC  id: Pho4p
+CC  name: Pho4p
+CC  version: 
+CC  name: Pho4p
+CC  description: CACGTGtV
+CC  transfac_consensus: 
+CC  matrix.nb: 438
+XX
+//
+AC  Rpn4p
+XX
+ID  Rpn4p
+XX
+DE  GGTGGCAAA
+P0       A     C     G     T
+1        0     0   100     0
+2        0     0   100     0
+3        0     0     0   100
+4        0     0   100     0
+5        0     0   100     0
+6        0   100     0     0
+7      100     0     0     0
+8      100     0     0     0
+9      100     0     0     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 503
+CC  accession: Rpn4p
+CC  AC: Rpn4p
+CC  id: Rpn4p
+CC  name: Rpn4p
+CC  version: 
+CC  name: Rpn4p
+CC  description: GGTGGCAAA
+CC  transfac_consensus: 
+CC  matrix.nb: 503
+XX
+//
+AC  Rpn4p
+XX
+ID  Rpn4p
+XX
+DE  CGCCACc
+P0       A     C     G     T
+1        0   100     0     0
+2        0     0   100     0
+3        0   100     0     0
+4        0   100     0     0
+5      100     0     0     0
+6        0   100     0     0
+7     16.6    50  16.6  16.6
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 504
+CC  accession: Rpn4p
+CC  AC: Rpn4p
+CC  id: Rpn4p
+CC  name: Rpn4p
+CC  version: 
+CC  name: Rpn4p
+CC  description: CGCCACc
+CC  transfac_consensus: 
+CC  matrix.nb: 504
+XX
+//
+AC  Rpn4p
+XX
+ID  Rpn4p
+XX
+DE  aCGCCACCCtaatc
+P0       A     C     G     T
+1       50  16.6  16.6  16.6
+2        0   100     0     0
+3        0     0   100     0
+4        0   100     0     0
+5        0   100     0     0
+6      100     0     0     0
+7        0   100     0     0
+8        0   100     0     0
+9        0   100     0     0
+10    16.6  16.6  16.6    50
+11      50  16.6  16.6  16.6
+12      50  16.6  16.6  16.6
+13    16.6  16.6  16.6    50
+14    16.6    50  16.6  16.6
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 505
+CC  accession: Rpn4p
+CC  AC: Rpn4p
+CC  id: Rpn4p
+CC  name: Rpn4p
+CC  version: 
+CC  name: Rpn4p
+CC  description: aCGCCACCCtaatc
+CC  transfac_consensus: 
+CC  matrix.nb: 505
+XX
+//
+AC  Rpn4p
+XX
+ID  Rpn4p
+XX
+DE  HccgCCaC
+P0       A     C     G     T
+1     33.3  33.3     0  33.3
+2     16.6    50  16.6  16.6
+3     16.6    50  16.6  16.6
+4     16.6  16.6    50  16.6
+5        0   100     0     0
+6        0   100     0     0
+7       50  16.6  16.6  16.6
+8        0   100     0     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 506
+CC  accession: Rpn4p
+CC  AC: Rpn4p
+CC  id: Rpn4p
+CC  name: Rpn4p
+CC  version: 
+CC  name: Rpn4p
+CC  description: HccgCCaC
+CC  transfac_consensus: 
+CC  matrix.nb: 506
+XX
+//
+AC  Rpn4p
+XX
+ID  Rpn4p
+XX
+DE  HGCCACHg
+P0       A     C     G     T
+1     33.3  33.3     0  33.3
+2        0     0   100     0
+3        0   100     0     0
+4        0   100     0     0
+5      100     0     0     0
+6        0   100     0     0
+7     33.3  33.3     0  33.3
+8     16.6  16.6    50  16.6
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 507
+CC  accession: Rpn4p
+CC  AC: Rpn4p
+CC  id: Rpn4p
+CC  name: Rpn4p
+CC  version: 
+CC  name: Rpn4p
+CC  description: HGCCACHg
+CC  transfac_consensus: 
+CC  matrix.nb: 507
+XX
+//
+AC  Rpn4p
+XX
+ID  Rpn4p
+XX
+DE  gHGCCACH
+P0       A     C     G     T
+1     16.6  16.6    50  16.6
+2     33.3  33.3     0  33.3
+3        0     0   100     0
+4        0   100     0     0
+5        0   100     0     0
+6      100     0     0     0
+7        0   100     0     0
+8     33.3  33.3     0  33.3
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 508
+CC  accession: Rpn4p
+CC  AC: Rpn4p
+CC  id: Rpn4p
+CC  name: Rpn4p
+CC  version: 
+CC  name: Rpn4p
+CC  description: gHGCCACH
+CC  transfac_consensus: 
+CC  matrix.nb: 508
+XX
+//
+AC  Yap1p
+XX
+ID  Yap1p
+XX
+DE  TTACTAA
+P0       A     C     G     T
+1        0     0     0   100
+2        0     0     0   100
+3      100     0     0     0
+4        0   100     0     0
+5        0     0     0   100
+6      100     0     0     0
+7      100     0     0     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 693
+CC  accession: Yap1p
+CC  AC: Yap1p
+CC  id: Yap1p
+CC  name: Yap1p
+CC  version: 
+CC  name: Yap1p
+CC  description: TTACTAA
+CC  transfac_consensus: 
+CC  matrix.nb: 693
+XX
+//
+AC  Yap1p
+XX
+ID  Yap1p
+XX
+DE  TGACTCA
+P0       A     C     G     T
+1        0     0     0   100
+2        0     0   100     0
+3      100     0     0     0
+4        0   100     0     0
+5        0     0     0   100
+6        0   100     0     0
+7      100     0     0     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 694
+CC  accession: Yap1p
+CC  AC: Yap1p
+CC  id: Yap1p
+CC  name: Yap1p
+CC  version: 
+CC  name: Yap1p
+CC  description: TGACTCA
+CC  transfac_consensus: 
+CC  matrix.nb: 694
+XX
+//
+AC  Yap1p
+XX
+ID  Yap1p
+XX
+DE  TGACTAA
+P0       A     C     G     T
+1        0     0     0   100
+2        0     0   100     0
+3      100     0     0     0
+4        0   100     0     0
+5        0     0     0   100
+6      100     0     0     0
+7      100     0     0     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 695
+CC  accession: Yap1p
+CC  AC: Yap1p
+CC  id: Yap1p
+CC  name: Yap1p
+CC  version: 
+CC  name: Yap1p
+CC  description: TGACTAA
+CC  transfac_consensus: 
+CC  matrix.nb: 695
+XX
+//
+AC  Yap1p
+XX
+ID  Yap1p
+XX
+DE  TKACAAA
+P0       A     C     G     T
+1        0     0     0   100
+2        0     0    50    50
+3      100     0     0     0
+4        0   100     0     0
+5      100     0     0     0
+6      100     0     0     0
+7      100     0     0     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 696
+CC  accession: Yap1p
+CC  AC: Yap1p
+CC  id: Yap1p
+CC  name: Yap1p
+CC  version: 
+CC  name: Yap1p
+CC  description: TKACAAA
+CC  transfac_consensus: 
+CC  matrix.nb: 696
+XX
+//
+AC  Yap1p
+XX
+ID  Yap1p
+XX
+DE  TTACTCA
+P0       A     C     G     T
+1        0     0     0   100
+2        0     0     0   100
+3      100     0     0     0
+4        0   100     0     0
+5        0     0     0   100
+6        0   100     0     0
+7      100     0     0     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 697
+CC  accession: Yap1p
+CC  AC: Yap1p
+CC  id: Yap1p
+CC  name: Yap1p
+CC  version: 
+CC  name: Yap1p
+CC  description: TTACTCA
+CC  transfac_consensus: 
+CC  matrix.nb: 697
+XX
+//
+AC  Yap1p
+XX
+ID  Yap1p
+XX
+DE  gMTKAcxaa
+P0       A     C     G     T
+1     16.6  16.6    50  16.6
+2       50    50     0     0
+3        0     0     0   100
+4        0     0    50    50
+5      100     0     0     0
+6     16.6    50  16.6  16.6
+7       25    25    25    25
+8       50  16.6  16.6  16.6
+9       50  16.6  16.6  16.6
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 698
+CC  accession: Yap1p
+CC  AC: Yap1p
+CC  id: Yap1p
+CC  name: Yap1p
+CC  version: 
+CC  name: Yap1p
+CC  description: gMTKAcxaa
+CC  transfac_consensus: 
+CC  matrix.nb: 698
+XX
+//
+AC  Yap1p
+XX
+ID  Yap1p
+XX
+DE  ttxMTTACGTAAKVtxxt
+P0       A     C     G     T
+1     16.6  16.6  16.6    50
+2     16.6  16.6  16.6    50
+3       25    25    25    25
+4       50    50     0     0
+5        0     0     0   100
+6        0     0     0   100
+7      100     0     0     0
+8        0   100     0     0
+9        0     0   100     0
+10       0     0     0   100
+11     100     0     0     0
+12     100     0     0     0
+13       0     0    50    50
+14    33.3  33.3  33.3     0
+15    16.6  16.6  16.6    50
+16      25    25    25    25
+17      25    25    25    25
+18    16.6  16.6  16.6    50
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 699
+CC  accession: Yap1p
+CC  AC: Yap1p
+CC  id: Yap1p
+CC  name: Yap1p
+CC  version: 
+CC  name: Yap1p
+CC  description: ttxMTTACGTAAKVtxxt
+CC  transfac_consensus: 
+CC  matrix.nb: 699
+XX
+//
+AC  Yap1p
+XX
+ID  Yap1p
+XX
+DE  TtAcStAA
+P0       A     C     G     T
+1        0     0     0   100
+2     16.6  16.6  16.6    50
+3      100     0     0     0
+4     16.6    50  16.6  16.6
+5        0    50    50     0
+6     16.6  16.6  16.6    50
+7      100     0     0     0
+8      100     0     0     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 700
+CC  accession: Yap1p
+CC  AC: Yap1p
+CC  id: Yap1p
+CC  name: Yap1p
+CC  version: 
+CC  name: Yap1p
+CC  description: TtAcStAA
+CC  transfac_consensus: 
+CC  matrix.nb: 700
+XX
+//
+AC  Yap1p
+XX
+ID  Yap1p
+XX
+DE  aSgTAATT
+P0       A     C     G     T
+1       50  16.6  16.6  16.6
+2        0    50    50     0
+3     16.6  16.6    50  16.6
+4        0     0     0   100
+5      100     0     0     0
+6      100     0     0     0
+7        0     0     0   100
+8        0     0     0   100
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 701
+CC  accession: Yap1p
+CC  AC: Yap1p
+CC  id: Yap1p
+CC  name: Yap1p
+CC  version: 
+CC  name: Yap1p
+CC  description: aSgTAATT
+CC  transfac_consensus: 
+CC  matrix.nb: 701
+XX
+//
+AC  Yap1p
+XX
+ID  Yap1p
+XX
+DE  SgTAATTV
+P0       A     C     G     T
+1        0    50    50     0
+2     16.6  16.6    50  16.6
+3        0     0     0   100
+4      100     0     0     0
+5      100     0     0     0
+6        0     0     0   100
+7        0     0     0   100
+8     33.3  33.3  33.3     0
+XX
+CC  residue_type: 
+CC  program: transfac
+CC  matrix.nb: 702
+CC  accession: Yap1p
+CC  AC: Yap1p
+CC  id: Yap1p
+CC  name: Yap1p
+CC  version: 
+CC  name: Yap1p
+CC  description: SgTAATTV
+CC  transfac_consensus: 
+CC  matrix.nb: 702
+XX
+//

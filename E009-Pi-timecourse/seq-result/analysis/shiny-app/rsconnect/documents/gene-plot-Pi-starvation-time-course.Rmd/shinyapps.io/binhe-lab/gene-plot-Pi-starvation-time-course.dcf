@@ -1,0 +1,12 @@
+name: gene-plot-Pi-starvation-time-course
+title: gene-plot-Pi-starvation-time-course
+username:
+account: binhe-lab
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3705572
+bundleId: 4277192
+url: https://binhe-lab.shinyapps.io/gene-plot-Pi-starvation-time-course/
+when: 1614379296.85187
+asMultiple: TRUE
+asStatic: FALSE
