@@ -1,0 +1,130 @@
+---
+title: "Demonstration of data analysis using R"
+subtitle: "example using Jia and Lindsey's flow cytometry data"
+author: "Bin He"
+email: bin-he@uiowa.edu
+institute: "Biology Department, University of Iowa"
+date: "2021-04-26 (updated: `r Sys.Date()`)"
+linkcolor: blue
+output:
+  xaringan::moon_reader:
+    nature:
+      ratio: 4:3
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  fig.align="center",
+  eval.after="fig.cap"
+)
+```
+
+# Prerequisites 
+
+### Base R installation
+
+```{r installR, eval=TRUE}
+R.version.string  # Check R version
+```
+
+### Tidyverse Packages (for data wrangling and plotting)
+
+```{r, eval=FALSE}
+if (!requireNamespace("tidyverse", quietly = TRUE))
+  install.packages("tidyverse")
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+### Cowplot (supplement ggplot2)
+
+```{r, eval=FALSE}
+if (!requireNamespace("cowplot", quietly = TRUE))
+  install.packages("cowplot")
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+---
+
+# Question
+
+## Which region of CgPho4 underlies its reduced Pho2-dependence?
+
+![place holder]()
+
+---
+
+# Approach
+
+- Swap "components" between ScPho4 and CgPho4 (Chimera)
+- Measure chimera's TF activity with and w/o Pho2. How?
+    - Chimera + Pho2 -> _PHO5_ mRNA -> Pho5p abundance
+    - Chimera w/o Pho2 -> -> Pho5p?
+
+---
+
+# Approach
+
+A comparison of the old (phoshatase) and new (flow cytometry) assay.
+
+.pull-left[
+Based on Pho5p activity
+
+Drawbacks:
+
+1. Cell number
+
+1. Pho4p per cell
+
+1. Signal dep on time
+
+1. Ss. to growth state
+]
+
+--
+
+.pull-right[
+Based on PHO5p-RFP
+
+Improvement 
+
+1. Single cell
+
+1. Pho4p-GFP
+
+1. Stable signal
+
+1. Ss. to growth state
+]
+
+---
+
+# Goal of this experiment
+
+- Validate the flow cytometry approach
+
+- Validate a subset of previously constructed chimera
+
+- Strains to be used
+
+    ![Chimera genotype](./img/Pho4-chimera-genotype-list.png)
+
+   * All strains in the table below have *pho80::Trp1*
+
+---
+
+# Read the data
+
+```{r echo=TRUE, tidy=FALSE}
+samples <- read_csv("../../data/20210402-Lindsey-Jia-test-autosampler-sample-list.csv", col_types = "ccccclc")
+```
+
+```{r eval=require('DT'), tidy=FALSE, echo=FALSE}
+DT::datatable(
+  samples,
+  fillContainer = FALSE, options = list(pageLength = 4)
+)
+```
