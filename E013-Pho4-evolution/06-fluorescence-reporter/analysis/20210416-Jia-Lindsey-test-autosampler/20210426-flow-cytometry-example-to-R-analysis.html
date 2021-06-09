@@ -7,15 +7,6 @@
     <script src="20210426-flow-cytometry-example-to-R-analysis_files/header-attrs-2.7/header-attrs.js"></script>
     <link href="20210426-flow-cytometry-example-to-R-analysis_files/remark-css-0.0.1/default.css" rel="stylesheet" />
     <link href="20210426-flow-cytometry-example-to-R-analysis_files/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
-    <script src="20210426-flow-cytometry-example-to-R-analysis_files/htmlwidgets-1.5.1/htmlwidgets.js"></script>
-    <script src="20210426-flow-cytometry-example-to-R-analysis_files/jquery-1.12.4/jquery.min.js"></script>
-    <link href="20210426-flow-cytometry-example-to-R-analysis_files/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
-    <script src="20210426-flow-cytometry-example-to-R-analysis_files/datatables-binding-0.14/datatables.js"></script>
-    <link href="20210426-flow-cytometry-example-to-R-analysis_files/dt-core-1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" />
-    <link href="20210426-flow-cytometry-example-to-R-analysis_files/dt-core-1.10.20/css/jquery.dataTables.extra.css" rel="stylesheet" />
-    <script src="20210426-flow-cytometry-example-to-R-analysis_files/dt-core-1.10.20/js/jquery.dataTables.min.js"></script>
-    <link href="20210426-flow-cytometry-example-to-R-analysis_files/crosstalk-1.1.0.1/css/crosstalk.css" rel="stylesheet" />
-    <script src="20210426-flow-cytometry-example-to-R-analysis_files/crosstalk-1.1.0.1/js/crosstalk.min.js"></script>
   </head>
   <body>
     <textarea id="source">
@@ -25,7 +16,7 @@ class: center, middle, inverse, title-slide
 ## example using Jia and Lindsey’s flow cytometry data
 ### Bin He
 ### Biology Department, University of Iowa
-### 2021-04-26 (updated: 2021-04-26)
+### 2021-04-26 (updated: 2021-04-29)
 
 ---
 
@@ -45,22 +36,18 @@ R.version.string  # Check R version
 ## [1] "R version 4.0.5 (2021-03-31)"
 ```
 
-### Tidyverse Packages (for data wrangling and plotting)
+### Tidyverse Packages
 
 
 ```r
 if (!requireNamespace("tidyverse", quietly = TRUE))
   install.packages("tidyverse")
 suppressPackageStartupMessages(library(tidyverse))
-```
 
-### Cowplot (supplement ggplot2)
-
-
-```r
+# Cowplot (supplement ggplot2)
 if (!requireNamespace("cowplot", quietly = TRUE))
   install.packages("cowplot")
-suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(cowplot))
 ```
 
 ---
@@ -68,67 +55,7 @@ suppressPackageStartupMessages(library(tidyverse))
 # Question
 
 ## Which region of CgPho4 underlies its reduced Pho2-dependence?
-
-![place holder]()
-
----
-
-# Approach
-
-- Swap "components" between ScPho4 and CgPho4 (Chimera)
-- Measure chimera's TF activity with and w/o Pho2. How?
-    - Chimera + Pho2 -&gt; _PHO5_ mRNA -&gt; Pho5p abundance
-    - Chimera w/o Pho2 -&gt; -&gt; Pho5p?
-
----
-
-# Approach
-
-A comparison of the old (phoshatase) and new (flow cytometry) assay.
-
-.pull-left[
-Based on Pho5p activity
-
-Drawbacks:
-
-1. Cell number
-
-1. Pho4p per cell
-
-1. Signal dep on time
-
-1. Ss. to growth state
-]
-
---
-
-.pull-right[
-Based on PHO5p-RFP
-
-Improvement 
-
-1. Single cell
-
-1. Pho4p-GFP
-
-1. Stable signal
-
-1. Ss. to growth state
-]
-
----
-
-# Goal of this experiment
-
-- Validate the flow cytometry approach
-
-- Validate a subset of previously constructed chimera
-
-- Strains to be used
-
-    ![Chimera genotype](./img/Pho4-chimera-genotype-list.png)
-
-   * All strains in the table below have *pho80::Trp1*
+![place holder](img/reduced-Pho2-dependence-in-CgPho4.png)
 
 ---
 
@@ -136,11 +63,135 @@ Improvement
 
 
 ```r
-samples &lt;- read_csv("../../data/20210402-Lindsey-Jia-test-autosampler-sample-list.csv", col_types = "ccccclc")
+samples &lt;- read_csv("20210402-Lindsey-Jia-test-autosampler-sample-list.csv",
+                    col_types = "ccccclc")
+dat0 &lt;- read_csv("20210416-bin-reexported-results.csv", col_types = cols())
 ```
 
-<div id="htmlwidget-38704980aa2ecabb5c96" style="width:100%;height:auto;" class="datatables html-widget"></div>
-<script type="application/json" data-for="htmlwidget-38704980aa2ecabb5c96">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29"],["yH156","yH372","yH373","180w","180wo","177w","177wo","188w","188wo","193w","193wo","194w","194wo","179w","179wo","yHB050","yHB063","B4","A4","B20","A20","B12","A12","B17","A17","B18","A18","B3","A3"],["LFS","LFS","LFS","LFS","LFS","LFS","LFS","LFS","LFS","LFS","LFS","LFS","LFS","LFS","LFS","JZ","JZ","JZ","JZ","JZ","JZ","JZ","JZ","JZ","JZ","JZ","JZ","JZ","JZ"],["ScPho4","pho4del","pho4del","pH180","pH180","pH177","pH177","pH188","pH188","pH193","pH193","pH194","pH194","pH179","pH179","pH124","pH124","pH180","pH180","pH177","pH177","pH188","pH188","pH193","pH193","pH194","pH194","pH179","pH179"],[null,null,null,"mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon","mNeon"],["Sc(1-312)","pho4del","pho4del","Cg(1-44)Sc(43-312)","Cg(1-44)Sc(43-312)","Sc(1-236)Cg(453-533)","Sc(1-236)Cg(453-533)","Cg(1-533)","Cg(1-533)","Sc(1-224)Cg(381-533)","Sc(1-224)Cg(381-533)","Sc(1-312)","Sc(1-312)","Cg(1-44)Sc(43-236)Cg(453-533)","Cg(1-44)Sc(43-236)Cg(453-533)","Sc(1-312)","Sc(1-312)","Cg(1-44)Sc(43-312)","Cg(1-44)Sc(43-312)","Sc(1-236)Cg(453-533)","Sc(1-236)Cg(453-533)","Cg(1-533)","Cg(1-533)","Sc(1-224)Cg(381-533)","Sc(1-224)Cg(381-533)","Sc(1-312)","Sc(1-312)","Cg(1-44)Sc(43-236)Cg(453-533)","Cg(1-44)Sc(43-236)Cg(453-533)"],[true,true,false,true,false,true,false,true,false,true,true,true,false,true,false,false,true,true,false,true,false,true,false,true,true,true,false,true,false],[null,"pho5","pho5","pho5","pho5","pho5","pho5","pho5","pho5","pho5","pho5","pho5","pho5","pho5","pho5","ura3","ura3","ura3","ura3","ura3","ura3","ura3","ura3","ura3","ura3","ura3","ura3","ura3","ura3"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Sample<\/th>\n      <th>Group<\/th>\n      <th>Pho4<\/th>\n      <th>Tag<\/th>\n      <th>Content<\/th>\n      <th>Pho2<\/th>\n      <th>PHO5RFP<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":4,"order":[],"autoWidth":false,"orderClasses":false,"columnDefs":[{"orderable":false,"targets":0}],"lengthMenu":[4,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+--
+
+### Quality control
+
+A few strains didn't grow well, including 
+
+
+```r
+issues &lt;- unique(dat0$Sample[dat0$Count &lt; 5000])
+samples %&gt;% filter(Sample %in% issues) %&gt;% select(-Content) %&gt;% as.data.frame()
+```
+
+```
+##   Sample Group  Pho4   Tag Pho2 PHO5RFP
+## 1   179w   LFS pH179 mNeon TRUE    pho5
+## 2     B3    JZ pH179 mNeon TRUE    ura3
+```
+
+---
+
+# Quality control (continued)
+
+Also check the robust CV to identify any samples with unusally high variability within the sample
+
+&lt;img src="20210426-flow-cytometry-example-to-R-analysis_files/figure-html/unnamed-chunk-4-1.png" style="display: block; margin: auto auto auto 0;" /&gt;
+
+    Samples with &lt; 5000 events were flagged and excluded.
+    
+
+
+---
+
+# Analysis - XPho4 expression levels
+
+First let's look at the background fluorescence level in the GFP channel
+
+&lt;img src="20210426-flow-cytometry-example-to-R-analysis_files/figure-html/unnamed-chunk-6-1.png" style="display: block; margin: auto auto auto 0;" /&gt;
+
+It's good that all negatives are similar.
+
+---
+
+# Analysis: XPho4 expression level variability
+
+Next, we can examine the Pho4-GFP levels for the different constructs, in _PHO2_ or _pho2∆_ backgrounds, and transformed into two genetic backgrounds.
+
+&lt;img src="20210426-flow-cytometry-example-to-R-analysis_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto auto auto 0;" /&gt;
+
+---
+
+# Analysis: XPho4 expression level variability
+
+### What does the data look like
+
+
+```r
+head(datw[sample(1:nrow(datw),5),]) %&gt;% as.data.frame()
+```
+
+```
+##     Group Sample Rep  Pho4    Pho2 Pho5RFP  flag PHO5pRFP Pho4GFP
+## 1     Jia    A18   1 pH194 pho2del    ura3 FALSE     1000    1239
+## 2 Lindsey  180wo   1 pH180 pho2del    pho5 FALSE     2161    1727
+## 3     Jia    B20   2 pH177  ScPho2    ura3 FALSE     8997    1794
+## 4     Jia    A12   1 pH188 pho2del    ura3 FALSE     6914    1152
+## 5 Lindsey   193w   1 pH193  ScPho2    pho5 FALSE     5337    1085
+```
+
+---
+
+# Analysis: XPho4 expression level variability
+
+### What do we want to visualize?
+
+Pho4-GFP intensity for each sample, grouped by biological replicates, researcher and _PHO2_ presence or absence
+
+
+```r
+ggplot(datw, aes(x = Sample, y = Pho4GFP)) + geom_col()
+```
+
+&lt;img src="20210426-flow-cytometry-example-to-R-analysis_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Analysis: XPho4 expression level variability
+
+Add some grouping
+
+
+```r
+ggplot(datw, aes(x = Sample, y = Pho4GFP, fill = Group)) + geom_col()
+```
+
+&lt;img src="20210426-flow-cytometry-example-to-R-analysis_files/figure-html/unnamed-chunk-10-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Analysis: XPho4 expression level variability
+
+Separate the two researchers
+
+
+```r
+ggplot(datw, aes(x = Pho4, y = Pho4GFP)) + geom_col() +
+  facet_wrap(~Group)
+```
+
+&lt;img src="20210426-flow-cytometry-example-to-R-analysis_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+
+# Analysis: XPho4 expression level variability
+
+Separate the biological replicates
+
+
+```r
+ggplot(datw, aes(x = Pho4, y = Pho4GFP)) + geom_col() +
+  facet_wrap(~Group)
+```
+
+&lt;img src="20210426-flow-cytometry-example-to-R-analysis_files/figure-html/unnamed-chunk-12-1.png" style="display: block; margin: auto;" /&gt;
+
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
