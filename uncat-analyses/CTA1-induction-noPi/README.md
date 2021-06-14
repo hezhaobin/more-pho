@@ -1,0 +1,3 @@
+Jinye has discovered that the sole catalase gene _CTA1_ is induced under phosphate starvation in _C. glabrata_, and is possibly regulated by the general stress response TF CgMsn4. We want to determine if the same are true in _S. cerevisiae_, namely if _ScCTA1_ is induced under phosphate starvation and whether ScMsn4 is responsible for its induction, although Jinye has also shown that ScMsn4 DOES NOT localize into the nucleus upon phosphate starvation, or at least not in sufficient amount for it to be detectable by fluorescent imaging.
+
+To answer the first question, the idea is to reanalyze two transcriptome-profiling dataset, one from Zhou and O'Shea 2011 (PMID: 21700227) and the other from Gurvich _et al._ 2017 (PMID: 29236696).

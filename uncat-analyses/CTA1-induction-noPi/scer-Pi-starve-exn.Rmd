@@ -1,0 +1,116 @@
+---
+title: "CTA1 induction under phosphate starvation in _S. cerevisiae_"
+author: "Bin He"
+date: "6/9/2021"
+output: 
+  html_notebook:
+    toc: yes
+    toc_float: yes
+    toc_depth: 5
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load_libraries}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(cowplot))
+suppressPackageStartupMessages(library(GEOquery))
+suppressPackageStartupMessages(library(SummarizedExperiment))
+```
+
+## Background
+
+Jinye has discovered that the sole catalase gene _CTA1_ is induced under phosphate starvation in _C. glabrata_, and is possibly regulated by the general stress response TF CgMsn4. We want to determine if the same are true in _S. cerevisiae_, i.e. if _ScCTA1_ is induced under phosphate starvation and whether ScMsn4 is responsible for its induction (although Jinye has also shown that ScMsn4 DOES NOT localize into the nucleus upon phosphate starvation, or at least not in sufficient amount for it to be detectable by fluorescent imaging).
+
+To answer the first question, the idea is to reanalyze two transcriptome-profiling dataset, one from Zhou and O'Shea 2011 (PMID: 21700227) and the other from Gurvich _et al._ 2017 (PMID: 29236696).
+
+## Materials and Methods
+
+### Data
+
+| GEO# | Description | Reference |
+| ---- | ----------- | --------- |
+| GSE23580 | Microarray expression analyses of _S. cerevisiae_ wt, _pho4∆_, _pho2∆_ in rich or no Pi media | Zhou & O'Shea 2011 |
+| | |
+
+    Zhou X, O’Shea EK. 2011. Integrated approaches reveal determinants of genome-wide binding and function of the transcription factor Pho4. Mol Cell 42:826–836.
+ 
+    Gurvich Y, Leshkowitz D, Barkai N. 2017. Dual role of starvation signaling in promoting growth and recovery. PLOS Biology 15:e2002039.
+
+### R methods
+
+- GEOquery workshop offered by Jason Ratcliff at the Iowa Institute of Human Genetics
+
+## Import data
+
+`getGEO()` will return an ExpressionSet object, which is then converted into a "SummarizedExperiment" object, which is a more modern data structure that is easier to deal with.
+```{r}
+gse <- getGEO(GEO = "GSE23580", destdir = "data/Zhou2011")
+gse23580 <- as(gse$GSE23580_series_matrix.txt.gz, "SummarizedExperiment")
+```
+
+The experimental information is stored in the `colData` fields. The ones we are interested in are:
+```{r}
+colData(gse23580) %>% 
+  as_tibble() %>%
+  filter(grepl("Wild type no vs high Pi conditions", title) | grepl("Comparison 1$", title)) %>% 
+  select(title, geo_accession, organism = organism_ch1, strain = characteristics_ch1, 
+         condition_ch1 = characteristics_ch1.2, label_ch1, condition_ch2 = characteristics_ch2.2, label_ch2)
+```
+
+The first three are part of the mutant cycle while the latter four are not. The latter four are said to have incorporated a dye swap, although I can't tell how the swap was done from the table above.
+
+Separately extract the two subsets and examine them separately.
+```{r}
+gse1 <- gse23580[, grepl("Comparison 1$", gse23580$title)]
+gse2 <- gse23580[, grepl("Wild type no vs high Pi conditions", gse23580$title)]
+```
+
+The probe annotation is stored as row metadata:
+```{r}
+gse23580 %>%  rowData() %>% as_tibble() %>% DT::datatable()
+```
+
+Check to see if the assay data is indeed normalized and log2 transformed, by plotting the values as boxplots:
+```{r}
+cbind(assay(gse1, 1), assay(gse2, 1)) %>% boxplot()
+```
+Looks like they are.
+
+Now we are ready to check CTA1 expression. First we need to find out the probe ID for CTA1, and then we can extract and plot the log2 transformed ratio. For comparison, we will include two other genes, one PHO target and one housekeeping.
+
+**Mutant Cycle**
+```{r, results='asis'}
+genes <- c("CTA1", "ALG9", "PHO8")
+probes <- rowData(gse1) %>% 
+  as_tibble() %>% 
+  filter(Name %in% genes) %>% 
+  select(ID, Name)
+
+res1 <- assay(gse1)[probes$ID,] %>% as_tibble(rownames = "ID") %>% 
+  left_join(probes, by = "ID") %>% 
+  pivot_longer(cols = starts_with("GSM"), names_to = "Acc", values_to = "log2") %>% 
+  left_join(colData(gse1) %>% as_tibble() %>% select(Sample = title, Acc = geo_accession), by = "Acc") %>% 
+  mutate(Sample = gsub(" Comparison 1||Mutant Cycle ", "", Sample)) %>% 
+  select(ID, Gene = Name, Acc, Sample, log2)
+
+ggplot(res1, aes(x = Sample, y = log2, fill = Gene)) + 
+  geom_col(position = position_dodge()) +
+  ylab("log2 No Pi vs High Pi") + theme_cowplot()
+```
+
+**Dye swap**
+```{r, results='asis'}
+res2 <- assay(gse2)[probes$ID,] %>% as_tibble(rownames = "ID") %>% 
+  left_join(probes, by = "ID") %>% 
+  pivot_longer(cols = starts_with("GSM"), names_to = "Acc", values_to = "log2") %>% 
+  left_join(colData(gse2) %>% as_tibble() %>% select(Sample = title, Acc = geo_accession), by = "Acc") %>% 
+  mutate(Sample = gsub("Wild type no vs high Pi conditions ", "", Sample)) %>% 
+  select(ID, Gene = Name, Acc, Sample, log2)
+
+ggplot(res2, aes(x = Sample, y = log2, fill = Gene)) + geom_col(position = position_dodge()) +
+  ylab("log2 No Pi vs High Pi") + theme_cowplot()
+```
