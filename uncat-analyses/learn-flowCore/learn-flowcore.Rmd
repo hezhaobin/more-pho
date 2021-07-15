@@ -1,0 +1,31 @@
+---
+title: "Learn to analyze flow cytometry data in R"
+output:
+  html_notebook:
+    toc: true
+    toc_depth: 4
+    code_folding: hide
+---
+
+```{r setup}
+require(tidyverse)
+require(flowCore)
+require(flowClust)
+require(flowViz)
+```
+
+# Goal
+
+Follow Metzger _et al._ 2015 (PMID: 25778704) to learn how to analyze flow cytometry data in R
+
+# Data
+
+From 2021-04-02 experiment conducted by Jia and Lindsey to test the chimeric Pho4 with _PHO5p_-RFP strains
+
+# Analysis
+## Import data
+```{r}
+example.file = "data/FCS-files/Chimeric Pho4 test_Experiment_Lindsey_179w-1.fcs"
+example <- read.FCS(example.file, transformation = FALSE, emptyValue = FALSE) # the original values are already linearized. 
+```
+

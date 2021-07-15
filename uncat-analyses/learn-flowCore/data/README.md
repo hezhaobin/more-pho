@@ -1,0 +1,1 @@
+the flow cytometry data was taken from the chimera test performed by Jia and Lindsey on 2021-04-02. The raw data is stored on RDSS server and the FCS files were copied to this folder for analysis. the FCS files are not tracked by git.
