@@ -11,7 +11,7 @@ output:
 require(tidyverse)
 require(flowCore)
 require(flowClust)
-require(flowViz)
+require(ggcyto)
 ```
 
 # Goal
@@ -21,6 +21,49 @@ Follow Metzger _et al._ 2015 (PMID: 25778704) to learn how to analyze flow cytom
 # Data
 
 From 2021-04-02 experiment conducted by Jia and Lindsey to test the chimeric Pho4 with _PHO5p_-RFP strains
+
+# Tutorial
+## FlowCore
+[reference](https://www.bioconductor.org/packages/release/bioc/vignettes/flowCore/inst/doc/HowTo-flowCore.pdf)
+
+```{r}
+file.name <- system.file("extdata","0877408774.B08", package="flowCore")
+x <- read.FCS(file.name, transformation=FALSE)
+summary(x)
+```
+```{r}
+keyword(x, paste0("$P",1:4,"E"))
+summary(read.FCS(file.name))
+```
+```{r}
+fcs.dir <- system.file("extdata",
+                       "compdata",
+                       "data",
+                       package="flowCore")
+frames <- lapply(dir(fcs.dir, full.names=TRUE), read.FCS)
+fs <- as(frames, "flowSet")
+fs
+sampleNames(fs)
+```
+```{r}
+names(frames) <- sapply(frames, keyword, "SAMPLE ID")
+fs <- as(frames, "flowSet")
+fs
+sampleNames(fs)
+```
+```{r}
+phenoData(fs)$Filename <- fsApply(fs, keyword, "$FIL")
+pData(phenoData(fs))
+```
+```{r}
+fs <- read.flowSet(path = fcs.dir)
+```
+
+```{r}
+x <- read.FCS(file.name, column.pattern = "-H")
+ggcyto(x, aes(x = `FL1-H`, `FL2-H`)) + geom_hex(bins = 128)
+autoplot(x, "FL1-H")
+```
 
 # Analysis
 ## Import data
