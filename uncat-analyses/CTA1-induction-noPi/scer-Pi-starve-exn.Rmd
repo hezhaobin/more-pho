@@ -85,7 +85,7 @@ Now we are ready to check CTA1 expression. First we need to find out the probe I
 
 **Mutant Cycle**
 ```{r, results='asis'}
-genes <- c("CTA1", "CTT1", "ALG9", "PHO8")
+genes <- c("CTA1", "CTT1", "HSP12", "ALG9", "PHO8", "SPL2")
 probes <- rowData(gse1) %>% 
   as_tibble() %>% 
   filter(Name %in% genes) %>% 
