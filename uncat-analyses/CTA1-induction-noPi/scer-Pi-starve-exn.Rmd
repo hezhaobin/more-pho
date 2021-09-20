@@ -48,6 +48,7 @@ To answer the first question, the idea is to reanalyze two transcriptome-profili
 
 `getGEO()` will return an ExpressionSet object, which is then converted into a "SummarizedExperiment" object, which is a more modern data structure that is easier to deal with.
 ```{r}
+Sys.setenv("VROOM_CONNECTION_SIZE" = 131072*10) # increase the local cache size
 gse <- getGEO(GEO = "GSE23580", destdir = "data/Zhou2011")
 gse23580 <- as(gse$GSE23580_series_matrix.txt.gz, "SummarizedExperiment")
 ```
@@ -100,6 +101,8 @@ res1 <- assay(gse1)[probes$ID,] %>% as_tibble(rownames = "ID") %>%
 ggplot(res1, aes(x = Sample, y = log2, fill = Gene)) + 
   geom_col(position = position_dodge()) +
   ylab("log2 No Pi vs High Pi") + theme_cowplot()
+
+ggsave("output/20210920-Zhou2011-mutant-cycle-data-plot.png")
 ```
 
 **Dye swap**
@@ -113,4 +116,6 @@ res2 <- assay(gse2)[probes$ID,] %>% as_tibble(rownames = "ID") %>%
 
 ggplot(res2, aes(x = Sample, y = log2, fill = Gene)) + geom_col(position = position_dodge()) +
   ylab("log2 No Pi vs High Pi") + theme_cowplot()
+
+ggsave("output/20210920-Zhou2011-dye-swap-data-plot.png")
 ```
