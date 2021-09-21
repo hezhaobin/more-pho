@@ -150,6 +150,7 @@ p <- gd00 %>%
   xlab("Time (hours after -> 0 mM Pi)") + ylab("Fold induction relative to 0 min") +
   facet_wrap(~ Group)
 p + theme_cowplot()
+ggsave("output/20210921-Gurvich2017-0Pi-data-plot.png")
 ```
 Notice how the stress genes show an early peak at the 2 hour time point, after which it drops to a lower level before reaching a second higher peak after quite some time (>8 hrs). What could be the explanation for this? The 2 hour time point induction shouldn't be a result of switching media, which requires centrifugation or filtering, both of which could induce Msn2/4 translocation (?). If that's not a likely reason, then we have to assume that these putative Msn2/4 targets are induced because the TFs responded to Pi starvation, likely at around 1 hour time point.
 
@@ -163,6 +164,7 @@ p <- gd06 %>%
   xlab("Time (hours after -> 0.06 mM Pi)") + ylab("Fold induction relative to 0 min") +
   facet_wrap(~ Group, nrow = 2)
 p + theme_cowplot()
+ggsave("output/20210921-Gurvich2017-0.06Pi-data-plot.png")
 ```
 The dotted horizontal line indicates 2 fold induction.
 
