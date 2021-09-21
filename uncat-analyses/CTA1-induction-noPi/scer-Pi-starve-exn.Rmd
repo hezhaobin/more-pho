@@ -11,11 +11,11 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r load_libraries}
 suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(readxl))
 suppressPackageStartupMessages(library(cowplot))
 suppressPackageStartupMessages(library(GEOquery))
 suppressPackageStartupMessages(library(SummarizedExperiment))
@@ -27,24 +27,19 @@ Jinye has discovered that the sole catalase gene _CTA1_ is induced under phospha
 
 To answer the first question, the idea is to reanalyze two transcriptome-profiling dataset, one from Zhou and O'Shea 2011 (PMID: 21700227) and the other from Gurvich _et al._ 2017 (PMID: 29236696).
 
-## Materials and Methods
+## Zhou and O'Shea 2011
 
 ### Data
 
 | GEO# | Description | Reference |
 | ---- | ----------- | --------- |
 | GSE23580 | Microarray expression analyses of _S. cerevisiae_ wt, _pho4∆_, _pho2∆_ in rich or no Pi media | Zhou & O'Shea 2011 |
-| | |
 
     Zhou X, O’Shea EK. 2011. Integrated approaches reveal determinants of genome-wide binding and function of the transcription factor Pho4. Mol Cell 42:826–836.
  
-    Gurvich Y, Leshkowitz D, Barkai N. 2017. Dual role of starvation signaling in promoting growth and recovery. PLOS Biology 15:e2002039.
-
-### R methods
+### Analysis
 
 - GEOquery workshop offered by Jason Ratcliff at the Iowa Institute of Human Genetics
-
-## Import data
 
 `getGEO()` will return an ExpressionSet object, which is then converted into a "SummarizedExperiment" object, which is a more modern data structure that is easier to deal with.
 ```{r}
@@ -72,7 +67,7 @@ gse2 <- gse23580[, grepl("Wild type no vs high Pi conditions", gse23580$title)]
 
 The probe annotation is stored as row metadata:
 ```{r}
-gse23580 %>%  rowData() %>% as_tibble() %>% DT::datatable()
+#gse23580 %>%  rowData() %>% as_tibble() %>% DT::datatable()
 ```
 
 Check to see if the assay data is indeed normalized and log2 transformed, by plotting the values as boxplots:
@@ -119,3 +114,56 @@ ggplot(res2, aes(x = Sample, y = log2, fill = Gene)) + geom_col(position = posit
 
 ggsave("output/20210920-Zhou2011-dye-swap-data-plot.png")
 ```
+
+## Gurvich 2017
+### Data
+
+    Gurvich Y, Leshkowitz D, Barkai N. 2017. Dual role of starvation signaling in promoting growth and recovery. PLOS Biology 15:e2002039.
+
+The data is extracted from the supplementary table 2, which records the data behind all the figures in the paper. The raw sequencing data were deposited in SRA, but not submitted to GEO. I decided to use their processed data, which is in log2 ratios (compared with the 0 min time point in most cases).
+
+The extracted data is stored in an excel file with two sheets, corresponding to the 0 mM Pi and 0.06 mM Pi timecourse.
+```{r}
+gurvich.file <- "data/Gurvich2017/20210921-extracted-supp-data-Fig1C.xlsx"
+excel_sheets(gurvich.file)
+```
+
+```{r}
+gd00 <- read_excel(gurvich.file, sheet = 1, na = "NaN") %>% 
+  pivot_longer(!Group:Gene, names_to = "Time", values_to = "Log2.ratio") %>% 
+  mutate(Time = as.numeric(Time))
+gd06 <- read_excel(gurvich.file, sheet = 3, na = "NaN") %>% 
+  pivot_longer(!Group:Gene, names_to = "Time", values_to = "Log2.ratio") %>% 
+  mutate(Time = as.numeric(Time))
+```
+
+### Analysis
+I selected four genes in the "stress" category based on Hasan _et al._ 2002 Mol. Microbiol. "The control of the yeast H2O2 response by the Msn2/4 transcription factors".
+
+We first look at the 0 mM Pi data
+```{r}
+genes <- c("CTT1", "TSL1", "HSP12", "HSP42", "PHO84", "SPL2", "PHO5")
+p <- gd00 %>% 
+  filter(Gene %in% genes, Time < 20) %>% 
+  mutate(Fold = 2^Log2.ratio) %>% 
+  ggplot(aes(x = Time, y = Fold, color = Gene)) + geom_point() + geom_line(size = 0.5) +
+  xlab("Time (hours after -> 0 mM Pi)") + ylab("Fold induction relative to 0 min") +
+  facet_wrap(~ Group)
+p + theme_cowplot()
+```
+Notice how the stress genes show an early peak at the 2 hour time point, after which it drops to a lower level before reaching a second higher peak after quite some time (>8 hrs). What could be the explanation for this? The 2 hour time point induction shouldn't be a result of switching media, which requires centrifugation or filtering, both of which could induce Msn2/4 translocation (?). If that's not a likely reason, then we have to assume that these putative Msn2/4 targets are induced because the TFs responded to Pi starvation, likely at around 1 hour time point.
+
+Next let's look at the 0.06 mM Pi data. Note that because
+```{r}
+p <- gd06 %>% 
+  filter(Gene %in% genes, Time < 20) %>% 
+  mutate(Fold = 2^Log2.ratio) %>% 
+  ggplot(aes(x = Time, y = Fold, color = Gene)) + geom_point() + geom_line(size = 0.5, linetype = 2) +
+  geom_hline(yintercept = 2, linetype = 3) +
+  xlab("Time (hours after -> 0.06 mM Pi)") + ylab("Fold induction relative to 0 min") +
+  facet_wrap(~ Group, nrow = 2)
+p + theme_cowplot()
+```
+The dotted horizontal line indicates 2 fold induction.
+
+What's different in this plot from the previous one is that at the intermediate level of Pi, the cells exhibit a strongly biphasic induction of the PHO genes, with ~6.5 hours as the separation point. Before 6.5 hours, _PHO5_ and _PHO84_ are mildly induced and after that time point, both are more strongly induced. _SPL2_ is an early gene that gets induced to a higher level even in the early time point (it is also less dependent on Pho2). For the stress genes, they really aren't induced until after 6.5 hrs when Pi starts to become growth limiting. This suggests that the signaling to Msn2/4 is probably via the sensing of nutrient levels (PKA? TOR)

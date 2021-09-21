@@ -18,9 +18,21 @@ require(ggcyto)
 
 Follow Metzger _et al._ 2015 (PMID: 25778704) to learn how to analyze flow cytometry data in R
 
+To do so, I have the following tasks:
+
+- [x] Learn how to load fcs files into R and how to access the data and parameters therein
+- [x] Learn how to read multiple fcs files for an entire experiment as a flow set object and associate the sample information with it
+- Learn how to make commonly used diagnostic plots like the incidence density plot and histograms
+- Learn how to filter out unwanted events using histogram and polygonal gates
+- Learn how to use FlowClust to automatically cluster cell populations
+- Determine the need to correct for cell size
+- Examine covariates like position on plates and day effects
+
+
 # Data
 
-From 2021-04-02 experiment conducted by Jia and Lindsey to test the chimeric Pho4 with _PHO5p_-RFP strains
+- From 2021-04-02 experiment conducted by Jia and Lindsey to test the chimeric Pho4 with _PHO5p_-RFP strains
+- From 2021-08-26 to 28 experiment conducted by Lindsey to test the covariates such as plate position
 
 # Tutorial
 ## FlowCore
@@ -66,9 +78,25 @@ autoplot(x, "FL1-H")
 ```
 
 # Analysis
-## Import data
+## Import data and edit the meta data
 ```{r}
-example.file = "data/FCS-files/Chimeric Pho4 test_Experiment_Lindsey_179w-1.fcs"
-example <- read.FCS(example.file, transformation = FALSE, emptyValue = FALSE) # the original values are already linearized. 
+data.path = "data/FCS-files/20210402-LS-JZ-chimeric-Pho4/"
+fs <- read.flowSet(path = data.path, transformation = FALSE, emptyValue = FALSE) # the original values are already linearized. 
+```
+Metadata
+```{r}
+sample <- read_csv("data/sample-list/20210402-LS-JZ-chimeric-Pho4-sample.csv")
+df <- data.frame(name = sampleNames(fs)) %>% mutate(strain = str_split(name, "-", simplify = TRUE)[,1]) %>% left_join(sample, by = c("strain" = "Sample"))
+rownames(df) <- df$name
+metaData <- data.frame(labelDescription = c("filename", "sample name", "experimenter", "Pho4 source", "Fluorescent protein tag", "Pho4 chimera genotype", "Pho2 present", "PHO5pr reporter location"))
+pData(fs) <- df
+varMetadata(fs) <- metaData
+```
+
+## EDA
+The code below demonstrates how to subset a flowSet, how to apply logicle (or other) transformations in ggcyto() (not on the original dataset)
+```{r}
+autoplot(fs[sampleNames(fs) %in% c("yH156-1.fcs","177w-1.fcs")], "BL1-H") + scale_x_log10()
+autoplot(fs[sampleNames(fs) %in% c("yH156-1.fcs","177w-1.fcs")], "FSC-H", "BL1-H", bins = 64) + scale_x_log10() + scale_y_logicle()
 ```
 
