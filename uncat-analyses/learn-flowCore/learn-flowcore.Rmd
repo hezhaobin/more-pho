@@ -11,7 +11,9 @@ output:
 require(tidyverse)
 require(flowCore)
 require(flowClust)
+require(open)
 require(ggcyto)
+require(gridExtra)
 ```
 
 # Goal
@@ -81,7 +83,9 @@ autoplot(x, "FL1-H")
 ## Import data and edit the meta data
 ```{r}
 data.path = "data/FCS-files/20210402-LS-JZ-chimeric-Pho4/"
-fs <- read.flowSet(path = data.path, transformation = FALSE, emptyValue = FALSE) # the original values are already linearized. 
+fs <- read.flowSet(path = data.path, transformation = FALSE,  # the original values are already linearized. 
+                   emptyValue = FALSE,  alter.names = TRUE,   # change parameter names to R format
+                   column.pattern = ".H|FSC|SSC") # only load the height variables for the fluorescent parameters
 ```
 Metadata
 ```{r}
@@ -96,7 +100,99 @@ varMetadata(fs) <- metaData
 ## EDA
 The code below demonstrates how to subset a flowSet, how to apply logicle (or other) transformations in ggcyto() (not on the original dataset)
 ```{r}
-autoplot(fs[sampleNames(fs) %in% c("yH156-1.fcs","177w-1.fcs")], "BL1-H") + scale_x_log10()
-autoplot(fs[sampleNames(fs) %in% c("yH156-1.fcs","177w-1.fcs")], "FSC-H", "BL1-H", bins = 64) + scale_x_log10() + scale_y_logicle()
+p1 <- autoplot(fs[sampleNames(fs) %in% c("yH156-1.fcs","177w-1.fcs")], "BL1.H") + scale_x_logicle() + facet_wrap(~name, nrow = 2)
+p2 <- autoplot(fs[sampleNames(fs) %in% c("yH156-1.fcs","177w-1.fcs")], "YL2.H") + scale_x_logicle() + facet_wrap(~name, nrow = 2)
+grid.arrange(as.ggplot(p1), as.ggplot(p2), ncol = 2)
+```
+- Pick out two examples, one positive (177) and one negative (156) for both the GFP and RFP channels.
+
+## Gating
+Next we use a series of plots to guide our gating strategy for identifying the population we want to work with.
+### Remove outliers
+We first gate on FSC.H and SSC.H to remove outliers (events that are too big or too small). The Attune instrument we use can record six decades (10^0-10^6), with the first two decades mostly occupied by electronic noise. Here we will use a higher cutoff for the lower bound for FSC.H primarily because of at least one sample showed an abnormal pattern (179w-3). Note that this bound likely needs to be optimized if we decide to change the voltage on the FSC channel latter. 
+
+Let's first define a gate and visualize it in a plot before adding it to a GatingSet.
+```{r}
+outlier.gate <- rectangleGate(filterId = "-outlier", "FSC.H" = c(1e5, 1e6), "SSC.H" = c(1e2, 1e6))
+ggcyto(fs[sampleNames(fs) %in% c("yH156-1.fcs", "177w-1.fcs", "179w-1.fcs", "179w-3.fcs")], aes(x = FSC.H, y = SSC.H), subset = "root") +
+  geom_hex(bins = 64) + geom_gate(outlier.gate) + facet_wrap(~name, ncol = 2)# + ggcyto_par_set(limits = "instrument")
+```
+Add this gate to the GatingSet
+```{r}
+gs <- GatingSet(fs) # create a GatingSet
+gs_pop_add(gs, outlier.gate, parent = "root")
+recompute(gs)
 ```
 
+Let's examine how this gate intersected with the FSC.H vs FSC.W plot (for singlets)
+```{r}
+p1 <- ggcyto(gs[[1]], aes(x = FSC.H, y = FSC.W), subset = "root") + geom_hex(bins = 64)
+p2 <- ggcyto(gs[[1]], aes(x = FSC.H, y = FSC.W), subset = "-outlier") + geom_hex(bins = 64)
+grid.arrange(as.ggplot(p1), as.ggplot(p2), ncol = 2)
+```
+### Singlet
+Next let's remove multiplets on FSC.H vs FSC.W. To do this, we could either manually set up a polygon gate, or use the automatic clustering function provided by the `flowClust` package. Note that in the original implementation, the `flowClust()` function or the `tmixFilter()` version that was supposed to allow for integration with the `flowCore` package, both were designed with different downstream actions in mind than what I want to do here (visualize with `ggcyto() + geom_gate()`). The `openCyto` package written by the same group of authors who created `flowClust` and `ggcyto` has a helper function to make this possible. See [this post](https://support.bioconductor.org/p/96945/) for a discussion on alternative ways to achieve this.
+```{r fig.width=4, fig.height=4}
+ex <- Subset(fs[[1]], outlier.gate)
+singlet.gate <- gate_flowclust_2d(ex, "FSC.H", "FSC.W", filterId = "singlet", K = 1, quantile = 0.95)
+ggcyto(ex, aes(x = FSC.H, y = FSC.W)) + geom_hex(bins = 64) + geom_gate(singlet.gate) + geom_stats()
+```
+To add the flowClust gates to the GatingSet, realize that the same clustering operations need to be conducted for each flowframe inside the flowSet individually. The following code is based on the example listed under the section 8.5 in the `flowCore` [manual](https://www.bioconductor.org/packages/release/bioc/vignettes/flowCore/inst/doc/HowTo-flowCore.pdf)
+```{r results='hide'}
+dat <- gs_pop_get_data(gs, "-outlier") # get parent data
+singletGate <- fsApply(dat, function(fr)
+  openCyto::gate_flowclust_2d(fr, "FSC.H", "FSC.W", K = 1, quantile = 0.95)
+)
+gs_pop_add(gs, singletGate, parent = "-outlier", name = "singlet")
+recompute(gs)
+```
+
+```{r, fig.width=12, fig.height=12}
+ggcyto(gs, aes(x = FSC.H, y = FSC.W), subset = "-outlier") + geom_hex(bins = 64) + geom_gate("singlet") + geom_stats() + 
+  facet_wrap(~name, ncol = 10)# + scale_x_logicle() + scale_y_logicle()
+```
+
+### PHO5-mCherry induction
+When I plotted the singlet events on GFP-RFP 2d space, I noticed a few samples that show more than one population of cells, where the main population appeared to be "induced" while one or more subpopulations are less or not induced. While the biological reasons behind require further investigation and may be very interesting (heterogeneity), for this analysis we will use flowClust to identify the main population and move forward.
+```{r}
+ggcyto(gs[grepl("177|179", sampleNames(gs))], aes(x = BL1.H, y = YL2.H), subset = "singlet") + geom_hex(bins = 64) +
+  facet_wrap(~name, ncol = 4) + scale_x_logicle() + scale_y_logicle() + theme_bw()
+```
+
+
+> Be careful when working with the GatingSet and GatingHierarchy objects -- these are strictly reference classes, meaning that most of the operations work by pointers and the operations will change the underlying data. For example, the first line of code below obtains a pointer to the underlying data rather than making a copy of that data. any operations on it will change the original data as a result.
+
+```{r}
+#ex <- gs_pop_get_data(gs, "singlet")[[1]]
+ex <- fs[["B3-1.fcs"]]
+#lgcl <- estimateLogicle(ex, channels = c("BL1.H", "YL2.H"))
+lgcl <- logicleTransform("induction")
+ex <- transform(ex, lgBL1.H = lgcl(`BL1.H`), lgYL2.H = lgcl(`YL2.H`))
+fluo.gate <- gate_flowclust_2d(ex, "lgBL1.H", "lgYL2.H", K = 2, quantile = 0.98)
+ggcyto(ex, aes(x = lgBL1.H, y = lgYL2.H)) + geom_hex(bins = 64) + geom_gate(fluo.gate) + geom_stats()# + scale_x_logicle() + scale_y_logicle()
+```
+
+Even though flowClust is supposed to perform its own transformation (modified Box-Cox), empirically I found the clustering seem to work better on logicle transformed data for the two fluorescent channels. Therefore I'm transforming the underlying data of the GatingSet. Note that it seems to be difficult to "create new parameters" to store the transformed data, while keeping the original data intact. Instead, the transformation functions constructed using the constructor `logicle_trans()` stores the inverse transformation functions, which can be used to perform the inverse transformation when needed. Followed the manual for GatingSet [here](https://www.bioconductor.org/packages/devel/bioc/vignettes/flowWorkspace/inst/doc/flowWorkspace-Introduction.html#03_GatingHierarchy)
+
+```{r}
+lgcl <- logicle_trans()
+transList <- transformerList(c(lgBL1.H = "BL1.H", lgclYL2.H = "YL2.H"), lgcl)
+transform(gs, transList)
+```
+> to obtain the original data, use `gs_pop_get_data(gs[[1]], inverse.transform = TRUE)`
+
+Now we can do the flowClust gating
+```{r}
+dat <- gs_pop_get_data(gs, "singlet") # get parent data
+inductionGate <- fsApply(dat, function(fr)
+  openCyto::gate_flowclust_2d(fr, "BL1.H", "YL2.H", K = 2, quantile = 0.95)
+)
+gs_pop_add(gs, inductionGate, parent = "singlet", name = "induction")
+recompute(gs)
+```
+
+
+```{r, fig.width=12, fig.height=12}
+ggcyto(gs, aes(x = BL1.H, y = YL2.H), subset = "singlet") + geom_hex(bins = 64) + geom_gate("induction") + geom_stats() + 
+  facet_wrap(~name, ncol = 10)# + scale_x_logicle() + scale_y_logicle()
+```
