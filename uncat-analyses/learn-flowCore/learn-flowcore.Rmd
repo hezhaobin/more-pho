@@ -148,9 +148,9 @@ recompute(gs)
 ```
 
 ```{r, fig.width=12, fig.height=12}
-ggcyto(gs, aes(x = FSC.H, y = FSC.W), subset = "-outlier") + geom_hex(bins = 64) + geom_gate("singlet") + geom_stats() + 
-  facet_wrap(~name, ncol = 10)# + scale_x_logicle() + scale_y_logicle()
+ggcyto(gs, aes(x = FSC.H, y = FSC.W), subset = "-outlier") + geom_hex(bins = 64) + geom_gate("singlet") + geom_stats(type = c("percent", "count")) + facet_wrap(~name, ncol = 10)# + scale_x_logicle() + scale_y_logicle()
 ```
+- Note that 179w-3, B3-1 and B3-3 have very few events.
 
 ### PHO5-mCherry induction
 When I plotted the singlet events on GFP-RFP 2d space, I noticed a few samples that show more than one population of cells, where the main population appeared to be "induced" while one or more subpopulations are less or not induced. While the biological reasons behind require further investigation and may be very interesting (heterogeneity), for this analysis we will use flowClust to identify the main population and move forward.
@@ -196,3 +196,42 @@ recompute(gs)
 ggcyto(gs, aes(x = BL1.H, y = YL2.H), subset = "singlet") + geom_hex(bins = 64) + geom_gate("induction") + geom_stats() + 
   facet_wrap(~name, ncol = 10)# + scale_x_logicle() + scale_y_logicle()
 ```
+Here are the cleaned data
+```{r, fig.width=12, fig.height=12}
+ggcyto(gs, aes(x = BL1.H, y = YL2.H), subset = "induction") + geom_hex(bins = 64) + facet_wrap(~name, ncol = 10)# + scale_x_logicle()
+```
+
+## Normalization
+My original idea was to follow the Metzger et al 2015 paper's protocol and normalize both fluorescent channels by the cell size, approximated by the FSC signal. I had been a bit unsure about how they came up with the formula, i.e. $\frac{logRFP^2/logFSC^3}{logGFP^2/logFSC^3}$. My best guess is that they explored different transformations of the two variables to look for the most linear correlations between the two measures (since FSC is not a direct measure of cell size), and came up with the cubic and square on each. But looking at the GFP vs RFP plot above, I suddenly realized that in our work what we really cared about is the activity of the chimeric Pho4 as defined by RFP / GFP (reporter protein production per cell normalized by chimeric Pho4 expression level). So that's what I'll be using to calculate the median.
+
+See below for the new normalized variable and how it is no longer correlated with FSC
+```{r}
+ex <- gs[grepl("177", sampleNames(gs))]; attr(ex, "subset") <- "induction"
+ggplot(ex, aes(x = FSC.H, y = YL2.H/BL1.H)) + geom_hex(bins = 64) + facet_wrap(~name, ncol = 3) + scale_fill_gradientn(colours = rev(RColorBrewer::brewer.pal(11, "Spectral"))) + stat_smooth(method = "lm")
+```
+
+# Output
+The goal is to export the gated events and calculate the RFP/GFP and take the median, which will be used in downstream analyses.
+```{r}
+# get the population stats
+stats <- gs_pop_get_stats(gs) %>% 
+  as_tibble() %>% 
+  mutate(pop = gsub(".*/", "", pop), pop = gsub("-outlier", "cells", pop)) %>% 
+  pivot_wider(names_from = pop, names_prefix = "n_", values_from = count)
+# get population data
+fs.out <- gs_pop_get_data(gs, y = "induction", inverse.transform = TRUE) # get the inverse transformed data
+# calculate ratio
+norm.data <- fsApply(fs.out, function(cf) {
+  cf <- cbind(cf, ratio = cf[,"YL2.H"] / cf[, "BL1.H"])
+  apply(cf[, c("BL1.H", "YL2.H", "ratio")], 2, median)
+  }, use.exprs = TRUE) %>% 
+  as_tibble(rownames = "name")
+```
+Export the data
+```{r}
+# pull all info together in a single tibble
+final <- left_join(as_tibble(pData(fs)), stats, by = c("name" = "sample")) %>% 
+  left_join(norm.data, by = "name")
+write_tsv(final, "output/20210402-jz-lfs-gated-median-out.txt")
+```
+
