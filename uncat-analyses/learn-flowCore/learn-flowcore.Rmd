@@ -86,6 +86,9 @@ data.path = "data/FCS-files/20210402-LS-JZ-chimeric-Pho4/"
 fs <- read.flowSet(path = data.path, transformation = FALSE,  # the original values are already linearized. 
                    emptyValue = FALSE,  alter.names = TRUE,   # change parameter names to R format
                    column.pattern = ".H|FSC|SSC") # only load the height variables for the fluorescent parameters
+# correct a sample name mistake
+names <- sampleNames(fs) %>% gsub("186", "193", .)
+sampleNames(fs) <- names
 ```
 Metadata
 ```{r}
