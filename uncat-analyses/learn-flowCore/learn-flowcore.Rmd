@@ -11,7 +11,7 @@ output:
 require(tidyverse)
 require(flowCore)
 require(flowClust)
-require(open)
+require(openCyto)
 require(ggcyto)
 require(gridExtra)
 ```
@@ -135,6 +135,7 @@ grid.arrange(as.ggplot(p1), as.ggplot(p2), ncol = 2)
 ```
 ### Singlet
 Next let's remove multiplets on FSC.H vs FSC.W. To do this, we could either manually set up a polygon gate, or use the automatic clustering function provided by the `flowClust` package. Note that in the original implementation, the `flowClust()` function or the `tmixFilter()` version that was supposed to allow for integration with the `flowCore` package, both were designed with different downstream actions in mind than what I want to do here (visualize with `ggcyto() + geom_gate()`). The `openCyto` package written by the same group of authors who created `flowClust` and `ggcyto` has a helper function to make this possible. See [this post](https://support.bioconductor.org/p/96945/) for a discussion on alternative ways to achieve this.
+
 ```{r fig.width=4, fig.height=4}
 ex <- Subset(fs[[1]], outlier.gate)
 singlet.gate <- gate_flowclust_2d(ex, "FSC.H", "FSC.W", filterId = "singlet", K = 1, quantile = 0.95)
@@ -205,7 +206,55 @@ ggcyto(gs, aes(x = BL1.H, y = YL2.H), subset = "induction") + geom_hex(bins = 64
 ```
 
 ## Normalization
-My original idea was to follow the Metzger et al 2015 paper's protocol and normalize both fluorescent channels by the cell size, approximated by the FSC signal. I had been a bit unsure about how they came up with the formula, i.e. $\frac{logRFP^2/logFSC^3}{logGFP^2/logFSC^3}$. My best guess is that they explored different transformations of the two variables to look for the most linear correlations between the two measures (since FSC is not a direct measure of cell size), and came up with the cubic and square on each. But looking at the GFP vs RFP plot above, I suddenly realized that in our work what we really cared about is the activity of the chimeric Pho4 as defined by RFP / GFP (reporter protein production per cell normalized by chimeric Pho4 expression level). So that's what I'll be using to calculate the median.
+Because the amount of fluorescence scales with cell size, comparing the median of each sample would only be valid if the cell size distribution is approximately the same across samples. Is that the case?
+```{r fig.width=12, fig.height=12}
+mult_format <- function() {
+     function(x) format(x/10000,digits = 2) 
+}
+ggcyto(gs, aes(x = FSC.H), subset = "induction") + geom_density(fill = "forestgreen") + 
+  scale_x_continuous(labels = mult_format(), name = "FSC.H x 10000") +
+  facet_wrap(~name, ncol = 10)
+```
+We can also calculate the medians of the FSC.H for each sample
+```{r}
+# get population data
+fs.out <- gs_pop_get_data(gs, y = "induction", inverse.transform = TRUE) # get the inverse transformed data
+```
+
+```{r}
+# calculate medians
+medFSC <- fsApply(fs.out, function(x) median(x[,"FSC.H"]), use.exprs = TRUE)
+hist(medFSC)
+```
+
+So we can see that they are not all uniform. This means without correction for cell size, the median wouldn't be truly comparable across samples. A related issue is background subtraction: we used to simply subtract the median of the negative sample from the medians of all positive samples. But that may not be reasonable.
+
+
+### Updates 2021-10-14
+First, after discussing with Brian Metzger, I figured out that their formula is based on the intuition that FSC is proportional to the max 2d projection (area) of a cell, and thus FSC^(3/2) should be roughly proportional to the volume. By contrast, the fluorescent channels should be the cumulative intensity from the whole cell. Therefore dividing FP intensity by FSC^(3/2) should effectively remove the variation due to cell size difference. He did say that the Wittkopp lab later switched to a different method, to be found in their papers post 2015. I'll take a look
+
+A second point relates to my [previous attempt](1attempt). I realized later that because the GFP values were not background subtracted, and since the difference between a cell with Pho4-mNeon and a cell with no GFP at all is about 1,200 vs 800 when the signal-to-noise is good, when I divide RFP by GFP, the latter mainly consists of autofluorescence and thus would scale with cell size.
+
+Let's check this with our negative strains -- yH156, yH372, yH373, all of which have no mNeon
+```{r}
+p1 <- ggcyto(gs[grepl("156|372|373", sampleNames(gs))], aes(x = FSC.H, y = BL1.H), subset = "singlet") + geom_hex(bins = 64) + facet_wrap(~name, ncol = 4) + scale_x_log10() + theme_bw()
+p2 <- ggcyto(gs[grepl("156|372|373", sampleNames(gs))], aes(x = FSC.H, y = YL2.H), subset = "singlet") + geom_hex(bins = 64) + facet_wrap(~name, ncol = 4) + scale_x_log10() + theme_bw()
+grid.arrange(as.ggplot(p1), as.ggplot(p2), nrow = 2)
+```
+
+Are the cell size distributions similar across samples?
+
+
+If I give up the idea of calculating the [Pho4] adjusted [PHO5pr-mCherry] value on a single cell basis, and revert to dealing with population stats (e.g. Median), then 
+
+### Earlier attempt {#1attempt}
+My original idea was to follow the Metzger et al 2015 paper's protocol and normalize both fluorescent channels by the cell size, approximated by the FSC signal. I had been a bit unsure about how they came up with the formula, i.e. $\frac{logRFP^2/logFSC^3}{logGFP^2/logFSC^3}$. My best guess is that they explored different transformations of the two variables to look for the most linear correlations between the two measures (since FSC is not a direct measure of cell size), and came up with the cubic and square on each. But looking at the GFP vs RFP plot above, I suddenly realized that in our work what we really cared about is the activity of the chimeric Pho4 as defined by RFP / GFP (reporter protein production per cell normalized by chimeric Pho4 expression level). So that's what I'll be using to calculate the median. First, though, I'll need to subtract the background from both the BL1 and YL2 channels.
+
+```{r background_calc}
+# first get the names of the samples that serve as background
+# for GFP (BL1), we have three samples that have no mNeon tags
+# for RFP (YL2), 
+```
 
 See below for the new normalized variable and how it is no longer correlated with FSC
 ```{r}
