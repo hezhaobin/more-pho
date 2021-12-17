@@ -1,4 +1,4 @@
-Group,ID,Sample,Rep,Pho4,Pho2,Pho5RFP,FP,Parameter,Count,Perc_gated,Median,CV,rCV
+Group,ID,Sample,Rep,Pho4,Pho2,PHO5RFP,FP,Parameter,Count,Perc_gated,Median,CV,rCV
 Jia,A12-1,A12,1,pH188,pho2del,ura3,T,PHO5pr-mCherry-H,10000,19.035,6914,50.22,46.53
 Jia,A12-1,A12,1,pH188,pho2del,ura3,T,Pho4-GFP-H,10000,19.035,1152,46.79,41.96
 Jia,A12-2,A12,2,pH188,pho2del,ura3,T,PHO5pr-mCherry-H,10000,18.784,7092,47.81,44.06
@@ -73,14 +73,14 @@ Jia,B4-2,B4,2,pH180,ScPho2,ura3,T,PHO5pr-mCherry-H,10000,15.635,10025,43.56,39.6
 Jia,B4-2,B4,2,pH180,ScPho2,ura3,T,Pho4-GFP-H,10000,15.635,1523,35.25,30.57
 Jia,B4-3,B4,3,pH180,ScPho2,ura3,T,PHO5pr-mCherry-H,10000,13.588,9874,41.09,38.43
 Jia,B4-3,B4,3,pH180,ScPho2,ura3,T,Pho4-GFP-H,10000,13.588,1567,36.19,29.48
-Jia,b50,yHB50,1,pH124,ScPho2,ura3,T,PHO5pr-mCherry-H,10000,21.019,1826,75.83,73.3
-Jia,b50,yHB50,1,pH124,ScPho2,ura3,T,Pho4-GFP-H,10000,21.019,1871,79.72,70.45
-Jia,b63,yHB63,1,pH124,pho2del,ura3,T,PHO5pr-mCherry-H,10123,27.481,7054,50.48,46.85
-Jia,b63,yHB63,1,pH124,pho2del,ura3,T,Pho4-GFP-H,10123,27.481,1204,40.75,37.93
-Lindsey,parent1-372,yH372,1,pho4del,ScPho2,pho5,T,PHO5pr-mCherry-H,10000,27.424,383,112.7,66.97
-Lindsey,parent1-372,yH372,1,pho4del,ScPho2,pho5,F,Pho4-GFP-H,10000,27.424,656,52.26,47.01
-Lindsey,parent2-373,yH373,1,pho4del,pho2del,pho5,T,PHO5pr-mCherry-H,10000,21.531,534,109.13,64.13
-Lindsey,parent2-373,yH373,1,pho4del,pho2del,pho5,F,Pho4-GFP-H,10000,21.531,757,47.11,45.63
+Jia,yHB050-1,yHB050,1,pH124,ScPho2,ura3,T,PHO5pr-mCherry-H,10000,21.019,1826,75.83,73.3
+Jia,yHB050-1,yHB050,1,pH124,ScPho2,ura3,T,Pho4-GFP-H,10000,21.019,1871,79.72,70.45
+Jia,yHB063-1,yHB063,1,pH124,pho2del,ura3,T,PHO5pr-mCherry-H,10123,27.481,7054,50.48,46.85
+Jia,yHB063-1,yHB063,1,pH124,pho2del,ura3,T,Pho4-GFP-H,10123,27.481,1204,40.75,37.93
+Lindsey,yH372-1,yH372,1,pho4del,ScPho2,pho5,T,PHO5pr-mCherry-H,10000,27.424,383,112.7,66.97
+Lindsey,yH372-1,yH372,1,pho4del,ScPho2,pho5,F,Pho4-GFP-H,10000,27.424,656,52.26,47.01
+Lindsey,yH373-1,yH373,1,pho4del,pho2del,pho5,T,PHO5pr-mCherry-H,10000,21.531,534,109.13,64.13
+Lindsey,yH373-1,yH373,1,pho4del,pho2del,pho5,F,Pho4-GFP-H,10000,21.531,757,47.11,45.63
 Lindsey,177w-1,177w,1,pH177,ScPho2,pho5,T,PHO5pr-mCherry-H,10000,19.169,28593,37.86,33.02
 Lindsey,177w-1,177w,1,pH177,ScPho2,pho5,T,Pho4-GFP-H,10000,19.169,2405,38.67,33.88
 Lindsey,177w-2,177w,2,pH177,ScPho2,pho5,T,PHO5pr-mCherry-H,10000,17.633,25182,41.32,37.47
@@ -153,5 +153,5 @@ Lindsey,194wo-2,194wo,2,pH194,pho2del,pho5,T,PHO5pr-mCherry-H,10000,25.886,671,1
 Lindsey,194wo-2,194wo,2,pH194,pho2del,pho5,T,Pho4-GFP-H,10000,25.886,1268,69.65,48.76
 Lindsey,194wo-3,194wo,3,pH194,pho2del,pho5,T,PHO5pr-mCherry-H,10000,24.816,848,100.89,81.82
 Lindsey,194wo-3,194wo,3,pH194,pho2del,pho5,T,Pho4-GFP-H,10000,24.816,1506,75.34,54.51
-Lindsey,yH156-neg,yH156,1,ScPho4,ScPho2,NA,F,PHO5pr-mCherry-H,10000,25.427,70,303.45,38.12
-Lindsey,yH156-neg,yH156,1,ScPho4,ScPho2,NA,F,Pho4-GFP-H,10000,25.427,734,49,45.25
+Lindsey,yH156-1,yH156,1,ScPho4,ScPho2,NA,F,PHO5pr-mCherry-H,10000,25.427,70,303.45,38.12
+Lindsey,yH156-1,yH156,1,ScPho4,ScPho2,NA,F,Pho4-GFP-H,10000,25.427,734,49,45.25
