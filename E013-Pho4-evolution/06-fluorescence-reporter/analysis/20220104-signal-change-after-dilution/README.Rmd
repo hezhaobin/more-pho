@@ -1,0 +1,35 @@
+# Background
+We previously observed that after diluting o/n culture grown without shaking in 96-well plates into 1xPBS (~1:20), the measured intensity drifts up such that the first well and the last well may differ by more than 3 fold even though they contain exactly the same strain. My hypothesis is that cells grown without shaking settle very early on and due to the lack of mixing, cells remained in a metabolically inactive mode that suppressed either transcription or translation. After being "released" into PBS, which doesn't contain any nutrient but does give the cells access to oxygen and phosphate, may result in the cells restarting their metabolism and thus increasing the protein reporter we measure.
+
+# Goal
+Test the above hypothesis, namely after diluting the o/n culture 1:20 into PBS, the fluorescent signal measured will continue to increase and reach a plateau after some time.
+
+# Approach
+yH156 and JZ-B18 (ScPho4 with Pho2) were inoculated into SC or SD-leu in the morning, grown to early log phase in the afternoon, diluted 1:5 to 1:10 into 96-well plates (standard) and left at 30C without shaking. The next morning, the o/n culture was diluted 1:20 into PBS (~1 mL total) and were measured by flow cytometry over the course of 3 hours.
+
+# Data
+The flow data was processed using the Attune software to export the median fluorescence after gating for single cells. The CSV file is lightly edited and stored in this folder.
+
+# Results
+## Load libraries and data
+```{r}
+require(tidyverse)
+require(cowplot)
+```
+```{r}
+dat <- read_csv("20220104-signal-change.csv", col_types = "ctcidi") %>% 
+  mutate(Parameter = factor(Parameter, levels = c("Pho4-GFP-GFP-H","PHO5pr-mCherry-mCherry-H"), 
+                            labels = c("Pho4-mNeon", "PHO5-mCherry")))
+```
+
+## Plot change in signal over time
+```{r}
+dat %>% 
+  filter(Sample == "Pos") %>% 
+  ggplot(aes(x = Time, y = MFI)) + geom_line() + geom_point() +
+  facet_wrap(~Parameter, scales = "free_y", ncol = 1) +
+  theme_cowplot()
+```
+
+# Conclusion
+The signal kept rising even after 4 hours. It is not a good idea to use the no-shaking method.
