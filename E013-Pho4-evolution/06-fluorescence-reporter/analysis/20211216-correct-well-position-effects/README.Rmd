@@ -55,13 +55,6 @@ df <- bind_rows(`12/16`=df1, `12/17`=df2, .id = "date") %>%
   filter(sample != "Neg")
 ```
 
-Create a custom plotting function
-```{r}
-myHeatMap <- function(tb){
-  p <- ggplot(tb, aes(x = row, y = col, fill = ))
-}
-```
-
 ## 1. Negative strain yH156
 The negative strain is in each 2x3 block. First check how background fluorescence values are influenced by the well positions.
 ```{r, fig.width=10}
