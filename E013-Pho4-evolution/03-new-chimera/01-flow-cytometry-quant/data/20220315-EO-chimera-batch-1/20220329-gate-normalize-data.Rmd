@@ -1,7 +1,7 @@
 ---
 title: "Collect flow data for chimeric constructs in new background with standardized protocol"
 author: Bin He
-date: "22 mar 2022 (updated `r format(Sys.time(), '%m/%d/%y')`)"
+date: "29 mar 2022 (updated `r format(Sys.time(), '%m/%d/%y')`)"
 output:
   html_notebook:
     toc: true
@@ -22,33 +22,22 @@ require(cowplot)
 
 *Plate design*
 
-See `20220322-sample-list.txt`
-
-| **Row \\ Col** | **1** | **2-4** | **5** | **6-8** | **9** | **10-12** |
-|----------------|:-----:|:-------:|:-----:|:-------:|:-----:|:---------:|
-| **A**          |   P   | 194-555 |   P   | 209-373 |   P   |  230-555  |
-| **B**          |   B   | 194-373 |   N   | 209-555 |  H2   |  230-373  |
-| **C**          |   P   | 211-555 |   P   | 218-373 |   P   |  232-555  |
-| **D**          |  H1   | 211-373 |   B   | 218-555 |   N   |  232-373  |
-| **E**          |   P   | 213-555 |   P   | 220-373 |   P   |  234-555  |
-| **F**          |  H2   | 213-373 |  H1   | 220-555 |   B   |  234-373  |
-| **G**          |   P   | 215-555 |   P   | 221-373 |   P   |  235-555  |
-| **H**          |   N   | 215-373 |  H2   | 221-555 |  H1   |  235-373  |
-
-P: positive control cells to identify well position effect (pH188-yH555)
-
-B: blank wells to detect contamination during growth and control for media background fluorescence
-
-N: negative control cells for estimating cell background fluorescence (yH156)
-
-H1: host yH555 (with Pho2) without Pho4 plasmids, to estimate baseline RFP reporter levels
-
-H2: host yH373 (without Pho2) without Pho4 plasmids, to estimate baseline RFP reporter levels
+See `20220315-sample-list.txt`
 
 # Analysis
 
 ## Import data and edit the meta data
 
+import the data from the RDSS (just once) and then write it to the local disk
+```{r eval=FALSE, include=FALSE}
+data.path = "/Volumes/rdss_bhe2/Project/E013-Pho4p-evolution/flow-cytometry/data/20220315-EO-chimera-batch-1/FCS_3.1"
+fs <- read.flowSet(path = data.path, pattern = ".fcs", # specify the file pattern
+                   transformation = FALSE,  # the original values are already linearized. 
+                   emptyValue = FALSE)
+write.flowSet(fs, outdir = "FCS")
+```
+
+import from the local path
 ```{r}
 data.path = "FCS"
 fs <- read.flowSet(path = data.path, pattern = ".fcs", # specify the file pattern
@@ -71,7 +60,7 @@ sampleNames(fs) <- shortNames
 Metadata
 
 ```{r}
-sample <- read.delim("20220322-sample-list.txt") %>% 
+sample <- read.csv("20220315-sample-list.csv") %>% 
   column_to_rownames(var = "file")
 pData(fs) <- sample
 ```
@@ -94,9 +83,10 @@ Next we use a series of plots to guide our gating strategy for identifying the p
 Let's first define a gate and visualize it in a plot before adding it to a GatingSet.
 
 ```{r}
+test <- shortNames[c(3, 12*2+3, 12*5+3, 12*7+3)]
 outlier.gate <- rectangleGate(filterId = "-outlier", "FSC.H" = c(1.2e5, 1e6), "SSC.H" = c(1e2, 1e6))
 ggcyto(fs[test], aes(x = FSC.H, y = SSC.H), subset = "root") +
-  geom_hex(bins = 64) + geom_gate(outlier.gate) + facet_wrap(~name, ncol = 2)# + ggcyto_par_set(limits = "instrument")
+  geom_hex(bins = 64) + geom_gate(outlier.gate) + geom_stats() + facet_wrap(~name, ncol = 2)# + ggcyto_par_set(limits = "instrument")
 ```
 
 Add this gate to the GatingSet
@@ -123,7 +113,7 @@ Next let's remove multiplets on FSC.H vs FSC.W. To do this, we could either manu
 ***Update 2022/03/26*** skip the singlet gate altogether
 
 
-```{r fig.width=4, fig.height=4}
+```{r include=FALSE, eval=FALSE, fig.width=4, fig.height=4}
 scPars <- ggcyto_par_set(limits = list(x = c(0,1e6), y = c(30,300)))
 ex <- Subset(fs[[1]], outlier.gate)
 #singlet.gate <- gate_flowclust_2d(ex, "FSC.H", "FSC.W", filterId = "singlet", K = 2, quantile = 0.8)
@@ -200,7 +190,7 @@ Because the amount of fluorescence scales with cell size, comparing the median o
 mult_format <- function() {
      function(x) format(x/10000,digits = 2) 
 }
-ggcyto(gs[[grep("218|230", sampleNames(fs), value = T)]], aes(x = FSC.H), subset = "induction") + geom_density(fill = "forestgreen") + 
+ggcyto(gs[sample(1:96, 9)], aes(x = FSC.H), subset = "induction") + geom_density(fill = "forestgreen") + 
   scale_x_continuous(labels = mult_format(), name = "FSC.H x 10000") +
   facet_wrap(~name, ncol = 3)
 ```
@@ -219,7 +209,7 @@ fs.out <- gs_pop_get_data(gs, y = "induction", inverse.transform = TRUE) # get t
 mfsc <- 5e5 # based on the mode of the median of FSC.H from all samples
 # fs.out is of the cytoframe class, which is a reference class. need to convert to flowframe for transformation
 # https://www.bioconductor.org/packages/devel/bioc/vignettes/flowWorkspace/inst/doc/flowWorkspace-Introduction.html
-exponent <- 1.0
+exponent <- 1.2
 # ex <- cytoframe_to_flowFrame(fs.out[["A9"]]) %>%
 #   transform(nFSC = FSC.H/mfsc) %>% 
 #   transform(nGFP = BL1.H/nFSC^(exponent), nRFP = YL2.H/nFSC^(exponent))
@@ -267,5 +257,5 @@ Export the data
 # pull all info together in a single tibble
 final <- left_join(as_tibble(pData(fs)), stats, by = c("name" = "sample")) %>% 
   left_join(norm.data, by = "name")
-write_tsv(final, "20220104-gated-median-out.txt")
+write_tsv(final, "20220329-gated-median-out.txt")
 ```
