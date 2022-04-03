@@ -1,0 +1,119 @@
+---
+title: "Teaching R formatting and plotting"
+author: "Bin He"
+date: "1/6/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+require(tidyverse)
+require(cowplot)
+```
+
+# Goal
+
+Demonstrate how to format and plot data using `tidyverse`
+
+# Data
+Emily O'Brien's 2021-12-23 flow cytometry data
+
+# Analysis
+## Read data
+```{r}
+df <- read_tsv("20211223-flow-cytometry-pH239-240-241.tsv", na = "N/A")
+```
+
+## Format and filter
+Which records need to be kept? Which variables?
+```{r}
+dat <- df %>% 
+  filter(gate == "R1", X.par != "FSC - FSC-H") %>% 
+  select(sample, count, pcTotal, parameter = X.par, median = X.median) %>% 
+  # simplify the parameter names
+  mutate(parameter = factor(parameter, levels = c("Pho4-GFP - BL1-H", "PHO5pr-mCherry - YL2-H"), labels = c("mNeon", "mCherry"))) %>% 
+  # remove the replicate postfix for the ease of data wrangling
+  mutate(sample = gsub("-[1-3]$", "", sample))
+```
+
+It's helpful to have a separate data frame that records the meta data for the strains. In this case the most obvious ones are the Pho4 makeup and Pho2 presence or absence.
+```{r}
+meta <- tibble(sample = c("yH156", "yH295", "yH296", "A12", "B12", "A18", "B18", "239-295", "239-296", "240-295", "240-296", "241-295", "241-296"),
+               Pho4 = ordered(c("pho4∆", "pho4∆", "pho4∆", "CgPho4", "CgPho4", "ScPho4", "ScPho4", "239", "239", "240", "240", "241", "241"), levels = c("pho4∆", "ScPho4", "CgPho4", "239", "240", "241")),
+               Pho2 = factor(c(0,0,1,0,1,0,1,0,1,0,1,0,1), levels = c(0,1), labels = c("pho2∆", "PHO2")))
+```
+
+## Background subtraction
+Calculate the background for the GFP and RFP channels based on the negative samples, and subtract them from the rest of the samples
+
+To make our calculations easier, we will first change the layout of the dataset by "gathering" the data corresponding to the same sample_replicate. This means bringing the two rows for each sample that each records the GFP or RFP signal into a single row.
+```{r}
+dat1 <- dat %>% 
+  pivot_wider(names_from = parameter, values_from = median)
+```
+
+Now we can calculate the background and do the subtraction
+```{r}
+bg <- dat1 %>% 
+  filter(sample == "yH156") %>% 
+  summarize(across(mNeon:mCherry, mean))
+
+dat2 <- dat1 %>% 
+  # remove yH156. this is optional but will make the dataset cleaner and easier for plotting
+  filter(sample != "yH156") %>% 
+  # background subtraction
+  mutate(mNeon = mNeon - bg$mNeon, mCherry = mCherry - bg$mCherry)
+```
+
+## Plotting
+We would like to plot the mNeon and mCherry on separate panels. There are two ways to do this: make two separate plots or make one plot with faceting. I'll demonstrate them both:
+
+First, let's see how to do them separately
+```{r}
+p1 <- ggplot(dat2, aes(y = sample, x = mNeon)) +
+  geom_bar(stat = 'summary', fun = "mean", fill = alpha("grey", 0.4), color = "black") + geom_point() +
+  theme_bw(base_size = 14)
+p2 <- ggplot(dat2, aes(y = sample, x = mCherry)) +
+  geom_bar(stat = 'summary', fun = "mean", fill = alpha("grey", 0.4), color = "black") + geom_point() +
+  theme_bw(base_size = 14)
+# at this point we can display the two plots separately and combine them in google slides or similar, like this
+p1
+p2
+
+# or we can combine them in R using the Cowplot package's plot_grid() function
+plot_grid(p1, p2, nrow = 1)
+
+# we can even use a small trick to create a "pyramid plot" effect
+plot_grid(p1 + theme(axis.title.y = element_blank(), axis.text.y = element_blank()) + scale_y_discrete(position = "right") + scale_x_reverse(), 
+          p2 + theme(axis.title.y = element_blank()),
+          rel_widths = c(0.9, 1))
+```
+
+To use the faceting function, we need to convert the dataset back to the "long" format, so that the mNeon and mCherry median values for each sample will appear on different rows. The basic idea is this: in faceting, we need to "map" a variable to the facets, and that variable (i.e., column) contains the name of the fluorescence proteins. So in effect, we need to turn the column names, in this case, "mNeon" and "mCherry", into values of a new column, named "parameter". Note that this is how we started.
+```{r}
+dat3 <- dat2 %>% 
+  pivot_longer(cols = mNeon:mCherry, names_to = "parameter", values_to = "median")
+# now we can make the plot
+ggplot(dat3, aes(y = sample, x = median)) +
+  geom_bar(stat = 'summary', fun = "mean", fill = alpha("grey", 0.4), color = "black") + 
+  geom_point() +
+  facet_wrap(~parameter, scale = "free") +
+  theme_bw(base_size = 14) + theme(axis.title.y = element_blank())
+```
+
+Now to demonstrate how we can add features to this plot, let's try to use the fill color to distinguish between the "PHO2" and "pho2∆" backgrounds. To do so we will use the meta data we created earlier.
+```{r}
+# first, we need to join the meta data with the data we just created
+dat4 <- dat3 %>% left_join(meta, by = "sample") 
+# next we can make the plot
+ggplot(dat4, aes(y = Pho4, x = median, fill = Pho2)) +
+  geom_bar(position = position_dodge(0.9), stat = 'summary', fun = "mean", color = "black") +  
+  geom_point(position = position_dodge(0.9), shape = 5) +
+  scale_fill_manual(values = c("PHO2" = alpha("red", 0.5), "pho2∆" = alpha("grey", 0.5))) +
+  scale_y_discrete(limits = rev) +
+  facet_wrap(~parameter, scale = "free") +
+  theme_bw(base_size = 14) + theme(axis.title.y = element_blank())
+```
+

@@ -1,0 +1,1 @@
+The goal of this sub-project is to select the [H2O2] and time points for RNAseq and Pol II ChIP-seq. The approach is to use qPCR to profile a small number of genes and to measure the growth curves under different [H2O2] to select a mild, intermediate and high stress condition, at an early, middle and late time point.

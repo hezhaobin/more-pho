@@ -1,0 +1,62 @@
+---
+title: "Determine stress conditions and timepoints for genomics profiling"
+author: Bin He
+date: 2022-03-07
+output: html_notebook
+---
+
+```{r}
+require(tidyverse)
+require(cowplot)
+```
+
+## Goal
+
+Summarize qRT-PCR and growth curve results performed by VKS from Nov 2021 to Jan 2022 in order to determine the time points and [H2O2] for the time course RNAseq.
+
+## Materials and Methods
+
+### qRT-PCR
+| **Date**  | **Species**   | **[H2O2] mM**  | **Time points (min)**  | **Targets**      |
+|-----------|---------------|----------------|------------------------|------------------|
+| 2022.01   | _S. cerevisiae_ | 0, 0.2, 0.5, 5 | 0, 10, 20, 40, 120     | CTT1, GRE2       |
+| 2021.12   | _C. glabrata_   | 0, 5, 10, 100  | 0, 10, 20, 40, 80, 100 | CTA1, GRE2       |
+| 2021.11   | _C. glabrata_   | 0, 5           | 40                     | CTA1, GRE2, TRX2 |
+
+```{r}
+dat <- read_tsv("../input/20220306-summary-H2O2-time-course-gene-induction.tsv")
+```
+
+### growth curve
+| **Date**  | **Species**   | **[H2O2] mM**  | **Time points (min)**  | **Targets**      |
+|-----------|---------------|----------------|------------------------|------------------|
+| 2022.01   | _S. cerevisiae_ | 0, 0.2, 0.5, 5 | 0, 10, 20, 40, 120     | CTT1, GRE2       |
+
+## Plot
+```{r}
+dat1 <- dat %>% 
+  mutate(FC = 2^log2FC,
+         time = factor(treatTime),
+         H2O2 = ordered(h2o2, levels = paste(c(0.2, 0.5, 1, 5, 10, 100), "mM")))
+
+dat1 %>% filter(gene %in% c("CTA1", "CTT1", "GRE2")) %>% 
+  ggplot(aes(x = time, y = FC, color = H2O2, group = H2O2)) +
+  geom_point() + stat_summary(geom = "line", fun.y = mean) +
+  scale_color_manual(values = c(
+    "0.2 mM" = "yellow3",
+    "0.5 mM" = "orange2",
+    "1 mM" = "darkred",
+    "5 mM" = "limegreen",
+    "10 mM" = "darkgreen",
+    "100 mM" = "purple4"
+  )) +
+  facet_wrap(~ paste(species, gene, sep = " - ")) +
+  ylab("Fold induction") + xlab("Time (min)") +
+  theme_cowplot() + panel_border() + background_grid(major = "y") +
+  theme(strip.text = element_text(face = 3))
+```
+
+```{r}
+ggsave("../output/20220307-qRT-PCR-Sc-Cg-time-course.png", width = 7, height = 5, bg = "white")
+```
+
