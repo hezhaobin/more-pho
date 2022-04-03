@@ -1,0 +1,128 @@
+---
+title: "E013 Pho4 chimera activity analysis, new host"
+author: Bin He
+date: "2022-03-30 updated `r Sys.Date()`"
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r}
+require(tidyverse)
+require(cowplot)
+```
+
+# Goal
+- Analyze the latest batches of flow cytometry data to determine the contribution of different (matching) parts of ScPho4 and CgPho4 to their difference in Pho2 dependence. 
+- Develop an analysis pipeline to perform QC, correction (if needed) and plotting the results.
+
+# Data
+Merge the three batches
+```{r}
+raw <- list(
+  "03/15/22" = read_tsv("../data/20220315-EO-chimera-batch-1/20220329-gated-median-out.txt"),
+  "03/22/22" = read_tsv("../data/20220322-EO-chimera-batch-2/20220327-gated-median-out.txt"),
+  "03/29/22" = read_tsv("../data/20220329-EO-chimera-batch-3/20220330-gated-median-out.txt")
+)
+dat <- bind_rows(raw, .id = "date") %>% 
+  #separate(col = well, sep = 1, into = c("row", "col")) %>% 
+  separate(col = sample, sep = "-", into = c("plasmid", "host", "rep"))
+```
+
+# Analysis
+## QC
+### 1. Number of events per sample
+```{r}
+dat %>% ggplot(aes(x = n_induction)) + geom_histogram(bins = 30, fill = "forestgreen") + facet_grid(host~date) + theme_gray(base_size = 14) #+ panel_border()
+```
+
+**_Discussion_**
+
+1. Majority of the experimental wells (not blank) have > 10000 events, with the exception of a few samples `r dat %>% filter(host != "blank", n_induction < 10000)`
+1. Remove the blank wells and proceed with QC
+
+### 2. Background subtraction
+```{r}
+dat %>% filter(host == "156") %>% 
+  pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
+  ggplot(aes(x = date, y = intensity)) + geom_point() + facet_wrap(~parameter, scale = "free_y") +
+  theme_bw(base_size = 14)
+```
+
+03/29/22 D9 showed higher background fluorescence than the others. after checking the gating result, I found that NA-156-2 sample in D9 had a slightly wider distribution, and the 2d cluster gate is also wider than the other two samples. The cell size normalized intensity doesn't show the same pattern, suggesting that at least some of the difference could be due to cell size variation. Try just averaging the three blank wells and perform the background removal.
+
+Subtract the background
+```{r}
+bg <- dat %>% 
+  filter(host == "156") %>% 
+  group_by(date) %>% 
+  summarize(across(FSC.H:nRFP, ~ round(mean(.x),1))) %>% 
+  column_to_rownames(var = "date")
+
+dat1 <- dat %>% 
+  select(date:host, FSC.H:nRFP) %>%
+  mutate(
+    FSC.H = FSC.H - bg[date, "FSC.H"],
+    BL1.H = BL1.H - bg[date, "BL1.H"],
+    YL2.H = YL2.H - bg[date, "YL2.H"],
+    nGFP = nGFP - bg[date, "nGFP"],
+    nRFP = nRFP - bg[date, "nRFP"]
+  ) %>% 
+  filter(!host %in% c("156", "blank")) %>% 
+  mutate(host = factor(host, levels = c("373", "555"), labels = c("pho2∆", "PHO2")))
+```
+
+### 3. Consistency across plates.
+Host strain levels
+```{r}
+dat1 %>% filter(plasmid == "NA") %>% 
+  pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
+  ggplot(aes(x = host, y = intensity, color = date)) + 
+  geom_point(position = position_dodge(0.5)) + 
+  scale_color_brewer(type = "qual", palette = 2) +
+  facet_wrap(~parameter, scale = "free_y") +
+  theme_bw(base_size = 14) +
+  theme(axis.text.x = element_text(face = 3))
+```
+
+The host strain fluorescence levels appear consistent across the three days. Additionally, their GFP levels are zero, as expected.
+
+### 4. Well position
+```{r}
+dat1 %>% 
+  filter(plasmid == "188") %>% 
+  separate(well, into = c("row", "col"), sep = 1) %>% 
+  pivot_longer(BL1.H:YL2.H, names_to = "parameter", values_to = "intensity") %>% 
+  ggplot(aes(x = row, y = intensity, group = date)) + 
+  geom_point(aes(color = date), size = 1) + 
+  #geom_line(aes(color = date), size = 0.4) +
+  stat_summary(aes(color = date), geom = "line", fun = mean) +
+  scale_color_brewer(type = "qual", palette = 2) +
+  facet_grid(parameter~host, scales = "free_y") +
+  theme_bw(base_size = 14)
+```
+
+**_Discussion_**
+
+- no obivous trend between the rows (or columns)
+- a clear correlation between YL2.H and BL1.H
+
+```{r}
+dat1 %>% 
+  filter(plasmid == "188") %>% 
+  separate(well, into = c("row", "col"), sep = 1) %>% 
+  ggplot(aes(x = BL1.H, y = YL2.H)) + 
+  geom_point(aes(shape = date, color = row), size = 3) + 
+  stat_smooth(method = "lm", se = FALSE, color = "gray50", size = 0.5) +
+  scale_color_viridis_d() +
+  scale_shape_manual(values = 15:17) +
+  #scale_x_log10() + scale_y_log10() +
+  #facet_grid(parameter~host, scales = "free_y") +
+  theme_bw(base_size = 14)
+```
+
+**_Discussion_**
+
+- There is variation in BL1.H and correspondingly in YL2.H, but the ratio between the two are very consistent

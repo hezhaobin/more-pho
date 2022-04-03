@@ -57,7 +57,7 @@ Next we use a series of plots to guide our gating strategy for identifying the p
 Let's first define a gate and visualize it in a plot before adding it to a GatingSet.
 
 ```{r}
-test <- shortNames[c(3, 12*2+3, 12*5+3, 12*7+3)]
+test <- shortNames[c(3, 12*2+3, 86, 12*7+3)]
 outlier.gate <- rectangleGate(filterId = "-outlier", "FSC.H" = c(1.2e5, 1e6), "SSC.H" = c(1e2, 1e6))
 ggcyto(fs[test], aes(x = FSC.H, y = SSC.H), subset = "root") +
   geom_hex(bins = 64) + geom_gate(outlier.gate) + facet_wrap(~name, ncol = 2)# + ggcyto_par_set(limits = "instrument")
@@ -74,8 +74,8 @@ recompute(gs)
 Let's examine how this gate intersected with the FSC.H vs FSC.W plot (for singlets)
 
 ```{r}
-p1 <- ggcyto(gs[[1]], aes(x = FSC.H, y = FSC.W), subset = "root") + geom_hex(bins = 128)
-p2 <- ggcyto(gs[[1]], aes(x = FSC.H, y = FSC.W), subset = "-outlier") + geom_hex(bins = 128)
+p1 <- ggcyto(gs[["NA-156-1"]], aes(x = FSC.H, y = FSC.W), subset = "root") + geom_hex(bins = 128)
+p2 <- ggcyto(gs[["NA-156-2"]], aes(x = FSC.H, y = FSC.W), subset = "-outlier") + geom_hex(bins = 128)
 plot_grid(as.ggplot(p1), as.ggplot(p2), ncol = 2)
 ```
 
@@ -114,7 +114,7 @@ Add this gate to the gatingSet
 When I plotted the singlet events on GFP-RFP 2d space, I noticed a few samples that show more than one population of cells, where the main population appeared to be "induced" while one or more subpopulations are less or not induced. While the biological reasons behind require further investigation and may be very interesting (heterogeneity), for this analysis we will use flowClust to identify the main population and move forward.
 
 ```{r}
-ggcyto(gs[sample(shortNames, 12)], aes(x = BL1.H, y = YL2.H), subset = "-outlier") + geom_hex(bins = 64) +
+ggcyto(gs[c(paste0("NA-156-", 1:3), sample(shortNames[1:84], 9))], aes(x = BL1.H, y = YL2.H), subset = "-outlier") + geom_hex(bins = 64) +
   facet_wrap(~name, ncol = 4) + scale_x_logicle() + scale_y_logicle() + theme_bw()
 ```
 
@@ -122,7 +122,7 @@ ggcyto(gs[sample(shortNames, 12)], aes(x = BL1.H, y = YL2.H), subset = "-outlier
 
 ```{r}
 #ex <- gs_pop_get_data(gs, "singlet")[[1]]
-ex <- fs[[3]]
+ex <- fs[["NA-156-2"]]
 #lgcl <- estimateLogicle(ex, channels = c("BL1.H", "YL2.H"))
 lgcl <- logicleTransform("induction")
 ex <- transform(ex, lgBL1.H = lgcl(`BL1.H`), lgYL2.H = lgcl(`YL2.H`))
