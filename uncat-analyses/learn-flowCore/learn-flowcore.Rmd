@@ -68,7 +68,18 @@ autoplot(x, "FL1-H")
 # Analysis
 ## Import data
 ```{r}
-example.file = "data/FCS-files/Chimeric Pho4 test_Experiment_Lindsey_179w-1.fcs"
-example <- read.FCS(example.file, transformation = FALSE, emptyValue = FALSE) # the original values are already linearized. 
+ex.file = "data/FCS-files/Chimeric Pho4 test_Experiment_Jia_A3-2.fcs"
+ex <- read.FCS(ex.file, transformation = FALSE, emptyValue = FALSE) # the original values are already linearized. 
+summary(ex)
+```
+
+## EDA of sample data
+FSC-H vs SSC-H
+```{r}
+require(cowplot)
+p0 <- autoplot(ex, "FSC-H", "SSC-H", bins = 128) %>% as.ggplot()
+p1 <- ggcyto(ex, aes(x = `FSC-H`, y = `FSC-W`)) + geom_hex(bins = 128) + scale_y_continuous(limits = c(0,300))
+p1 + theme_cowplot()
+plot_grid(p0, p1)
 ```
 
