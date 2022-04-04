@@ -31,9 +31,8 @@ dat <- bind_rows(raw, .id = "date") %>%
   separate(col = sample, sep = "-", into = c("plasmid", "host", "rep"))
 ```
 
-# Analysis
-## QC
-### 1. Number of events per sample
+# QC
+## 1. Number of events per sample
 ```{r}
 dat %>% ggplot(aes(x = n_induction)) + geom_histogram(bins = 30, fill = "forestgreen") + facet_grid(host~date) + theme_gray(base_size = 14) #+ panel_border()
 ```
@@ -43,7 +42,7 @@ dat %>% ggplot(aes(x = n_induction)) + geom_histogram(bins = 30, fill = "forestg
 1. Majority of the experimental wells (not blank) have > 10000 events, with the exception of a few samples `r dat %>% filter(host != "blank", n_induction < 10000)`
 1. Remove the blank wells and proceed with QC
 
-### 2. Background subtraction
+## 2. Background subtraction
 ```{r}
 dat %>% filter(host == "156") %>% 
   pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
@@ -51,7 +50,7 @@ dat %>% filter(host == "156") %>%
   theme_bw(base_size = 14)
 ```
 
-03/29/22 D9 showed higher background fluorescence than the others. after checking the gating result, I found that NA-156-2 sample in D9 had a slightly wider distribution, and the 2d cluster gate is also wider than the other two samples. The cell size normalized intensity doesn't show the same pattern, suggesting that at least some of the difference could be due to cell size variation. Try just averaging the three blank wells and perform the background removal.
+> 03/29/22 D9 showed higher background fluorescence than the others. after checking the gating result, I found that NA-156-2 sample in D9 had a slightly wider distribution, and the 2d cluster gate is also wider than the other two samples. The cell size normalized intensity doesn't show the same pattern, suggesting that at least some of the difference could be due to cell size variation. Try just averaging the three blank wells and perform the background removal.
 
 Subtract the background
 ```{r}
@@ -64,7 +63,6 @@ bg <- dat %>%
 dat1 <- dat %>% 
   select(date:host, FSC.H:nRFP) %>%
   mutate(
-    FSC.H = FSC.H - bg[date, "FSC.H"],
     BL1.H = BL1.H - bg[date, "BL1.H"],
     YL2.H = YL2.H - bg[date, "YL2.H"],
     nGFP = nGFP - bg[date, "nGFP"],
@@ -74,8 +72,9 @@ dat1 <- dat %>%
   mutate(host = factor(host, levels = c("373", "555"), labels = c("pho2∆", "PHO2")))
 ```
 
-### 3. Consistency across plates.
-Host strain levels
+## 3. Consistency across plates.
+**Host strain levels**
+
 ```{r}
 dat1 %>% filter(plasmid == "NA") %>% 
   pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
@@ -87,9 +86,15 @@ dat1 %>% filter(plasmid == "NA") %>%
   theme(axis.text.x = element_text(face = 3))
 ```
 
-The host strain fluorescence levels appear consistent across the three days. Additionally, their GFP levels are zero, as expected.
+> The host strain fluorescence levels appear consistent across the three days. Additionally, their GFP levels are zero, as expected. RFP levels appear to be slightly higher in the _pho2∆_ background than in the _PHO2_ background.
 
-### 4. Well position
+## 4. Well position
+
+**_Rationale_**
+
+- In my original plate design, I placed a positive control strain (envisioned CgPho4-mNeon in _PHO2_ background for example) in the control columns (1, 5, 9) on every other row (A, C, E, G). The reason for this is to use it to identify any well position effect on the fluorescence readings.
+- In Emily's implementation, she instead put **a pair** of strains, namely pH188-yH323 and pH188-yH555 in these wells. This means I cannot use the positive control wells exactly the way as I designed them. But I can still use them to spot any trend.
+    
 ```{r}
 dat1 %>% 
   filter(plasmid == "188") %>% 
@@ -104,10 +109,24 @@ dat1 %>%
   theme_bw(base_size = 14)
 ```
 
-**_Discussion_**
+> - no obivous trend between the rows (or columns, not shown)
+> - a clear correlation between YL2.H and BL1.H. at least part of this is due to the cell size differences -- see size normalized data below:
 
-- no obivous trend between the rows (or columns)
-- a clear correlation between YL2.H and BL1.H
+```{r}
+dat1 %>% 
+  filter(plasmid == "188") %>% 
+  separate(well, into = c("row", "col"), sep = 1) %>% 
+  pivot_longer(c(YL2.H, nRFP), names_to = "parameter", values_to = "intensity") %>% 
+  ggplot(aes(x = row, y = intensity, group = date)) + 
+  geom_point(aes(color = date), size = 1) + 
+  #geom_line(aes(color = date), size = 0.4) +
+  stat_summary(aes(color = date), geom = "line", fun = mean) +
+  scale_color_brewer(type = "qual", palette = 2) +
+  facet_grid(parameter~host, scales = "free_y") +
+  theme_bw(base_size = 14)
+```
+
+- What we care about is the ratio between Pho4-mNeon and _PHO5pr_-mCherry
 
 ```{r}
 dat1 %>% 
@@ -123,6 +142,21 @@ dat1 %>%
   theme_bw(base_size = 14)
 ```
 
-**_Discussion_**
+> - There is variation in BL1.H and correspondingly in YL2.H, but the ratio between the two are very consistent
 
-- There is variation in BL1.H and correspondingly in YL2.H, but the ratio between the two are very consistent
+# Main
+## EDA
+Plot all data
+```{r}
+dat2 <- dat1 %>% 
+  select(-nGFP, -nRFP) %>% 
+  pivot_longer(FSC.H:YL2.H, names_to = "parameter", values_to = "intensity") %>% 
+  group_by(date, plasmid, host, parameter) %>% 
+  summarize(
+    n = n(),
+    mean = round(mean(intensity)),
+    cv = num(sd(intensity)/mean(intensity), digits = 2)
+  ) %>% 
+  arrange(desc(cv))
+```
+
