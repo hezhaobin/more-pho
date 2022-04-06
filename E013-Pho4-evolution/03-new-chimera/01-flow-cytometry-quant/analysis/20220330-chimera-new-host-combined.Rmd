@@ -22,9 +22,9 @@ require(cowplot)
 Merge the three batches
 ```{r}
 raw <- list(
-  "03/15/22" = read_tsv("../data/20220315-EO-chimera-batch-1/20220329-gated-median-out.txt"),
-  "03/22/22" = read_tsv("../data/20220322-EO-chimera-batch-2/20220327-gated-median-out.txt"),
-  "03/29/22" = read_tsv("../data/20220329-EO-chimera-batch-3/20220330-gated-median-out.txt")
+  "03/15/22" = read_tsv("../data/20220315-EO-chimera-batch-1/20220329-gated-median-out.txt", show_col_types = FALSE),
+  "03/22/22" = read_tsv("../data/20220322-EO-chimera-batch-2/20220327-gated-median-out.txt", show_col_types = FALSE),
+  "03/29/22" = read_tsv("../data/20220329-EO-chimera-batch-3/20220330-gated-median-out.txt", show_col_types = FALSE)
 )
 dat <- bind_rows(raw, .id = "date") %>% 
   #separate(col = well, sep = 1, into = c("row", "col")) %>% 
@@ -43,10 +43,15 @@ dat %>% ggplot(aes(x = n_induction)) + geom_histogram(bins = 30, fill = "forestg
 1. Remove the blank wells and proceed with QC
 
 ## 2. Background subtraction
+
+Check the background fluorescence levels across different days.
 ```{r}
 dat %>% filter(host == "156") %>% 
   pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
-  ggplot(aes(x = date, y = intensity)) + geom_point() + facet_wrap(~parameter, scale = "free_y") +
+  mutate(parameter = ordered(parameter, levels = c("BL1.H", "YL2.H", "nGFP", "nRFP"))) %>% 
+  ggplot(aes(x = date, y = intensity)) + geom_point(aes(shape = well)) +
+  stat_summary(geom = "pointrange", color = "red", position = position_nudge(x = 0.1)) +
+  facet_wrap(~parameter, scale = "free_y") +
   theme_bw(base_size = 14)
 ```
 
@@ -61,33 +66,63 @@ bg <- dat %>%
   column_to_rownames(var = "date")
 
 dat1 <- dat %>% 
+  filter(host != "blank") %>% 
   select(date:host, FSC.H:nRFP) %>%
   mutate(
     BL1.H = BL1.H - bg[date, "BL1.H"],
     YL2.H = YL2.H - bg[date, "YL2.H"],
     nGFP = nGFP - bg[date, "nGFP"],
-    nRFP = nRFP - bg[date, "nRFP"]
-  ) %>% 
-  filter(!host %in% c("156", "blank")) %>% 
+    nRFP = nRFP - bg[date, "nRFP"],
+  )
+```
+
+Double check that the subtraction worked correctly
+```{r}
+dat1 %>% filter(host == "156") %>% 
+  pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
+  mutate(parameter = ordered(parameter, levels = c("BL1.H", "YL2.H", "nGFP", "nRFP"))) %>% 
+  ggplot(aes(x = date, y = intensity)) + geom_point(aes(shape = well)) +
+  stat_summary(geom = "pointrange", color = "red", position = position_nudge(x = 0.1)) +
+  facet_wrap(~parameter, scale = "free_y") +
+  theme_bw(base_size = 14)
+
+# remove the yH156 samples
+dat1 <- dat1 %>% 
+  filter(host != "156") %>% 
   mutate(host = factor(host, levels = c("373", "555"), labels = c("pho2∆", "PHO2")))
 ```
 
 ## 3. Consistency across plates.
-**Host strain levels**
+
+Check the background-subtracted fluorescence values for the host strains (yH373 and yH555) as well as the positive control strain (pH188 in yH373 or yH555 backgrounds), both of which are present on each plate.
 
 ```{r}
-dat1 %>% filter(plasmid == "NA") %>% 
-  pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
-  ggplot(aes(x = host, y = intensity, color = date)) + 
+dat1 %>% filter(plasmid %in% c("188", "NA")) %>% 
+  pivot_longer(BL1.H:YL2.H, names_to = "parameter", values_to = "intensity") %>% 
+  #mutate(parameter = ordered(parameter, levels = c("BL1.H", "YL2.H", "nGFP", "nRFP"))) %>% 
+  ggplot(aes(x = plasmid, y = intensity, color = date)) + 
   geom_point(position = position_dodge(0.5)) + 
   scale_color_brewer(type = "qual", palette = 2) +
-  facet_wrap(~parameter, scale = "free_y") +
+  facet_grid(parameter~host, scale = "free_y") +
   theme_bw(base_size = 14) +
   theme(axis.text.x = element_text(face = 3))
 ```
 
-> The host strain fluorescence levels appear consistent across the three days. Additionally, their GFP levels are zero, as expected. RFP levels appear to be slightly higher in the _pho2∆_ background than in the _PHO2_ background.
+> 1. The host strain fluorescence levels appear to be consistent across the three days. Additionally, their GFP levels are zero, as expected.
+> 1. The positive control strain has strong BL1.H and correspondingly has strong YL2.H.
 
+The size normalized values show slightly lower variance:
+```{r}
+dat1 %>% filter(plasmid %in% c("188", "NA")) %>% 
+  pivot_longer(nGFP:nRFP, names_to = "parameter", values_to = "intensity") %>% 
+  #mutate(parameter = ordered(parameter, levels = c("BL1.H", "YL2.H", "nGFP", "nRFP"))) %>% 
+  ggplot(aes(x = plasmid, y = intensity, color = date)) + 
+  geom_point(position = position_dodge(0.5)) + 
+  scale_color_brewer(type = "qual", palette = 2) +
+  facet_grid(parameter~host, scale = "free_y") +
+  theme_bw(base_size = 14) +
+  theme(axis.text.x = element_text(face = 3))
+```
 ## 4. Well position
 
 **_Rationale_**
@@ -144,9 +179,25 @@ dat1 %>%
 
 > - There is variation in BL1.H and correspondingly in YL2.H, but the ratio between the two are very consistent
 
-# Main
-## EDA
-Plot all data
+Let's check both ScPho4 (pH194) and CgPho4 (pH188) to see if their behaviors are consistent across the days.
+```{r}
+dat1 %>% 
+  filter(plasmid %in% c("188", "194")) %>% 
+  mutate(`YL2.H/BL1.H` = YL2.H/BL1.H,
+  #mutate(`YL2.H/BL1.H` = nRFP/nGFP,
+         Pho4 = factor(plasmid, levels = c("194", "188"), 
+                       labels = c("ScPho4", "CgPho4"))) %>% 
+  separate(well, into = c("row", "col"), sep = 1) %>% 
+  ggplot(aes(x = host, y = `YL2.H/BL1.H`)) + 
+  geom_point(color = alpha("gray50", 0.9), position = position_jitter(0.2)) + 
+  stat_summary( geom = "pointrange", color = "red") +
+  facet_grid(Pho4~date) +
+  theme_bw(base_size = 14)
+```
+
+## 5. High variance samples
+
+Summarize the background subtracted data by calculating the means and cv for each strain.
 ```{r}
 dat2 <- dat1 %>% 
   select(-nGFP, -nRFP) %>% 
@@ -160,3 +211,13 @@ dat2 <- dat1 %>%
   arrange(desc(cv))
 ```
 
+```{r}
+dat2 %>% filter(plasmid != "NA") %>% 
+  ggplot(aes(x = cv)) + geom_histogram(aes(y = ..density../10)) + stat_ecdf() + 
+  geom_hline(yintercept = 0.8, linetype = 2) +
+  ylab("cumulative density") + theme_cowplot()
+```
+
+> 80% of the samples have a CV < 20%. Label the remaining samples as high var
+
+`r dat2 %>% filter(cv > 0.2)`

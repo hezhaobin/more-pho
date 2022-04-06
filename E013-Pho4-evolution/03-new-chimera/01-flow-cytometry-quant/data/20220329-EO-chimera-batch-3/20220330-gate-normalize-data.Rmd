@@ -74,8 +74,8 @@ recompute(gs)
 Let's examine how this gate intersected with the FSC.H vs FSC.W plot (for singlets)
 
 ```{r}
-p1 <- ggcyto(gs[["NA-156-1"]], aes(x = FSC.H, y = FSC.W), subset = "root") + geom_hex(bins = 128)
-p2 <- ggcyto(gs[["NA-156-2"]], aes(x = FSC.H, y = FSC.W), subset = "-outlier") + geom_hex(bins = 128)
+p1 <- ggcyto(gs[["188-555-1"]], aes(x = FSC.H, y = FSC.W), subset = "root") + geom_hex(bins = 128)
+p2 <- ggcyto(gs[["188-555-2"]], aes(x = FSC.H, y = FSC.W), subset = "-outlier") + geom_hex(bins = 128)
 plot_grid(as.ggplot(p1), as.ggplot(p2), ncol = 2)
 ```
 
@@ -113,20 +113,23 @@ Add this gate to the gatingSet
 
 When I plotted the singlet events on GFP-RFP 2d space, I noticed a few samples that show more than one population of cells, where the main population appeared to be "induced" while one or more subpopulations are less or not induced. While the biological reasons behind require further investigation and may be very interesting (heterogeneity), for this analysis we will use flowClust to identify the main population and move forward.
 
-```{r}
-ggcyto(gs[c(paste0("NA-156-", 1:3), sample(shortNames[1:84], 9))], aes(x = BL1.H, y = YL2.H), subset = "-outlier") + geom_hex(bins = 64) +
-  facet_wrap(~name, ncol = 4) + scale_x_logicle() + scale_y_logicle() + theme_bw()
+```{r fig.height=12,fig.width=12}
+ggcyto(gs, aes(x = BL1.H, y = YL2.H), subset = "-outlier") + geom_hex(bins = 64) +
+  facet_wrap(~name, ncol = 10) + scale_x_logicle() + scale_y_logicle() + theme_bw()
 ```
 
 > Be careful when working with the GatingSet and GatingHierarchy objects -- these are strictly reference classes, meaning that most of the operations work by pointers and the operations will change the underlying data. For example, the first line of the code below (commented out) obtains a pointer to the underlying data rather than making a copy of that data. any operations on it will change the original data as a result.
 
 ```{r}
 #ex <- gs_pop_get_data(gs, "singlet")[[1]]
-ex <- fs[["NA-156-2"]]
+ex <- fs[["251-555-2"]]
 #lgcl <- estimateLogicle(ex, channels = c("BL1.H", "YL2.H"))
 lgcl <- logicleTransform("induction")
+# set cluster gate parameters
+k = 1; q = 0.9
+# end setting
 ex <- transform(ex, lgBL1.H = lgcl(`BL1.H`), lgYL2.H = lgcl(`YL2.H`))
-fluo.gate <- gate_flowclust_2d(ex, "lgBL1.H", "lgYL2.H", K = 2, quantile = 0.95)
+fluo.gate <- gate_flowclust_2d(ex, "lgBL1.H", "lgYL2.H", K = k, quantile = q)
 ggcyto(ex, aes(x = lgBL1.H, y = lgYL2.H)) + geom_hex(bins = 64) + geom_gate(fluo.gate) + geom_stats()# + scale_x_logicle() + scale_y_logicle()
 ```
 
@@ -145,7 +148,7 @@ Now we can do the flowClust gating
 ```{r}
 dat <- gs_pop_get_data(gs, "-outlier") # get parent data
 inductionGate <- fsApply(dat, function(fr)
-  openCyto::gate_flowclust_2d(fr, "BL1.H", "YL2.H", K = 2, quantile = 0.95)
+  openCyto::gate_flowclust_2d(fr, "BL1.H", "YL2.H", K = k, quantile = q)
 )
 gs_pop_add(gs, inductionGate, parent = "-outlier", name = "induction")
 recompute(gs)
@@ -153,14 +156,14 @@ recompute(gs)
 
 ```{r, fig.width=12, fig.height=12}
 ggcyto(gs, aes(x = BL1.H, y = YL2.H), subset = "-outlier") + geom_hex(bins = 64) + geom_gate("induction") + geom_stats() + 
-  facet_wrap(~name, ncol = 10)# + scale_x_logicle() + scale_y_logicle()
+  facet_wrap(~name, ncol = 10) + theme_bw()
 ```
 
-Notice that a couple of samples showed more than one population and the dominant one appears to be different from that in the biological replicates, i.e., 223-555-3 and 251-555-1. Let's see if we can manually fix this.
+Notice that two samples, i.e. 223-555-3 and 251-555-1 showed two distinct populations, one of which has normal Pho4-GFP but very little _PHO5pr_-RFP. According to Emily, these strains show consistent bimodality behaviors. In P'tase plate assays they tend to give either very high or no activity results. Here we will us an additional 2 cluster gating strategy to select the expressing population. A note should be added for these samples later.
 ```{r}
 newGate <- list()
-newGate[["223-555-3"]] = gate_flowclust_2d(dat[["223-555-3"]], "BL1.H", "YL2.H", K = 2, quantile = 0.95, target = c(3,4))
-newGate[["251-555-1"]] = gate_flowclust_2d(dat[["251-555-1"]], "BL1.H", "YL2.H", K = 2, quantile = 0.95, target = c(3,4))
+newGate[["223-555-3"]] = gate_flowclust_2d(dat[["223-555-3"]], "BL1.H", "YL2.H", K = 2, quantile = 0.9, target = c(3,4))
+newGate[["251-555-1"]] = gate_flowclust_2d(dat[["251-555-1"]], "BL1.H", "YL2.H", K = 2, quantile = 0.9, target = c(3,4))
 p1 <- ggcyto(gs[["223-555-3"]], aes(x = BL1.H, y = YL2.H), subset = "-outlier") + geom_hex(bins = 64) +
   geom_gate(newGate[["223-555-3"]]) + geom_stats()
 p2 <- ggcyto(gs[["251-555-1"]], aes(x = BL1.H, y = YL2.H), subset = "-outlier") + geom_hex(bins = 64) + 
@@ -172,28 +175,26 @@ recompute(gs[c("223-555-3", "251-555-1")], "induction")
 ```
 Check the results
 ```{r}
-ggcyto(gs[grep("223|251", shortNames, value = TRUE)], aes(x = BL1.H, y = YL2.H), subset = "-outlier") + 
+ggcyto(gs[grep("223-555|251-555", shortNames, value = TRUE)], aes(x = BL1.H, y = YL2.H), subset = "-outlier") + 
   geom_hex(bins = 64) + geom_gate("induction") + geom_stats() + 
-  facet_wrap(~name, ncol = 6)# + scale_x_logicle() + scale_y_logicle()
+  facet_wrap(~name, ncol = 3) + theme_bw()
 ```
 
 ## Normalization
 
 Because the amount of fluorescence scales with cell size, comparing the median of each sample would only be valid if the cell size distribution is approximately the same across samples. Is that the case?
 
-```{r}
+```{r fig.width=12,fig.height=12}
 mult_format <- function() {
      function(x) format(x/10000,digits = 2) 
 }
-ggcyto(gs[[grep("223|251", shortNames, value = T)]], aes(x = FSC.H), subset = "induction") + geom_density(fill = "forestgreen") + 
+ggcyto(gs, aes(x = FSC.H), subset = "induction") + geom_density(fill = "forestgreen") + 
   scale_x_continuous(labels = mult_format(), name = "FSC.H x 10000") +
-  facet_wrap(~name, ncol = 3)
+  facet_wrap(~name, ncol = 10, scales = "free_y") +
+  theme(axis.text.y = element_blank())
 ```
 
 Brian Metzger and colleagues proposed a simple correction in their 2015 paper. The intuition behind this method is that FSC is proportional to the max 2d projection (area) of a cell, and thus FSC\^(3/2) should be roughly proportional to the volume. By contrast, the fluorescent channels should be the cumulative intensity from the whole cell. Therefore dividing FP intensity by FSC\^(3/2) should effectively remove the variation due to cell size difference. He did say that the Wittkopp lab later switched to a different method based on PCA and rotations. After reading those papers, I thought the simpler one will suffice for us.
-
-In practice, I found the exponent of 1.5 doesn't always work well, which is likely why the Wittkopp lab later resorted to a fitting approach. Below I used an exponent of 1, which doesn't fully remove the dependency. 1.5 results in overcorrection in many cases.
-
 
 Test normalization formula
 
@@ -204,7 +205,7 @@ fs.out <- gs_pop_get_data(gs, y = "induction", inverse.transform = TRUE) # get t
 mfsc <- 5e5 # based on the mode of the median of FSC.H from all samples
 # fs.out is of the cytoframe class, which is a reference class. need to convert to flowframe for transformation
 # https://www.bioconductor.org/packages/devel/bioc/vignettes/flowWorkspace/inst/doc/flowWorkspace-Introduction.html
-exponent <- 1.2
+exponent <- 1.5
 # ex <- cytoframe_to_flowFrame(fs.out[["A9"]]) %>%
 #   transform(nFSC = FSC.H/mfsc) %>% 
 #   transform(nGFP = BL1.H/nFSC^(exponent), nRFP = YL2.H/nFSC^(exponent))
@@ -216,9 +217,10 @@ ex <- cytoset_to_flowSet(fs.out) %>%
 
 
 plot the examples
-```{r}
-ggplot(ex[sample(1:96, 12)], aes(x = nFSC, y = nRFP/1e3)) + geom_hex(bins = 64) + scale_y_log10() + stat_smooth(method = "lm") +
-  scale_fill_gradientn(colours = rev(RColorBrewer::brewer.pal(11, "Spectral"))) + facet_wrap(~name, scales = "free_y")
+```{r fig.width=12, fig.height=12}
+ggplot(ex, aes(x = nFSC, y = nRFP/1e3)) + geom_hex(bins = 64) + scale_y_log10() + stat_smooth(method = "lm") +
+  scale_fill_gradientn(colours = rev(RColorBrewer::brewer.pal(11, "Spectral"))) + facet_wrap(~name, scales = "free_y") +
+  theme_bw()
 ```
 
 ```{r}

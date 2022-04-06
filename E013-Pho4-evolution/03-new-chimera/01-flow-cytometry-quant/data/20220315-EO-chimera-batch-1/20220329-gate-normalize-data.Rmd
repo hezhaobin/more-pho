@@ -33,17 +33,12 @@ import the data from the RDSS (just once) and then write it to the local disk
 data.path = "/Volumes/rdss_bhe2/Project/E013-Pho4p-evolution/flow-cytometry/data/20220315-EO-chimera-batch-1/FCS_3.1"
 fs <- read.flowSet(path = data.path, pattern = ".fcs", # specify the file pattern
                    transformation = FALSE,  # the original values are already linearized. 
-                   emptyValue = FALSE)
-write.flowSet(fs, outdir = "FCS")
-```
-
-import from the local path
-```{r}
-data.path = "FCS"
-fs <- read.flowSet(path = data.path, pattern = ".fcs", # specify the file pattern
-                   transformation = FALSE,  # the original values are already linearized. 
                    emptyValue = FALSE,  alter.names = TRUE,   # change parameter names to R format
                    column.pattern = ".H|FSC|SSC") # only load the height variables for the fluorescent parameters
+```
+
+```{r}
+fs <- fs[-97] # remove the manual bead well
 ```
 
 Simplify the sample names
@@ -139,20 +134,23 @@ Add this gate to the gatingSet
 
 When I plotted the singlet events on GFP-RFP 2d space, I noticed a few samples that show more than one population of cells, where the main population appeared to be "induced" while one or more subpopulations are less or not induced. While the biological reasons behind require further investigation and may be very interesting (heterogeneity), for this analysis we will use flowClust to identify the main population and move forward.
 
-```{r}
-ggcyto(gs[sample(shortNames, 12)], aes(x = BL1.H, y = YL2.H), subset = "-outlier") + geom_hex(bins = 64) +
-  facet_wrap(~name, ncol = 4) + scale_x_logicle() + scale_y_logicle() + theme_bw()
+```{r fig.width=12, fig.height=12}
+ggcyto(gs, aes(x = BL1.H, y = YL2.H), subset = "-outlier") + geom_hex(bins = 64) +
+  facet_wrap(~name, ncol = 10) + scale_x_logicle() + scale_y_logicle() + theme_bw()
 ```
 
 > Be careful when working with the GatingSet and GatingHierarchy objects -- these are strictly reference classes, meaning that most of the operations work by pointers and the operations will change the underlying data. For example, the first line of the code below (commented out) obtains a pointer to the underlying data rather than making a copy of that data. any operations on it will change the original data as a result.
 
 ```{r}
 #ex <- gs_pop_get_data(gs, "singlet")[[1]]
-ex <- fs[[3]]
+ex <- fs[["231-555-1"]]
 #lgcl <- estimateLogicle(ex, channels = c("BL1.H", "YL2.H"))
+# set the parameters for the cluster gate
+k = 1; q = 0.9
+# end setting
 lgcl <- logicleTransform("induction")
 ex <- transform(ex, lgBL1.H = lgcl(`BL1.H`), lgYL2.H = lgcl(`YL2.H`))
-fluo.gate <- gate_flowclust_2d(ex, "lgBL1.H", "lgYL2.H", K = 2, quantile = 0.95)
+fluo.gate <- gate_flowclust_2d(ex, "lgBL1.H", "lgYL2.H", K = k, quantile = q)
 ggcyto(ex, aes(x = lgBL1.H, y = lgYL2.H)) + geom_hex(bins = 64) + geom_gate(fluo.gate) + geom_stats()# + scale_x_logicle() + scale_y_logicle()
 ```
 
@@ -171,7 +169,7 @@ Now we can do the flowClust gating
 ```{r}
 dat <- gs_pop_get_data(gs, "-outlier") # get parent data
 inductionGate <- fsApply(dat, function(fr)
-  openCyto::gate_flowclust_2d(fr, "BL1.H", "YL2.H", K = 2, quantile = 0.95)
+  openCyto::gate_flowclust_2d(fr, "BL1.H", "YL2.H", K = k, quantile = q)
 )
 gs_pop_add(gs, inductionGate, parent = "-outlier", name = "induction")
 recompute(gs)
@@ -179,7 +177,7 @@ recompute(gs)
 
 ```{r, fig.width=12, fig.height=12}
 ggcyto(gs, aes(x = BL1.H, y = YL2.H), subset = "-outlier") + geom_hex(bins = 64) + geom_gate("induction") + geom_stats() + 
-  facet_wrap(~name, ncol = 10)# + scale_x_logicle() + scale_y_logicle()
+  facet_wrap(~name, ncol = 10) + theme_bw()
 ```
 
 ## Normalization
@@ -197,9 +195,6 @@ ggcyto(gs[sample(1:96, 9)], aes(x = FSC.H), subset = "induction") + geom_density
 
 Brian Metzger and colleagues proposed a simple correction in their 2015 paper. The intuition behind this method is that FSC is proportional to the max 2d projection (area) of a cell, and thus FSC\^(3/2) should be roughly proportional to the volume. By contrast, the fluorescent channels should be the cumulative intensity from the whole cell. Therefore dividing FP intensity by FSC\^(3/2) should effectively remove the variation due to cell size difference. He did say that the Wittkopp lab later switched to a different method based on PCA and rotations. After reading those papers, I thought the simpler one will suffice for us.
 
-In practice, I found the exponent of 1.5 doesn't always work well, which is likely why the Wittkopp lab later resorted to a fitting approach. Below I used an exponent of 1, which doesn't fully remove the dependency. 1.5 results in overcorrection in many cases.
-
-
 Test normalization formula
 
 ```{r}
@@ -209,7 +204,7 @@ fs.out <- gs_pop_get_data(gs, y = "induction", inverse.transform = TRUE) # get t
 mfsc <- 5e5 # based on the mode of the median of FSC.H from all samples
 # fs.out is of the cytoframe class, which is a reference class. need to convert to flowframe for transformation
 # https://www.bioconductor.org/packages/devel/bioc/vignettes/flowWorkspace/inst/doc/flowWorkspace-Introduction.html
-exponent <- 1.2
+exponent <- 1.5
 # ex <- cytoframe_to_flowFrame(fs.out[["A9"]]) %>%
 #   transform(nFSC = FSC.H/mfsc) %>% 
 #   transform(nGFP = BL1.H/nFSC^(exponent), nRFP = YL2.H/nFSC^(exponent))
@@ -221,8 +216,8 @@ ex <- cytoset_to_flowSet(fs.out) %>%
 
 
 plot the examples
-```{r}
-ggplot(ex[sample(1:96, 12)], aes(x = nFSC, y = nRFP/1e3)) + geom_hex(bins = 64) + scale_y_log10() + stat_smooth(method = "lm") +
+```{r fig.width = 8, fig.height=8}
+ggplot(ex[sample(1:96, 48)], aes(x = nFSC, y = nRFP/1e3)) + geom_hex(bins = 64) + scale_y_log10() + stat_smooth(method = "lm") +
   scale_fill_gradientn(colours = rev(RColorBrewer::brewer.pal(11, "Spectral"))) + facet_wrap(~name, scales = "free_y")
 ```
 
