@@ -60,3 +60,27 @@ dat1 %>% filter(gene %in% c("CTA1", "CTT1", "GRE2")) %>%
 ggsave("../output/20220307-qRT-PCR-Sc-Cg-time-course.png", width = 7, height = 5, bg = "white")
 ```
 
+Plot the two species separately
+```{r}
+p1 <- dat1 %>% 
+  filter(gene %in% c("CTA1", "CTT1", "GRE2"), species == "S. cerevisiae") %>% 
+  ggplot(aes(x = time, y = FC, color = H2O2, group = H2O2)) +
+  geom_point() + stat_summary(geom = "line", fun = mean, size = 1) +
+  scale_color_viridis_d(begin = 0.2) + #scale_y_sqrt() +
+  facet_wrap(~ gene) +
+  ylab("Fold induction") + xlab("Time (min)") +
+  theme_cowplot(font_size = 16) + panel_border() + background_grid(major = "y") +
+  theme(strip.text = element_text(face = 3))
+p2 <- dat1 %>% 
+  filter(gene %in% c("CTA1", "CTT1", "GRE2"), species == "C. glabrata") %>% 
+  ggplot(aes(x = time, y = FC, color = H2O2, group = H2O2)) +
+  geom_point() + stat_summary(geom = "line", fun = mean, size = 1) +
+  scale_color_viridis_d(begin = 0.2) + #scale_y_sqrt() +
+  facet_wrap(~ gene) +
+  ylab("Fold induction") + xlab("Time (min)") +
+  theme_cowplot(font_size = 16) + panel_border() + background_grid(major = "y") +
+  theme(strip.text = element_text(face = 3))
+ggsave("../output/20220419-qRT-PCR-Sc-time-course.png", p1, width = 7, height = 4)
+ggsave("../output/20220419-qRT-PCR-Cg-time-course.png", p2, width = 7, height = 4)
+```
+
