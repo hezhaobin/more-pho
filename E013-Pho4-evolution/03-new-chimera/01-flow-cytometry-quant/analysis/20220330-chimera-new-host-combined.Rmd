@@ -10,6 +10,7 @@ output:
 ---
 
 ```{r}
+require(plotly)
 require(tidyverse)
 require(cowplot)
 ```
@@ -89,8 +90,14 @@ dat1 %>% filter(host == "156") %>%
 # remove the yH156 samples
 dat1 <- dat1 %>% 
   filter(host != "156") %>% 
-  mutate(host = factor(host, levels = c("373", "555"), labels = c("pho2∆", "PHO2")))
+  mutate(host = ordered(host, levels = c("555", "373"), labels = c("PHO2", "pho2∆")))
 ```
+
+Export the background-subtracted values for later use with the shinyapp
+```{r}
+write_tsv(dat1, "../shinyapp/20220412-bg-sub-data.tsv")
+```
+
 
 ## 3. Consistency across plates.
 
@@ -190,7 +197,7 @@ dat1 %>%
   separate(well, into = c("row", "col"), sep = 1) %>% 
   ggplot(aes(x = host, y = `YL2.H/BL1.H`)) + 
   geom_point(color = alpha("gray50", 0.9), position = position_jitter(0.2)) + 
-  stat_summary( geom = "pointrange", color = "red") +
+  stat_summary(fun.data = "mean_se", geom = "pointrange", color = "red") +
   facet_grid(Pho4~date) +
   theme_bw(base_size = 14)
 ```
@@ -205,19 +212,160 @@ dat2 <- dat1 %>%
   group_by(date, plasmid, host, parameter) %>% 
   summarize(
     n = n(),
-    mean = round(mean(intensity)),
+    mean = num(mean(intensity), digits = 0),
     cv = num(sd(intensity)/mean(intensity), digits = 2)
   ) %>% 
   arrange(desc(cv))
 ```
 
 ```{r}
-dat2 %>% filter(plasmid != "NA") %>% 
-  ggplot(aes(x = cv)) + geom_histogram(aes(y = ..density../10)) + stat_ecdf() + 
+dat2 %>% 
+  filter(plasmid != "NA", parameter != "FSC.H") %>% 
+  ggplot(aes(x = cv)) + geom_histogram(aes(y = ..density../20)) + stat_ecdf() + 
   geom_hline(yintercept = 0.8, linetype = 2) +
-  ylab("cumulative density") + theme_cowplot()
+  ylab("cumulative density") + 
+  facet_wrap(~parameter) +
+  theme_cowplot()
 ```
 
-> 80% of the samples have a CV < 20%. Label the remaining samples as high var
+> The histogram's y-axis is not shown. The line graph represents the empirical CDF, and the dotted horizontal line is at 80%. GFP is more variable than RFP, likely because the absolute values of the former is lower. For both, ~80% of the samples have a CV < 20%.
 
-`r dat2 %>% filter(cv > 0.2)`
+Do the same for the cell size-normalized values
+```{r}
+ndat2 <- dat1 %>% 
+  select(-BL1.H, -YL2.H) %>% 
+  pivot_longer(nGFP:nRFP, names_to = "parameter", values_to = "intensity") %>% 
+  group_by(date, plasmid, host, parameter) %>% 
+  summarize(
+    n = n(),
+    mean = num(mean(intensity), digits = 0),
+    cv = num(sd(intensity)/mean(intensity), digits = 2)
+  ) %>% 
+  arrange(desc(cv))
+```
+
+```{r}
+ndat2 %>% 
+  filter(plasmid != "NA", parameter != "FSC.H") %>% 
+  ggplot(aes(x = cv)) + geom_histogram(aes(y = ..density../20)) + stat_ecdf() + 
+  geom_hline(yintercept = 0.8, linetype = 2) +
+  ylab("cumulative density") + 
+  facet_wrap(~parameter) +
+  theme_cowplot()
+```
+
+> CV is smaller on the cell size normalized fluorescence values.
+
+# Main
+## Plotting functions
+Here I'd like to develop a series of plotting functions that take the names or any part of the Pho4 chimera annotation as input and plot their results in a variety of ways
+Load the Pho4 plasmid information and merge with the reshaped data
+```{r}
+meta <- read_tsv("../data/20220330-chimera-Pho4-makeup.tsv", col_types = "cccc")
+```
+
+Plotting function
+```{r}
+# extract ximera names
+refs <- c("CCCCC","SSSSS")
+ximeras <- setdiff(meta$symbol, refs)
+# make a test set
+test <- sample(ximeras, 6)
+# subset data
+tmp <- meta %>% 
+  filter(symbol %in% c(refs,test)) %>% 
+  inner_join(dat1, by = "plasmid") %>% 
+  mutate(symbol = factor(symbol, levels = c(refs, test)))
+```
+
+Plot individual components
+```{r}
+tmp %>% 
+  pivot_longer(nGFP:nRFP, names_to = "parameter", values_to = "intensity") %>% 
+  mutate(parameter = ordered(parameter, levels = c("nRFP", "nGFP"))) %>% 
+  #pivot_longer(BL1.H:YL2.H, names_to = "parameter", values_to = "intensity") %>% 
+  #mutate(parameter = ordered(parameter, levels = c("YL2.H", "BL1.H"))) %>% 
+  ggplot(aes(x = symbol, y = intensity, group = host)) + 
+  geom_bar(aes(fill = host), width = 0.5, alpha = 0.8,
+           stat = "summary", fun = "mean", position = position_dodge(0.5)) +
+  geom_point(aes(color = host), size = 1,
+             position = position_jitterdodge(dodge.width = 0.5)) + 
+  scale_color_manual(values = c("PHO2" = "gray20", "pho2∆" = "gray40")) +
+  scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+  #stat_summary(fun = "mean", geom = "crossbar", color = "red", width = 0.25,
+  #             position = position_dodge(0.75), ) +
+  facet_wrap(~parameter, scale = "free_y", ncol = 1) +
+  xlab("Pho4 chimera") + expand_limits(y = 0) +
+  theme_gray(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, family = "mono"))
+```
+```{r}
+tmp %>% 
+  #mutate(`YL2.H/BL1.H` = YL2.H/BL1.H,
+  mutate(`R/G` = nRFP/nGFP) %>% 
+  ggplot(aes(x = symbol, y = `R/G`, group = host)) + 
+  geom_bar(aes(fill = host), width = 0.5, alpha = 0.8,
+           stat = "summary", fun = "mean", position = position_dodge(0.5)) +
+  geom_point(aes(color = host), position = position_jitterdodge(dodge.width = 0.5)) + 
+  scale_color_manual(values = c("PHO2" = "gray20", "pho2∆" = "gray40")) +
+  scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+  #stat_summary(fun = "mean", color = "red", geom = "crossbar", width = 0.2,
+  #             position = position_dodge(0.75), ) +
+  theme_gray(base_size = 14) + xlab("Pho4 chimera") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, family = "mono"))
+```
+
+Next idea is to plot the ratio between the mean R/G for _PHO2_ and mean R/G for _pho2∆_, over the mean R/G for _PHO2_
+
+First summarize the data.
+```{r}
+datsum <- dat1 %>%
+  filter(plasmid != "NA") %>% 
+  mutate(`R/G` = YL2.H/BL1.H, `nR/G` = nRFP/nGFP) %>% 
+  group_by(date, plasmid, host) %>% 
+  summarize(across(c(BL1.H, nGFP, YL2.H, nRFP, `R/G`, `nR/G`), mean), .groups = "drop") %>% 
+  pivot_wider(names_from = host, values_from = BL1.H:`nR/G`) %>% 
+  mutate(`pho2∆/PHO2` = `R/G_pho2∆`/`R/G_PHO2`,
+         `n.pho2∆/PHO2` = `nR/G_pho2∆`/`nR/G_PHO2`)
+
+# useful to set a flag for low activity mutants
+low.act.th <- datsum %>% filter(plasmid == "194") %>% summarize(across(.cols = where(is.numeric), .fns = mean)) %>% unlist()
+```
+
+Then extract the subset for plotting
+```{r}
+tmpsum <- meta %>% 
+  filter(symbol %in% c(refs,test)) %>% 
+  inner_join(datsum, by = "plasmid") %>% 
+  mutate(symbol = factor(symbol, levels = c(refs, test)))
+
+```
+
+Design the plot
+```{r}
+tmpsum %>% 
+  mutate(Activity = ifelse(`R/G_PHO2` < 2*low.act.th["R/G_pho2∆"], "low", "pass")) %>% 
+  ggplot(aes(x = symbol, y = `pho2∆/PHO2`)) + 
+  geom_col(aes(group = date, fill = `R/G_PHO2`), width = 0.75, color = "gray50",
+           position = position_dodge(0.9)) +
+  #geom_point(aes(color = host), position = position_jitterdodge(dodge.width = 0.5)) + 
+  scale_fill_gradient2("Activity") +
+  #scale_color_manual(values = c(alpha("black",0), "red3")) +
+  #stat_summary(fun = "mean", color = "red", geom = "crossbar", width = 0.2,
+  #             position = position_dodge(0.75), ) +
+  facet_grid(.~Activity, scales = "free_x", space = "free_x", labeller = "label_both") +
+  theme_bw(base_size = 14) + xlab("Pho4 chimera") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, family = "mono"))
+```
+
+X-Y plot
+```{r}
+p3 <- tmpsum %>% 
+  mutate(`nR/G_PHO2` = signif(`nR/G_PHO2`, digits = 2),
+         `nR/G_pho2∆` = signif(`nR/G_pho2∆`, digits = 2)) %>% 
+  ggplot(aes(x = `nR/G_PHO2`, y = `nR/G_pho2∆`, label = symbol)) + 
+  geom_point(size = 2.5) + geom_abline(slope = 1) +
+  theme_gray(base_size = 14)
+ggplotly(p3, tooltip = c("label", "x", "y"))
+```
+
