@@ -1,0 +1,1 @@
+In this analysis the goal is to assemble a list of oxidative stress response (OSR) genes in both _S. cerevisiae_ and _C. glabrata_ and use the -Pi timecourse RNA-seq in both species (Cg: unpublished, HB; Sc: Gurvich et al 2017) to determine their induction dynamics under phosphate starvation.

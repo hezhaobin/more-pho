@@ -1,0 +1,288 @@
+---
+title: "Plot the expression of Pi starvaiton induced genes relevant for oxidative stress, in _C. glabrata_"
+author: "Bin He"
+date: "2022-04-28 (updated `r Sys.Date()`)"
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r load_library, echo=FALSE}
+# install the package if not already available
+suppressMessages(library(tidyverse))
+#suppressMessages(library(data.table))
+suppressMessages(library(cowplot))
+suppressMessages(library(ggtext))
+suppressMessages(library(SummarizedExperiment))
+```
+
+## Goal
+Plot the induction of oxidative stress response genes in _C. glabrata_ during phosphate starvation. Genes known to be induced during hydrogen peroxide stress in _S. cerevisiae_ are the basis for selecting the candiate gene set.
+
+## Data
+### _C. glabrata_ -Pi time course
+Load normalized gene counts for the -Pi time course in _C. glabrata_. Data collected in 2017 by Bin He. Pre-processing was done as described under the E009/seq-results folder.
+
+Below is a simple chart to show the design:
+
+| Genotype | Time point  | Replicates | Comment |
+| -------- | :---------- | :--------: | ------- |
+| 80∆      | rich media  | 2          | for consistency check with my previous data |
+| 80∆ 4∆   | rich media  | 2          | for consistency check with my previous data |
+| wt-1     | pre, 20', 30', 45', 60', 90', 120', 150', 180', 240' | 1 | time course for wt  |
+| 4∆-1     | pre, 20', 30', 45', 60', 90', 120', 150', 180', 240' | 1 | time course for 4∆  | 
+| wt-2     | pre, 20', 30', 45', 60',      120',       180', 240' | 1 | biol. repl. for wt-1|
+| 4∆-2     | pre, 20', 30', 45', 60',      120',       180'       | 1 | biol. repl. for 4∆-1| 
+
+```{r}
+load("../input/Cgla-Pi-He2017-unpub/E009-Cgla-Pi-time-course-normalized.RData")
+cgToSc <- cgToSc %>% 
+  select(CglaID = cgid, CglaName = cgname, ScerID = scid, ScerName = scname)
+anno <- left_join(anno, cgToSc, by = c("GeneID" = "CglaID")) %>% 
+  select(CglaID = GeneID, CglaName, ScerID, ScerName, Chr, Type.of.Gene)
+```
+
+Construct a SummarizedExperiment object
+```{r}
+se0 <- SummarizedExperiment(
+  assays = lcpm, 
+  rowData = column_to_rownames(anno, "CglaID"),
+  colData = column_to_rownames(sample, "Sample")
+  )
+# subset the experiment to include just the wt time course
+se <- se0[, se0$Genotype == "wt" & se0$Timepoint != "del80"]
+```
+
+### _S. cerevisiae_ -Pi 1hr gene expression
+Description and code below copied/adapted from `uncat-analyses/CTA1-induction-noPi`
+
+_Data source_
+
+| GEO# | Description | Reference |
+| ---- | ----------- | --------- |
+| GSE23580 | Microarray expression analyses of _S. cerevisiae_ wt, _pho4∆_, _pho2∆_ in rich or no Pi media, sampled at 1hr | Zhou & O'Shea 2011 |
+
+    Zhou X, O’Shea EK. 2011. Integrated approaches reveal determinants of genome-wide binding and function of the transcription factor Pho4. Mol Cell 42:826–836.
+
+The analysis below is inspired by a GEOquery workshop offered by Jason Ratcliff at the Iowa Institute of Human Genetics. `getGEO()` will return an ExpressionSet object, which is then converted into a "SummarizedExperiment" object, which is a more modern data structure that is easier to deal with.
+```{r}
+#Sys.setenv("VROOM_CONNECTION_SIZE" = 131072*10) # increase the local cache size
+gse <- GEOquery::getGEO(filename = "../input/Scer-Pi-Zhou2011/GSE23580_series_matrix.txt.gz") %>% 
+  as("SummarizedExperiment")
+```
+
+The experimental information is stored in the `colData` fields. The ones we are interested in are:
+```{r}
+colData(gse) %>% 
+  as_tibble() %>%
+  filter(grepl("Wild type no vs high Pi conditions", title) | grepl("Comparison 1$", title)) %>% 
+  select(title, geo_accession, organism = organism_ch1, strain = characteristics_ch1, 
+         condition_ch1 = characteristics_ch1.2, label_ch1, condition_ch2 = characteristics_ch2.2, label_ch2)
+```
+
+The first three are part of the mutant cycle while the latter four are not. The latter four are said to have incorporated a dye swap, although I can't tell how the swap was done from the table above.
+
+Separately extract the two subsets and examine them separately.
+```{r}
+gse1 <- gse[, grepl("Comparison 1$", gse$title)]
+gse2 <- gse[, grepl("Wild type no vs high Pi conditions", gse$title)]
+```
+
+### OSR gene list based on _S. cerevisiae_ literature
+Compile gene list known to be involved in the response to hydrogen perxoide. This list is mostly based on Lee _et al._ 1999 (PMID: 10347154) and Hasan _et al._ 2002 (PMID: 12100562)
+```{r}
+# manually compiled datasets
+scer.osr <- read_csv("../input/gene-list/s-cerevisiae-hydroperoxide-response-genes.csv", col_types = cols()) %>%
+  mutate(ori.name = str_to_upper(ori.name), cor.name = str_to_upper(cor.name))
+# these IDs are retrieved from YeastMine
+scer.id <- read_csv("../input/gene-list/s-cerevisiae-hydroperoxide-response-gene-id.csv", col_types = cols()) %>% 
+  mutate(input = str_to_upper(input))
+# merge
+scer.osr <- scer.id %>% 
+  select(input, scer.sys = secondaryIdentifier, fun = name, length) %>% 
+  left_join(scer.osr, by = c("input" = "cor.name")) %>% 
+  select(scer.common = input, -ori.name, everything())
+```
+
+### Mapping between the two genomes
+
+Mapping between the two species are downloaded from [CGD](www.candidagenome.org). Two types of mappings are available: [orthology](http://www.candidagenome.org/download/homology/orthologs/) is based on the [Yeast Gene Order Browser](http://ygob.ucd.ie/); [best hits](http://www.candidagenome.org/download/homology/best_hits/) is based on `blastp` and is only performed for genes lacking a credible ortholog. Note that because both mappings start from _C. glabrata_, they are not the ideal mapping to use for identifying the _C. glabrata_ ortholog for _S. cerevisiae_ genes, but should be sufficient for the current purpose. This is because most of the genes do have 1-to-1 orthologs between the two species and thus starting from either species should yield the same mapping.
+
+Below our goal is to reverse-engineer an scToCg one-to-one mapping from the two cgToSc mappings.
+```{r}
+# cgToSc is loaded already and stores the orthology mapping
+# read the best hit mapping
+cgToSc.bh <- read_tsv("../input/annotation/C_glabrata_CBS138_S_cerevisiae_best_hits.txt", 
+                           comment = "#", col_types = cols(), 
+                           col_names = c("CglaID","CglaName","Cgla.id","ScerID","ScerName","Scer.id")) %>% 
+  select(CglaID, CglaName, ScerID, ScerName)
+re.scToCg <- bind_rows(
+  ortholog = cgToSc, 
+  # only include the rows in the best hit table if the Scer gene is not already in the orthology mapping
+  # for Scer genes with more than one Cgla genes mapped to it by blastp, randomly pick the first one
+  `best hit` = cgToSc.bh %>% filter(!ScerID %in% cgToSc$ScerID) %>% group_by(ScerID) %>% filter(row_number() == 1),
+  .id = "mapping")
+```
+
+Combine the orthology and best hits mapping
+```{r}
+cgla.list <- scer.osr %>% 
+  dplyr::rename(ScerID = scer.sys, ScerName = scer.common) %>%
+  left_join(cgToSc %>% select(CglaID.or = CglaID, CglaName.or = CglaName, ScerID, ScerName)) %>% 
+  # note that the following is not a robust procedure. it just happens that none of the Scer genes in 
+  # scer.osr have more than one best hit mapped Cgla genes
+  left_join(cgToSc.bh %>% select(CglaID.bh = CglaID, CglaName.bh = CglaName, ScerID, ScerName)) %>% 
+  mutate(
+    CglaID = ifelse(is.na(CglaID.or), CglaID.bh, CglaID.or),
+    CglaName = ifelse(is.na(CglaName.or), CglaName.bh, CglaName.or)
+  ) %>% 
+  select(starts_with("Cgla"), everything())
+```
+
+
+## Analysis
+### Plotting _C. glabrata_ time course
+```{r}
+myGenesPlot <- function(genes = "CAGL0B02475g", names = "PMU2") {
+  # this function takes in the read count matrix (normalized and transformed) and a list of gene IDs
+  # and plots the values stratified by genotype and timepoint
+  if(any(!genes %in% rownames(se))){
+    print("The following genes are not included in the experiment. Check to make sure that the gene names are correct.")
+    setdiff(genes, rownames(se))
+    stop("Gene names not included in the experiment")
+  }
+  
+  if(!is.null(names(genes))){
+    names = names(genes)
+  }
+  else if(length(genes) != length(names)){
+    stop("length of 'genes' must equal length of 'names'")
+  }
+  
+  
+  # construct tibble for plotting
+  dat <- t(assay(se[genes,])) %>% as_tibble(rownames = NA) %>% rownames_to_column(var = "sample") # subset the expression matrix
+  tb <- colData(se) %>% as_tibble(rownames = NA) %>% 
+    rownames_to_column(var = "sample") %>% 
+    select(sample, Genotype, Timepoint) %>%
+    left_join(dat, by = "sample") %>% 
+    pivot_longer(cols = starts_with("CAGL"), names_to = "gene", values_to = "log2 cpm") %>% 
+    left_join(tibble(gene = genes, name = names), by = "gene")
+    
+  p <- ggplot(tb, aes(x = Timepoint, y = `log2 cpm`)) + 
+    geom_point() + geom_smooth(method = "loess", formula = y ~ x, aes(x = as.numeric(Timepoint), y = `log2 cpm`)) + 
+    xlab("") + ylab("log2 count per million") + facet_wrap(~paste(gene, name, sep = ":"), scale = "free_y") +
+    theme_bw(base_size = 12) + 
+    theme(axis.text.x = element_text(angle = 45, size = rel(0.75), hjust = 1),
+          axis.text.y = element_text(size = rel(0.75)))
+  return(p)
+}
+```
+
+```{r}
+group <- c("antioxidant", "protein degradation", "chaperon")
+categories <- lapply(group, function(x){
+  test <- cgla.list %>% 
+    filter(category == x) %>% 
+    select(ScerName, CglaID) %>% 
+    filter(!is.na(CglaID)) %>% 
+    deframe()
+})
+names(categories) <- group
+categories$antioxidant <- c(categories$antioxidant, CTT1 = "CAGL0K10868g", TSA2 = "CAGL0K06259g")
+for (i in seq_along(categories)){
+  p <- myGenesPlot(categories[[i]])
+  print(p + ggtitle(str_to_upper(group[i])) + theme(plot.title = element_text(hjust = 0.5)))
+}
+```
+
+
+### Plotting _S. cerevisiae_ -Pi at 1hr
+
+To compare OSR genes under phopshate starvation in _C. glabrata_ vs in _S. cerevisiae_, I downloaded Xu's 2011 data, which was measured using two-color microarray at 1hr post starvation. In the future I plan to use Gurvich 2017, which contains the time course data but requires more processing.
+
+First, we need to assemble the dataset. The idea is to calculate the log2FC between 1hr and pre-stress time points from the _C. glabrata_ dataset. Later we will merge it with the _S. cerevisiae_ data. The final data should include `Species | Name | ID | log2FC`, in which `Name` is always from _S. cerevisiae_ and `ID` from the respective species.
+```{r}
+tmp <- assay(se[, se$Timepoint %in% c("pre", "60m")])
+colnames(tmp) <- c("pre.1","pre.2","60m.1","60m.2","60m.3")
+cgla.1hr <- as_tibble(tmp, rownames = "CglaID") %>% 
+  mutate(
+    base = (pre.1 + pre.2)/2,
+    m60.1 = `60m.1` - base,
+    m60.2 = `60m.2` - base,
+    m60.3 = `60m.3` - base
+  ) %>% 
+  select(CglaID, starts_with("m60")) %>% 
+  pivot_longer(m60.1:m60.3, names_to = NULL, values_to = "log2FC")
+```
+
+With the Cgla data calculated, we can write a function that takes a list of _S. cerevisiae_ gene names as input and plot the logFC in both species.
+```{r}
+myCompare <- function(genes = "YML123C"){
+  # check gene names against the S. cerevisiae microarray annotation
+  scerORF <- rowData(gse)$ORF
+  if(all(!genes %in% scerORF)){
+    stop("Check ORF names. None are present in the annotation file.")
+  }else if(any(!genes %in% scerORF)){
+    print("The following S. cerevisiae genes are not included on the microarray chip.")
+    print(setdiff(genes, scerORF))
+  }else if(any(!genes %in% re.scToCg$ScerID)){
+    print("The following S. cerevisiae genes do not have a C. glabrata ortholog.")
+    print(setdiff(genes, re.scToCg$ScerID))
+  }
+  geneSet <- rowData(gse) %>% 
+    as_tibble(rownames = NULL) %>% 
+    filter(ORF %in% genes) %>% 
+    select(ScerID = ORF, ScerName = Name) %>% 
+    left_join(re.scToCg, by = c("ScerID", "ScerName"))
+  
+  # extract Scer data
+  probes <- rowData(gse1) %>% as_tibble() %>% filter(ORF %in% geneSet$ScerID) %>% select(ID, ORF, Name)
+  scerDat <- assay(gse1)[probes$ID,] %>% 
+    as_tibble(rownames = "ID") %>% 
+    left_join(probes, by = "ID") %>% 
+    pivot_longer(cols = starts_with("GSM"), names_to = NULL, values_to = "log2FC") %>% 
+    select(ScerName = Name, ID = ORF, log2FC)
+  # extract Cgla data
+  cglaDat <- cgla.1hr %>% 
+    filter(CglaID %in% na.omit(geneSet$CglaID)) %>% 
+    left_join(select(geneSet, CglaID, ScerName), by = "CglaID") %>% 
+    select(ScerName, ID = CglaID, log2FC)
+  Dat <- bind_rows(`S. cerevisiae` = scerDat, `C. glabrata` = cglaDat, .id = "species") %>%
+    # sort the gene list by Cgla induction mean
+    mutate(ScerName = forcats::fct_reorder(ScerName, log2FC, mean, .desc = TRUE))
+  
+  # plotting
+  ggplot(Dat, aes(x = ScerName, y = log2FC, group = species)) +
+    geom_bar(aes(fill = species), stat = "summary", fun = "mean", alpha = 0.9,
+             position = position_dodge(0.9)) +
+    geom_point(aes(color = species), position = position_dodge(0.9), size = 1) +
+    geom_hline(yintercept = 0, linetype = 1, color = "gray20") +
+    geom_hline(yintercept = 1, linetype = 2, color = "gray50") +
+    scale_color_manual(values = c("S. cerevisiae" = "gray30", "C. glabrata" = "orange2"), guide = NULL) +
+    scale_fill_manual("Species", values = c("S. cerevisiae" = "yellowgreen", "C. glabrata" = "royalblue3")) +
+    labs(x = "*S. cerevisiae* gene names", y = "log2 Fold Change") +
+    #coord_flip() + 
+    theme_bw(base_size = 14) + 
+    theme(legend.text = element_text(face = 3), 
+          axis.title.x = element_markdown(),
+          legend.position = c(0.8, 0.8))
+}
+```
+
+```{r plot_gene, echo=FALSE}
+geneList <- lapply(group, function(x){
+  scer.osr %>% filter(category == x) %>% pull(scer.sys)
+})
+names(geneList) <- group
+# add CTA1, which is induced in C. glabrata but not in S. cerevisiae
+# remove CYS3 and TSA2, both of which appear to be down under -Pi in both species
+geneList$antioxidant <- setdiff(c(geneList$antioxidant, "YDR256C"), c("YDR453C", "YAL012W"))
+for (i in seq_along(geneList)){
+  print(group[i])
+  p <- myCompare(geneList[[i]])
+  print(p + ggtitle(str_to_upper(group[i])) + theme(plot.title = element_text(hjust = 0.5)))
+}
+```

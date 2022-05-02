@@ -1,0 +1,56 @@
+input,reason,matches,symbol,organism.shortName,name,length,secondaryIdentifier,primaryIdentifier,class
+cdc48,MATCH,1,CDC48,S. cerevisiae,Cell Division Cycle,2508,YDL126C,S000002284,ORF
+gsh1,MATCH,1,GSH1,S. cerevisiae,glutathione (GSH),2037,YJL101C,S000003637,ORF
+ahp1,MATCH,1,AHP1,S. cerevisiae,Alkyl HydroPeroxide reductase,531,YLR109W,S000004099,ORF
+tsa2,MATCH,1,TSA2,S. cerevisiae,Thiol-Specific Antioxidant,591,YDR453C,S000002861,ORF
+hsp78,MATCH,1,HSP78,S. cerevisiae,Heat Shock Protein,2436,YDR258C,S000002666,ORF
+uba1,MATCH,1,UBA1,S. cerevisiae,UBiquitin Activating,3075,YKL210W,S000001693,ORF
+hsp104,MATCH,1,HSP104,S. cerevisiae,Heat Shock Protein,2727,YLL026W,S000003949,ORF
+hsp82,MATCH,1,HSP82,S. cerevisiae,Heat Shock Protein,2130,YPL240C,S000006161,ORF
+ald5,MATCH,1,ALD5,S. cerevisiae,ALdehyde Dehydrogenase,1563,YER073W,S000000875,ORF
+CTT1,MATCH,1,CTT1,S. cerevisiae,CaTalase T,1689,YGR088W,S000003320,ORF
+glr1,MATCH,1,GLR1,S. cerevisiae,GLutathione Reductase,1452,YPL091W,S000006012,ORF
+pnc1,MATCH,1,PNC1,S. cerevisiae,Pyrazinamidase and NiCotinamidase,651,YGL037C,S000003005,ORF
+adh6,MATCH,1,ADH6,S. cerevisiae,Alcohol DeHydrogenase,1083,YMR318C,S000004937,ORF
+tfs1,MATCH,1,TFS1,S. cerevisiae,cdc Twenty-Five Suppressor,660,YLR178C,S000004168,ORF
+pgm2,MATCH,1,PGM2,S. cerevisiae,PhosphoGlucoMutase,1710,YMR105C,S000004711,ORF
+gre2,MATCH,1,GRE2,S. cerevisiae,Genes de Respuesta a Estres (stress responsive genes),1029,YOL151W,S000005511,ORF
+tps1,MATCH,1,TPS1,S. cerevisiae,Trehalose-6-Phosphate Synthase,1488,YBR126C,S000000330,ORF
+cpa2,MATCH,1,CPA2,S. cerevisiae,Carbamyl Phosphate synthetase A,3357,YJR109C,S000003870,ORF
+zwf1,MATCH,1,ZWF1,S. cerevisiae,ZWischenFerment,1518,YNL241C,S000005185,ORF
+pup2,MATCH,1,PUP2,S. cerevisiae,PUtative Proteasome subunit,783,YGR253C,S000003485,ORF
+pst2,MATCH,1,PST2,S. cerevisiae,Protoplasts-SecreTed,597,YDR032C,S000002439,ORF
+cys3,MATCH,1,CYS3,S. cerevisiae,CYStathionine gamma-lyase,1185,YAL012W,S000000010,ORF
+ola1,MATCH,1,OLA1,S. cerevisiae,Obg-Like ATPase,1185,YBR025C,S000000229,ORF
+lsp1,MATCH,1,LSP1,S. cerevisiae,Long chain bases Stimulate Phosphorylation,1026,YPL004C,S000005925,ORF
+TRR1,MATCH,1,TRR1,S. cerevisiae,ThioRedoxin Reductase,960,YDR353W,S000002761,ORF
+aro4,MATCH,1,ARO4,S. cerevisiae,AROmatic amino acid requiring,1113,YBR249C,S000000453,ORF
+dnm1,MATCH,1,DNM1,S. cerevisiae,DyNaMin-related,2274,YLL001W,S000003924,ORF
+tal1,MATCH,1,TAL1,S. cerevisiae,TransALdolase,1008,YLR354C,S000004346,ORF
+pre5,MATCH,1,PRE5,S. cerevisiae,PRoteinase yscE,705,YMR314W,S000004931,ORF
+hsp12,MATCH,1,HSP12,S. cerevisiae,Heat Shock Protein,330,YFL014W,S000001880,ORF
+sba1,MATCH,1,SBA1,S. cerevisiae,increased Sensitivity to Benzoquinone Ansamycins,651,YKL117W,S000001600,ORF
+pil1,MATCH,1,PIL1,S. cerevisiae,Phosphorylation Inhibited by Long chain bases,1020,YGR086C,S000003318,ORF
+tkl2,MATCH,1,TKL2,S. cerevisiae,TransKetoLase,2046,YBR117C,S000000321,ORF
+ara1,MATCH,1,ARA1,S. cerevisiae,D-ARAbinose dehydrogenase,1035,YBR149W,S000000353,ORF
+dak1,MATCH,1,DAK1,S. cerevisiae,DihydroxyAcetone Kinase,1755,YML070W,S000004535,ORF
+pep4,MATCH,1,PEP4,S. cerevisiae,carboxyPEPtidase Y-deficient,1218,YPL154C,S000006075,ORF
+rpt1,MATCH,1,RPT1,S. cerevisiae,Regulatory Particle Triple-A protein or Regulatory Particle Triphosphatase,1404,YKL145W,S000001628,ORF
+hsp60,MATCH,1,HSP60,S. cerevisiae,Heat Shock Protein,1719,YLR259C,S000004249,ORF
+grx1,MATCH,1,GRX1,S. cerevisiae,GlutaRedoXin,333,YCL035C,S000000540,ORF
+gor1,MATCH,1,GOR1,S. cerevisiae,GlyOxylate Reductase,1053,YNL274C,S000005218,ORF
+ynl134c,MATCH,1,,S. cerevisiae,,1131,YNL134C,S000005078,ORF
+gpp2,MATCH,1,GPP2,S. cerevisiae,Glycerol-3-Phosphate Phosphatase,753,YER062C,S000000864,ORF
+CCP1,MATCH,1,CCP1,S. cerevisiae,Cytochrome c Peroxidase,1086,YKR066C,S000001774,ORF
+ugp1,MATCH,1,UGP1,S. cerevisiae,UDP-glucose pyrophosphorylase,1500,YKL035W,S000001518,ORF
+ssa1,MATCH,1,SSA1,S. cerevisiae,Stress-Seventy subfamily A,1929,YAL005C,S000000004,ORF
+TSA1,MATCH,1,TSA1,S. cerevisiae,Thiol-Specific Antioxidant,591,YML028W,S000004490,ORF
+pdi1,MATCH,1,PDI1,S. cerevisiae,Protein Disulfide Isomerase,1569,YCL043C,S000000548,ORF
+rpn11,MATCH,1,RPN11,S. cerevisiae,Regulatory Particle Non-ATPase,921,YFR004W,S000001900,ORF
+oye3,MATCH,1,OYE3,S. cerevisiae,Old Yellow Enzyme,1203,YPL171C,S000006092,ORF
+hsp42,MATCH,1,HSP42,S. cerevisiae,Heat Shock Protein,1128,YDR171W,S000002578,ORF
+SOD2,MATCH,1,SOD2,S. cerevisiae,SuperOxide Dismutase,702,YHR008C,S000001050,ORF
+lys20,MATCH,1,LYS20,S. cerevisiae,LYSine requiring,1287,YDL182W,S000002341,ORF
+SOD1,MATCH,1,SOD1,S. cerevisiae,SuperOxide Dismutase,465,YJR104C,S000003865,ORF
+glk1,MATCH,1,GLK1,S. cerevisiae,GLucoKinase,1503,YCL040W,S000000545,ORF
+TRX2,MATCH,1,TRX2,S. cerevisiae,ThioRedoXin,315,YGR209C,S000003441,ORF
