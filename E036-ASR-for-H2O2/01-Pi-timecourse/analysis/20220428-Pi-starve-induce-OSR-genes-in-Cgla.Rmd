@@ -222,12 +222,13 @@ With the Cgla data calculated, we can write a function that takes a list of _S. 
 ```{r}
 myCompare <- function(genes = "YML123C"){
   # check gene names against the S. cerevisiae microarray annotation
-  scerORF <- rowData(gse)$ORF
-  if(all(!genes %in% scerORF)){
+  scerArray <- rowData(gse)$ORF
+  names(scerArray) <- rowData(gse)$Name
+  if(all(!genes %in% scerArray)){
     stop("Check ORF names. None are present in the annotation file.")
-  }else if(any(!genes %in% scerORF)){
+  }else if(any(!genes %in% scerArray)){
     print("The following S. cerevisiae genes are not included on the microarray chip.")
-    print(setdiff(genes, scerORF))
+    print(setdiff(genes, scerArray))
   }else if(any(!genes %in% re.scToCg$ScerID)){
     print("The following S. cerevisiae genes do not have a C. glabrata ortholog.")
     print(setdiff(genes, re.scToCg$ScerID))
@@ -235,16 +236,18 @@ myCompare <- function(genes = "YML123C"){
   geneSet <- rowData(gse) %>% 
     as_tibble(rownames = NULL) %>% 
     filter(ORF %in% genes) %>% 
-    select(ScerID = ORF, ScerName = Name) %>% 
-    left_join(re.scToCg, by = c("ScerID", "ScerName"))
+    select(ScerID = ORF) %>% 
+    inner_join(re.scToCg, by = "ScerID")
   
   # extract Scer data
-  probes <- rowData(gse1) %>% as_tibble() %>% filter(ORF %in% geneSet$ScerID) %>% select(ID, ORF, Name)
+  probes <- rowData(gse1) %>% as_tibble() %>% filter(ORF %in% geneSet$ScerID) %>% select(ID, ORF)
   scerDat <- assay(gse1)[probes$ID,] %>% 
     as_tibble(rownames = "ID") %>% 
     left_join(probes, by = "ID") %>% 
     pivot_longer(cols = starts_with("GSM"), names_to = NULL, values_to = "log2FC") %>% 
-    select(ScerName = Name, ID = ORF, log2FC)
+    select(ScerID = ORF, log2FC) %>% 
+    left_join(select(geneSet, ScerID, ScerName), by = "ScerID") %>% 
+    select(ScerName, ID = ScerID, log2FC)
   # extract Cgla data
   cglaDat <- cgla.1hr %>% 
     filter(CglaID %in% na.omit(geneSet$CglaID)) %>% 
@@ -255,7 +258,7 @@ myCompare <- function(genes = "YML123C"){
     mutate(ScerName = forcats::fct_reorder(ScerName, log2FC, mean, .desc = TRUE))
   
   # plotting
-  ggplot(Dat, aes(x = ScerName, y = log2FC, group = species)) +
+  p <- ggplot(Dat, aes(x = ScerName, y = log2FC, group = species)) +
     geom_bar(aes(fill = species), stat = "summary", fun = "mean", alpha = 0.9,
              position = position_dodge(0.9)) +
     geom_point(aes(color = species), position = position_dodge(0.9), size = 1) +
@@ -263,12 +266,14 @@ myCompare <- function(genes = "YML123C"){
     geom_hline(yintercept = 1, linetype = 2, color = "gray50") +
     scale_color_manual(values = c("S. cerevisiae" = "gray30", "C. glabrata" = "orange2"), guide = NULL) +
     scale_fill_manual("Species", values = c("S. cerevisiae" = "yellowgreen", "C. glabrata" = "royalblue3")) +
-    labs(x = "*S. cerevisiae* gene names", y = "log2 Fold Change") +
+    labs(x = expression(paste(italic("S. cerevisiae"), " gene names")),
+         y = "log2 Fold Change") +
     #coord_flip() + 
-    theme_bw(base_size = 14) + 
+    theme_bw(base_size = 12) + 
     theme(legend.text = element_text(face = 3), 
-          axis.title.x = element_markdown(),
-          legend.position = c(0.8, 0.8))
+          legend.position = c(0.8, 0.8)) +
+    background_grid(major = "y", minor = "none")
+  return(p)
 }
 ```
 
@@ -277,12 +282,15 @@ geneList <- lapply(group, function(x){
   scer.osr %>% filter(category == x) %>% pull(scer.sys)
 })
 names(geneList) <- group
-# add CTA1, which is induced in C. glabrata but not in S. cerevisiae
+# add CTA1, PRX1 and TRX3, which are OSR-related and induced in C. glabrata but not in S. cerevisiae
 # remove CYS3 and TSA2, both of which appear to be down under -Pi in both species
-geneList$antioxidant <- setdiff(c(geneList$antioxidant, "YDR256C"), c("YDR453C", "YAL012W"))
+geneList$antioxidant <- setdiff(c(geneList$antioxidant, "YDR256C", "YBL064C", "YCR083W"), 
+                                c("YDR453C", "YAL012W"))
 for (i in seq_along(geneList)){
   print(group[i])
   p <- myCompare(geneList[[i]])
   print(p + ggtitle(str_to_upper(group[i])) + theme(plot.title = element_text(hjust = 0.5)))
+  ggsave(paste0("../output/", gsub("-", "", Sys.Date()), "-compare-", group[i], "-gene-induction-in-no-Pi.pdf"),
+         width = 6, height = 4)
 }
 ```
