@@ -1,0 +1,460 @@
+---
+title: "E013 Pho4 chimera activity analysis, new host, constructs with mutations replaced"
+author: Bin He
+date: "2022-03-30 (updated `r Sys.Date()`)"
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+    code_folding: hide
+---
+
+```{r message=FALSE}
+suppressPackageStartupMessages(require(plotly))
+suppressPackageStartupMessages(require(tidyverse))
+suppressPackageStartupMessages(require(cowplot))
+suppressPackageStartupMessages(require(ggtext))
+```
+
+# Background
+Emily found out that a number of constructs included in the last batch of experiments had nonsynonymous mutations. To ensure that the results were not due to mutations, she remade those constructs using higher fidelity enzymes.
+
+# Goal
+- Quality control for the new batch of repeat experiments. Determine if there is any well position effect and how well the values agree across multiple days of experiments.
+- Once QC is done, merge the new, repeat dataset with the old one, replacing the results for the old constructs with mutations.
+- Implement the idea of separating the basal activity and Pho2-boost traits.
+
+# Data
+Read the previous merged data
+```{r}
+datPre <- read_tsv("../output/20220614-mar22-batch-bg-sub-data.tsv", col_types = "cccfdddddll") %>% 
+  mutate(host = ordered(host))
+
+list.mutations <- as.character(c(215, 209, 211, 210, 217, 218, 220, 221, 223, 224, 222, 227, 230, 229, 231, 233, 240, 241, 250:255, 257, 258))
+
+exptPre <- datPre %>% 
+  group_by(date, plasmid, host) %>% 
+  summarize(n = n(), n_filter = sum(!low_event_count), .groups = "drop") %>% 
+  mutate(flag = ifelse(plasmid %in% list.mutations, "mutation", ""))
+```
+
+Read the new batches of data
+```{r}
+raw <- list(
+  "05/12/22" = read_tsv("../data/20220512-EO-repeat-batch-1/20220512-gated-median-out.txt", show_col_types = FALSE),
+  "05/17/22" = read_tsv("../data/20220517-EO-repeat-batch-2/20220517-gated-median-out.txt", show_col_types = FALSE),
+  "05/19/22" = read_tsv("../data/20220519-EO-repeat-batch-3/20220519-gated-median-out.txt", show_col_types = FALSE),
+  "05/31/22" = read_tsv("../data/20220531-EO-repeat-batch-4/20220531-gated-median-out.txt", show_col_types = FALSE),
+  "06/02/22" = read_tsv("../data/20220602-EO-repeat-batch-5/20220602-gated-median-out.txt", show_col_types = FALSE)
+)
+dat <- bind_rows(raw, .id = "date") %>% 
+  #separate(col = well, sep = 1, into = c("row", "col")) %>% 
+  separate(col = sample, sep = "-", into = c("plasmid", "host", "rep"))
+```
+
+# QC
+## 1. Number of events per sample
+```{r}
+dat %>% ggplot(aes(x = n_induction/1000)) + geom_histogram(bins = 30, fill = "forestgreen") + 
+  xlab("# events x 1000") +
+  facet_grid(host~date, scales = "free_y") + theme_bw(base_size = 14) #+ panel_border()
+```
+
+> Majority of the experimental wells (not blank) have > 10000 events, with the exception of a few samples
+
+```{r}
+dat %>% filter(host != "blank", n_induction < 10000)
+```
+> Nearly all samples with a low event count were in the 555 background. Emily repeated many of them.
+> Will remove all samples with lower than 7,000 events in the final gated population from further analysis.
+
+```{r}
+event.th <- 7000
+
+dat <- dat %>% 
+  mutate(
+    low_event_count = n_induction < event.th,
+    # Emily labeled the old plasmids with mutations with an "o" in the flow sample name column
+    mutation = ifelse(grepl("o$", name), TRUE, FALSE)
+  ) %>% 
+  filter(host != "blank")
+```
+
+## 2. Background subtraction
+
+Check the background fluorescence levels across different days.
+```{r}
+dat %>% filter(host == "156") %>% 
+  mutate(date = gsub("/22", "", date)) %>% 
+  pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
+  mutate(parameter = ordered(parameter, levels = c("BL1.H", "YL2.H", "nGFP", "nRFP"))) %>% 
+  ggplot(aes(x = date, y = intensity)) + geom_point(aes(shape = well)) +
+  stat_summary(fun.data = "mean_se", geom = "pointrange", color = "red", position = position_nudge(x = 0.1)) +
+  facet_wrap(~parameter, scale = "free_y") +
+  theme_bw(base_size = 14)
+```
+
+> 06/02 run had smaller FSC values (~ cell volume) compared with the other days, while the background fluorescence doesn't appear to be a lot higher, resulting in higher normalized values.
+
+Subtract the background
+```{r}
+bg <- dat %>% 
+  filter(host == "156") %>% 
+  group_by(date) %>% 
+  summarize(across(FSC.H:nRFP, ~ round(mean(.x),1))) %>% 
+  column_to_rownames(var = "date")
+
+dat1 <- dat %>% 
+  filter(host != "blank") %>% 
+  select(date:host, FSC.H:nRFP) %>%
+  mutate(
+    BL1.H = BL1.H - bg[date, "BL1.H"],
+    YL2.H = YL2.H - bg[date, "YL2.H"],
+    nGFP = nGFP - bg[date, "nGFP"],
+    nRFP = nRFP - bg[date, "nRFP"],
+  )
+```
+
+Double check that the subtraction worked correctly
+```{r}
+dat1 %>% filter(host == "156") %>% 
+  pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
+  mutate(
+    parameter = ordered(parameter, levels = c("BL1.H", "YL2.H", "nGFP", "nRFP")),
+    date = gsub("\\/22$", "", date)
+  ) %>% 
+  ggplot(aes(x = date, y = intensity)) + geom_point(aes(shape = well)) +
+  stat_summary(fun.data = "mean_se", geom = "pointrange", color = "red", position = position_nudge(x = 0.1)) +
+  facet_wrap(~parameter, scale = "free_y") +
+  theme_bw(base_size = 14)
+
+# remove the yH156 samples
+dat1 <- dat1 %>% 
+  filter(host != "156") %>%
+  mutate(host = ordered(host, levels = c("555", "373"), labels = c("PHO2", "pho2∆")))
+```
+
+
+## 3. Well position
+
+**_Rationale_**
+
+In my plate design, I placed a positive control strain (CgPho4-mNeon in _PHO2_ background) in the control columns (1, 5, 9) on every other row (A, C, E, G). The rationale for this is to use it to identify any well position effect on the fluorescence readings. In this round of repeat experiments, Emily followed this design and put pH188-yH323 in these wells. Now we can properly assess the well position effect.
+
+For this analysis, we will combine and compare the May/Jun batch with the Mar batch
+```{r}
+datM <- bind_rows(datPre, dat1)
+```
+
+```{r}
+datM %>% 
+  filter(plasmid == "188", host == "PHO2") %>% 
+  separate(well, into = c("row", "col"), sep = 1) %>% 
+  pivot_longer(BL1.H:YL2.H, names_to = "parameter", values_to = "intensity") %>% 
+  ggplot(aes(x = col, y = intensity, group = date)) + 
+  geom_point(aes(color = date), size = 1) + 
+  #geom_line(aes(color = date), size = 0.4) +
+  stat_summary(aes(color = date), geom = "line", fun = mean) +
+  scale_color_brewer(type = "qual", palette = 2) +
+  xlab("Column") +
+  facet_grid(parameter~row, scales = "free_y") +
+  theme_bw(base_size = 14)
+```
+
+> - no obvious trend between the rows or columns
+> - a clear correlation between YL2.H and BL1.H.
+
+Same plot for normalized fluorescence
+```{r}
+datM %>% 
+  filter(plasmid == "188", host == "PHO2") %>% 
+  separate(well, into = c("row", "col"), sep = 1) %>% 
+  pivot_longer(c(nGFP, nRFP), names_to = "parameter", values_to = "intensity") %>% 
+  ggplot(aes(x = col, y = intensity, group = date)) + 
+  geom_point(aes(color = date), size = 1) + 
+  #geom_line(aes(color = date), size = 0.4) +
+  stat_summary(aes(color = date), geom = "line", fun = mean) +
+  scale_color_brewer(type = "qual", palette = 2) +
+  xlab("Column") +
+  facet_grid(parameter~row, scales = "free_y") +
+  theme_bw(base_size = 14)
+```
+
+> - What we care about is the ratio between Pho4-mNeon and _PHO5pr_-mCherry
+
+```{r}
+datM %>% 
+  filter(plasmid == "188", host == "PHO2") %>% 
+  separate(well, into = c("row", "col"), sep = 1) %>% 
+  ggplot(aes(x = BL1.H, y = YL2.H)) + 
+  geom_point(aes(color = date, shape = row), size = 3) + 
+  stat_smooth(method = "lm", se = FALSE, color = "gray50", size = 0.5) +
+  scale_color_brewer(type = "qual", palette = 2) +
+  #scale_color_viridis_d() +
+  #scale_shape_manual(values = c(15:17, 23, 25)) +
+  theme_bw(base_size = 14)
+```
+
+> - There is variation in BL1.H and correspondingly in YL2.H, but the ratio between the two are very consistent
+
+## 4. Run effect
+
+How does the same control strain behave in different runs (represented as date variable here)? Is there a strong run effect?
+
+Let's check both ScPho4 (pH194) and CgPho4 (pH188) to see if their behaviors are consistent across days and between this and the last (03/30) batch.
+```{r}
+datM %>% 
+  filter(plasmid %in% c("188", "194")) %>% 
+  mutate(
+    date = gsub("/22$", "", date),
+    `YL2.H / BL1.H` = YL2.H / BL1.H,
+    Pho4 = factor(plasmid, levels = c("194", "188"), labels = c("ScPho4", "CgPho4"))
+  ) %>% 
+  separate(well, into = c("row", "col"), sep = 1) %>% 
+  ggplot(aes(x = date, y = `YL2.H / BL1.H`, group = host)) + 
+  geom_point(aes(color = host), position = position_jitter(0.1), alpha = 0.8, size = 1) + 
+  scale_color_viridis_d(begin = 0.2, end = 0.6) +
+  stat_summary(fun.data = "mean_se", geom = "pointrange", shape = 16, color = "red") +
+  ylim(0, 30) + facet_grid(Pho4~.) + theme_bw(base_size = 14)
+```
+> while the characteristic behaviors of ScPho4 and CgPho4 are consistent across runs, there are also clear variability in the RFP/GFP ratios between plates for the same genotype.
+
+Next we examine the underlying background-subtracted fluorescence values for pH188 and pH194 in the yH555 background, which are present on each plate.
+
+```{r}
+datM %>% 
+  filter(plasmid %in% c("188", "194"), host == "PHO2") %>% 
+  mutate(
+    date = gsub("/22$", "", date),
+    plasmid = factor(plasmid, levels = c("188", "194"), labels = c("CgPho4", "ScPho4"))
+  ) %>% 
+  pivot_longer(BL1.H:YL2.H, names_to = "parameter", values_to = "intensity") %>% 
+  ggplot(aes(x = date, y = intensity, group = plasmid)) + 
+  geom_point(aes(color = plasmid), alpha = 0.7, size = 1,
+             position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.7)) + 
+  scale_color_manual(values = c("ScPho4" = "blue3", "CgPho4" = "forestgreen")) +
+  stat_summary(aes(color = plasmid), fun.data = "mean_se", geom = "crossbar", width = 0.4,
+               position = position_dodge(0.7)) +
+  facet_grid(parameter~., scale = "free_y") +
+  expand_limits(y = 0) +
+  theme_bw(base_size = 14) + labs(subtitle = "in _PHO2_ background") +
+  theme(plot.subtitle = element_markdown())
+```
+
+> CgPho4 and ScPho4 values track each other -- on days (runs) where one is high, the other one also tends to be high. On the 05/31 run, ScPho4 is significantly higher than CgPho4.
+
+```{r}
+datM %>% 
+  filter(plasmid %in% c("188", "194"), host == "PHO2") %>% 
+  mutate(
+    date = gsub("/22$", "", date),
+    plasmid = factor(plasmid, levels = c("188", "194"), labels = c("CgPho4", "ScPho4"))
+  ) %>% 
+  pivot_longer(nGFP:nRFP, names_to = "parameter", values_to = "intensity") %>% 
+  ggplot(aes(x = date, y = intensity, group = plasmid)) + 
+  geom_point(aes(color = plasmid), alpha = 0.7, size = 1,
+             position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.7)) + 
+  scale_color_manual(values = c("ScPho4" = "blue3", "CgPho4" = "forestgreen")) +
+  stat_summary(aes(color = plasmid), fun.data = "mean_se", geom = "crossbar", width = 0.4,
+               position = position_dodge(0.7)) +
+  facet_grid(parameter~., scale = "free_y") +
+  expand_limits(y = 0) +
+  theme_bw(base_size = 14) + labs(subtitle = "in _PHO2_ background") +
+  theme(plot.subtitle = element_markdown())
+```
+> The size normalized values show lower variance but a similar correlated pattern. Here, however, ScPho4 overtakes CgPho4 on the 03/22 and 05/17 runs.
+
+How about the RFP/GFP ratios?
+```{r}
+datM %>% 
+  filter(plasmid %in% c("188", "194"), host == "PHO2") %>% 
+  mutate(
+    date = gsub("/22$", "", date),
+    plasmid = factor(plasmid, levels = c("188", "194"), labels = c("CgPho4", "ScPho4")),
+    `YL2 / BL1` = YL2.H / BL1.H,
+    `nRFP / nGFP` = nRFP / nGFP
+  ) %>% 
+  pivot_longer(`YL2 / BL1`:`nRFP / nGFP`, names_to = "parameter", values_to = "ratio") %>% 
+  ggplot(aes(x = date, y = ratio, group = plasmid)) + 
+  geom_point(aes(color = plasmid), alpha = 0.6, size = 1, 
+             position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.7)) + 
+  stat_summary(aes(color = plasmid), fun.data = "mean_se", geom = "crossbar", width = 0.4,
+               position = position_dodge(0.7)) +
+  scale_color_manual(values = c("ScPho4" = "blue3", "CgPho4" = "forestgreen")) +
+  facet_grid(parameter~.) + expand_limits(y = c(0,30)) +
+  theme_bw(base_size = 14) + labs(subtitle = "in _PHO2_ background") +
+  theme(plot.subtitle = element_markdown())
+```
+
+ 
+## 5. Statistical tests for confounding factors
+Testing for run (date) as well as well (block) position effects on fluorescence values. Using the [nest-map-unnest workflow](https://www.tidymodels.org/learn/statistics/tidy-analysis/)
+
+Note that in order to maintain a balanced design (same number of replicates in each group), we will restrict the analysis to batches 1-4 in the May/Jun dataset. The March dataset had a different plate design, while batch 5 of the May/Jun dataset is incomplete w.r.t. the controls (because only half of the plate was used).
+
+```{r}
+tmp <- filter(dat1, plasmid == "188", host == "PHO2", date != "06/02/22") %>%   
+  separate(well, into = c("row", "col"), sep = 1, remove = FALSE) %>% 
+  select(date, block = well, row, col, BL1.H:nRFP) %>% 
+  mutate(RvG = YL2.H / BL1.H, nRvG = nRFP / nGFP)
+```
+
+```{r}
+tmp %>% 
+  pivot_longer(cols = BL1.H:nRvG, names_to = "parameter", values_to = "value") %>% 
+  nest(data = c(-parameter)) %>% 
+  mutate(
+    fit = map(data, ~anova(lm(value ~ date + block, dat = .x))),
+    tidied = map(fit, broom::tidy)
+  ) %>% 
+  unnest(tidied) %>% 
+  mutate(
+    significant = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01  ~ "**",
+      p.value < 0.05  ~ "*",
+      p.value < 0.1   ~ ".",
+      TRUE ~ " "
+    )) %>% 
+  filter(term != "Residuals") %>% 
+  select(parameter, term, df, statistic, p.value, significant)
+```
+> the date, row and column effects are significant for multiple variables.
+
+Use dummy encoding in linear regression to view the effects of run and block.
+```{r}
+tmp %>% 
+  pivot_longer(cols = BL1.H:nRvG, names_to = "parameter", values_to = "value") %>% 
+  nest(data = c(-parameter)) %>% 
+  mutate(
+    fit = map(data, ~lm(value ~ date + row + col, dat = .x)),
+    tidied = map(fit, broom::tidy)
+  ) %>% 
+  unnest(tidied) %>% 
+  mutate(
+    term = gsub("/22$", "", term),
+    estimate = round(estimate, digits = 2),
+    significant = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01  ~ "**",
+      p.value < 0.05  ~ "*",
+      p.value < 0.1   ~ ".",
+      TRUE ~ " "
+    )) %>% 
+  select(parameter, term, e = estimate, s = significant) %>% 
+  pivot_wider(names_from = parameter, values_from = c(e, s))
+```
+
+# Main
+## Plotting functions
+Here I'd like to develop a series of plotting functions that take the names or any part of the Pho4 chimera annotation as input and plot their results in a variety of ways
+Load the Pho4 plasmid information and merge with the reshaped data
+```{r}
+meta <- read_tsv("../data/20220330-chimera-Pho4-makeup.tsv", col_types = "cccc")
+```
+
+Plotting function
+```{r}
+# extract ximera names
+refs <- c("CCCCC","SSSSS")
+ximeras <- setdiff(meta$symbol, refs)
+# make a test set
+test <- sample(ximeras, 6)
+# subset data
+tmp <- meta %>% 
+  filter(symbol %in% c(refs,test)) %>% 
+  inner_join(dat1, by = "plasmid") %>% 
+  mutate(symbol = factor(symbol, levels = c(refs, test)))
+```
+
+Plot individual components
+```{r}
+tmp %>% 
+  pivot_longer(nGFP:nRFP, names_to = "parameter", values_to = "intensity") %>% 
+  mutate(parameter = ordered(parameter, levels = c("nRFP", "nGFP"))) %>% 
+  #pivot_longer(BL1.H:YL2.H, names_to = "parameter", values_to = "intensity") %>% 
+  #mutate(parameter = ordered(parameter, levels = c("YL2.H", "BL1.H"))) %>% 
+  ggplot(aes(x = symbol, y = intensity, group = host)) + 
+  geom_bar(aes(fill = host), width = 0.5, alpha = 0.8,
+           stat = "summary", fun = "mean", position = position_dodge(0.5)) +
+  geom_point(aes(color = host), size = 1,
+             position = position_jitterdodge(dodge.width = 0.5)) + 
+  scale_color_manual(values = c("PHO2" = "gray20", "pho2∆" = "gray40")) +
+  scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+  #stat_summary(fun = "mean", geom = "crossbar", color = "red", width = 0.25,
+  #             position = position_dodge(0.75), ) +
+  facet_wrap(~parameter, scale = "free_y", ncol = 1) +
+  xlab("Pho4 chimera") + expand_limits(y = 0) +
+  theme_gray(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, family = "mono"))
+```
+```{r}
+tmp %>% 
+  #mutate(`YL2.H/BL1.H` = YL2.H/BL1.H,
+  mutate(`R/G` = nRFP/nGFP) %>% 
+  ggplot(aes(x = symbol, y = `R/G`, group = host)) + 
+  geom_bar(aes(fill = host), width = 0.5, alpha = 0.8,
+           stat = "summary", fun = "mean", position = position_dodge(0.5)) +
+  geom_point(aes(color = host), position = position_jitterdodge(dodge.width = 0.5)) + 
+  scale_color_manual(values = c("PHO2" = "gray20", "pho2∆" = "gray40")) +
+  scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+  #stat_summary(fun = "mean", color = "red", geom = "crossbar", width = 0.2,
+  #             position = position_dodge(0.75), ) +
+  theme_gray(base_size = 14) + xlab("Pho4 chimera") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, family = "mono"))
+```
+
+Next idea is to plot the ratio between the mean R/G for _PHO2_ and mean R/G for _pho2∆_, over the mean R/G for _PHO2_
+
+First summarize the data.
+```{r}
+datsum <- dat1 %>%
+  filter(plasmid != "NA") %>% 
+  mutate(`R/G` = YL2.H/BL1.H, `nR/G` = nRFP/nGFP) %>% 
+  group_by(date, plasmid, host) %>% 
+  summarize(across(c(BL1.H, nGFP, YL2.H, nRFP, `R/G`, `nR/G`), mean), .groups = "drop") %>% 
+  pivot_wider(names_from = host, values_from = BL1.H:`nR/G`) %>% 
+  mutate(`pho2∆/PHO2` = `R/G_pho2∆`/`R/G_PHO2`,
+         `n.pho2∆/PHO2` = `nR/G_pho2∆`/`nR/G_PHO2`)
+
+# useful to set a flag for low activity mutants
+low.act.th <- datsum %>% filter(plasmid == "194") %>% summarize(across(.cols = where(is.numeric), .fns = mean)) %>% unlist()
+```
+
+Then extract the subset for plotting
+```{r}
+tmpsum <- meta %>% 
+  filter(symbol %in% c(refs,test)) %>% 
+  inner_join(datsum, by = "plasmid") %>% 
+  mutate(symbol = factor(symbol, levels = c(refs, test)))
+
+```
+
+Design the plot
+```{r}
+tmpsum %>% 
+  mutate(Activity = ifelse(`R/G_PHO2` < 2*low.act.th["R/G_pho2∆"], "low", "pass")) %>% 
+  ggplot(aes(x = symbol, y = `pho2∆/PHO2`)) + 
+  geom_col(aes(group = date, fill = `R/G_PHO2`), width = 0.75, color = "gray50",
+           position = position_dodge(0.9)) +
+  #geom_point(aes(color = host), position = position_jitterdodge(dodge.width = 0.5)) + 
+  scale_fill_gradient2("Activity") +
+  #scale_color_manual(values = c(alpha("black",0), "red3")) +
+  #stat_summary(fun = "mean", color = "red", geom = "crossbar", width = 0.2,
+  #             position = position_dodge(0.75), ) +
+  facet_grid(.~Activity, scales = "free_x", space = "free_x", labeller = "label_both") +
+  theme_bw(base_size = 14) + xlab("Pho4 chimera") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, family = "mono"))
+```
+
+X-Y plot
+```{r}
+p3 <- tmpsum %>% 
+  mutate(`nR/G_PHO2` = signif(`nR/G_PHO2`, digits = 2),
+         `nR/G_pho2∆` = signif(`nR/G_pho2∆`, digits = 2)) %>% 
+  ggplot(aes(x = `nR/G_PHO2`, y = `nR/G_pho2∆`, label = symbol)) + 
+  geom_point(size = 2.5) + geom_abline(slope = 1) +
+  theme_gray(base_size = 14)
+ggplotly(p3, tooltip = c("label", "x", "y"))
+```
+

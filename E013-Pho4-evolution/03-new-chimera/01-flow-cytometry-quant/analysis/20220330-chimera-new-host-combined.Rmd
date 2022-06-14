@@ -10,9 +10,9 @@ output:
 ---
 
 ```{r}
-require(plotly)
-require(tidyverse)
-require(cowplot)
+suppressPackageStartupMessages(require(plotly))
+suppressPackageStartupMessages(require(tidyverse))
+suppressPackageStartupMessages(require(cowplot))
 ```
 
 # Goal
@@ -32,16 +32,46 @@ dat <- bind_rows(raw, .id = "date") %>%
   separate(col = sample, sep = "-", into = c("plasmid", "host", "rep"))
 ```
 
+
 # QC
 ## 1. Number of events per sample
 ```{r}
-dat %>% ggplot(aes(x = n_induction)) + geom_histogram(bins = 30, fill = "forestgreen") + facet_grid(host~date) + theme_gray(base_size = 14) #+ panel_border()
+dat %>% ggplot(aes(x = n_induction)) + geom_histogram(bins = 30, fill = "forestgreen") + facet_grid(host~date) + theme_bw(base_size = 14) #+ panel_border()
+```
+> Majority of the experimental wells (not blank) have > 10000 events, with the exception of a few samples
+
+```{r}
+dat %>% filter(host != "blank", n_induction < 10000)
+```
+Given the distribution of event counts, we will label all samples with < 7000 counts, which would exclude 2 samples. The rationale is that even though some samples had between 7000 - 10000 events, their mean fluorescence values appear in line with the other replicates of the same genotype. I also removed the blank wells and add a flag to mark the plasmids that Emily remade because the original one (used for this batch of data) contains nonsynonymous mutations.
+```{r}
+event.th <- 7000
+
+list.mutations <- as.character(c(215, 209, 211, 210, 217, 218, 220, 221, 223, 224, 222, 227, 230, 229, 231, 233, 240, 241, 250:255, 257, 258, 265, 266))
+
+expt <- dat %>% 
+  filter(host != "blank") %>% 
+  group_by(date, plasmid, host) %>% 
+  summarize(n = n(), n_filter = sum(n_induction >= event.th), .groups = "drop") %>% 
+  mutate(flag = ifelse(plasmid %in% list.mutations, "mutation", ""))
 ```
 
-**_Discussion_**
+```{r}
+dat <- dat %>% 
+  mutate(
+    low_event_count = n_induction < event.th,
+    mutation = ifelse(plasmid %in% list.mutations, TRUE, FALSE)
+  ) %>% 
+  filter(host != "blank")
+```
 
-1. Majority of the experimental wells (not blank) have > 10000 events, with the exception of a few samples `r dat %>% filter(host != "blank", n_induction < 10000)`
-1. Remove the blank wells and proceed with QC
+How many plasmid-host combination have < 3 replicates after removing samples with low event counts?
+```{r}
+dat %>% filter(!low_event_count) %>% 
+  count(plasmid, host) %>% 
+  filter(n < 3)
+```
+
 
 ## 2. Background subtraction
 
@@ -51,7 +81,7 @@ dat %>% filter(host == "156") %>%
   pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
   mutate(parameter = ordered(parameter, levels = c("BL1.H", "YL2.H", "nGFP", "nRFP"))) %>% 
   ggplot(aes(x = date, y = intensity)) + geom_point(aes(shape = well)) +
-  stat_summary(geom = "pointrange", color = "red", position = position_nudge(x = 0.1)) +
+  stat_summary(fun.data = "mean_se", geom = "pointrange", color = "red", position = position_nudge(x = 0.1)) +
   facet_wrap(~parameter, scale = "free_y") +
   theme_bw(base_size = 14)
 ```
@@ -67,8 +97,7 @@ bg <- dat %>%
   column_to_rownames(var = "date")
 
 dat1 <- dat %>% 
-  filter(host != "blank") %>% 
-  select(date:host, FSC.H:nRFP) %>%
+  select(date:host, FSC.H:nRFP, low_event_count, mutation) %>%
   mutate(
     BL1.H = BL1.H - bg[date, "BL1.H"],
     YL2.H = YL2.H - bg[date, "YL2.H"],
@@ -83,7 +112,7 @@ dat1 %>% filter(host == "156") %>%
   pivot_longer(BL1.H:nRFP, names_to = "parameter", values_to = "intensity") %>% 
   mutate(parameter = ordered(parameter, levels = c("BL1.H", "YL2.H", "nGFP", "nRFP"))) %>% 
   ggplot(aes(x = date, y = intensity)) + geom_point(aes(shape = well)) +
-  stat_summary(geom = "pointrange", color = "red", position = position_nudge(x = 0.1)) +
+  stat_summary(fun.data = "mean_se", geom = "pointrange", color = "red", position = position_nudge(x = 0.1)) +
   facet_wrap(~parameter, scale = "free_y") +
   theme_bw(base_size = 14)
 
@@ -95,7 +124,7 @@ dat1 <- dat1 %>%
 
 Export the background-subtracted values for later use with the shinyapp
 ```{r}
-write_tsv(dat1, "../shinyapp/20220412-bg-sub-data.tsv")
+write_tsv(dat1, "../output/20220614-mar22-batch-bg-sub-data.tsv")
 ```
 
 
