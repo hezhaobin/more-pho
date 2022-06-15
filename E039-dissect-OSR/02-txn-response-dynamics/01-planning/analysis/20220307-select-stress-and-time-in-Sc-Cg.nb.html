@@ -11,7 +11,6 @@
 
 <meta name="author" content="Bin He" />
 
-<meta name="date" content="2022-03-07" />
 
 <title>Determine stress conditions and timepoints for genomics profiling</title>
 
@@ -1501,6 +1500,8 @@ window.initializeCodeFolding = function(show) {
   // select all R code blocks
   var rCodeBlocks = $('pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.julia, pre.foldable');
   rCodeBlocks.each(function() {
+    // skip if the block has fold-none class
+    if ($(this).hasClass('fold-none')) return;
 
     // create a collapsable div to wrap the code in
     var div = $('<div class="collapse r-code-collapse"></div>');
@@ -1516,7 +1517,9 @@ window.initializeCodeFolding = function(show) {
     showCodeButton.append(showCodeText);
     showCodeButton
         .attr('data-toggle', 'collapse')
+        .attr('data-bs-toggle', 'collapse') // BS5
         .attr('data-target', '#' + id)
+        .attr('data-bs-target', '#' + id)   // BS5
         .attr('aria-expanded', showThis)
         .attr('aria-controls', id);
 
@@ -1606,6 +1609,7 @@ if (window.hljs) {
 
 
 
+
 <style type="text/css">
 #rmd-source-code {
   display: none;
@@ -1636,6 +1640,9 @@ button.code-folding-btn:focus {
 }
 summary {
   display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
 }
 pre code {
   padding: 0;
@@ -1745,7 +1752,7 @@ pre code {
 <div id="header">
 
 <div class="btn-group pull-right float-right">
-<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
 <ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
 <li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
 <li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
@@ -1759,7 +1766,7 @@ pre code {
 <h1 class="title toc-ignore">Determine stress conditions and timepoints
 for genomics profiling</h1>
 <h4 class="author">Bin He</h4>
-<h4 class="date">2022-03-07</h4>
+<h4 class="date">2022-03-07 (updated 2022-05-05)</h4>
 
 </div>
 
@@ -1767,10 +1774,36 @@ for genomics profiling</h1>
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmVxdWlyZSh0aWR5dmVyc2UpXG5yZXF1aXJlKGNvd3Bsb3QpXG5gYGAifQ== -->
-<pre class="r"><code>require(tidyverse)
-require(cowplot)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmVxdWlyZSh0aWR5dmVyc2UpXG5gYGAifQ== -->
+<pre class="r"><code>require(tidyverse)</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiB0aWR5dmVyc2VcblJlZ2lzdGVyZWQgUzMgbWV0aG9kcyBvdmVyd3JpdHRlbiBieSAnZGJwbHlyJzpcbiAgbWV0aG9kICAgICAgICAgZnJvbVxuICBwcmludC50YmxfbGF6eSAgICAgXG4gIHByaW50LnRibF9zcWwgICAgICBcbuKUgOKUgCBBdHRhY2hpbmcgcGFja2FnZXMg4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSA4pSAIHRpZHl2ZXJzZSAxLjMuMSDilIDilIBcbuKclCBnZ3Bsb3QyIDMuMy41ICAgICDinJQgcHVycnIgICAwLjMuNFxu4pyUIHRpYmJsZSAgMy4xLjYgICAgIOKclCBkcGx5ciAgIDEuMC45XG7inJQgdGlkeXIgICAxLjIuMCAgICAg4pyUIHN0cmluZ3IgMS40LjBcbuKclCByZWFkciAgIDIuMS4yICAgICDinJQgZm9yY2F0cyAwLjUuMVxu4pSA4pSAIENvbmZsaWN0cyDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAgdGlkeXZlcnNlX2NvbmZsaWN0cygpIOKUgOKUgFxu4pyWIGRwbHlyOjpmaWx0ZXIoKSBtYXNrcyBzdGF0czo6ZmlsdGVyKClcbuKcliBkcGx5cjo6bGFnKCkgICAgbWFza3Mgc3RhdHM6OmxhZygpXG4ifQ== -->
+<pre><code>Loading required package: tidyverse
+Registered S3 methods overwritten by &#39;dbplyr&#39;:
+  method         from
+  print.tbl_lazy     
+  print.tbl_sql      
+── Attaching packages ──────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.1 ──
+✔ ggplot2 3.3.5     ✔ purrr   0.3.4
+✔ tibble  3.1.6     ✔ dplyr   1.0.9
+✔ tidyr   1.2.0     ✔ stringr 1.4.0
+✔ readr   2.1.2     ✔ forcats 0.5.1
+── Conflicts ─────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmVxdWlyZShjb3dwbG90KVxuYGBgIn0= -->
+<pre class="r"><code>require(cowplot)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBjb3dwbG90XG4ifQ== -->
+<pre><code>Loading required package: cowplot</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucmVxdWlyZShnZ3RleHQpXG5gYGAifQ== -->
+<pre class="r"><code>require(ggtext)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTG9hZGluZyByZXF1aXJlZCBwYWNrYWdlOiBnZ3RleHRcbiJ9 -->
+<pre><code>Loading required package: ggtext</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <div id="goal" class="section level2">
@@ -1802,11 +1835,11 @@ the time course RNAseq.</p>
 </thead>
 <tbody>
 <tr class="odd">
-<td>2022.01</td>
-<td><em>S. cerevisiae</em></td>
-<td>0, 0.2, 0.5, 5</td>
-<td>0, 10, 20, 40, 120</td>
-<td>CTT1, GRE2</td>
+<td>2021.11</td>
+<td><em>C. glabrata</em></td>
+<td>0, 5</td>
+<td>40</td>
+<td>CTA1, GRE2, TRX2</td>
 </tr>
 <tr class="even">
 <td>2021.12</td>
@@ -1816,18 +1849,50 @@ the time course RNAseq.</p>
 <td>CTA1, GRE2</td>
 </tr>
 <tr class="odd">
-<td>2021.11</td>
+<td>2022.01</td>
+<td><em>S. cerevisiae</em></td>
+<td>0, 0.2, 0.5, 5</td>
+<td>0, 10, 20, 40, 120</td>
+<td>CTT1, GRE2</td>
+</tr>
+<tr class="even">
+<td>2022.04*</td>
 <td><em>C. glabrata</em></td>
-<td>0, 5</td>
-<td>40</td>
-<td>CTA1, GRE2, TRX2</td>
+<td>0, 1.5, 50</td>
+<td>0, 10, 20, 40, 80, 100</td>
+<td>CTA1, GRE2</td>
+</tr>
+<tr class="odd">
+<td>2022.05</td>
+<td><em>C. glabrata</em></td>
+<td>0, 1.5, 50</td>
+<td>0, 10, 20, 40, 80, 100</td>
+<td>CTA1, GRE2</td>
 </tr>
 </tbody>
 </table>
+<p>*has NoRT issues</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGF0IDwtIHJlYWRfdHN2KFwiLi4vaW5wdXQvMjAyMjAzMDYtc3VtbWFyeS1IMk8yLXRpbWUtY291cnNlLWdlbmUtaW5kdWN0aW9uLnRzdlwiKVxuYGBgIn0= -->
-<pre class="r"><code>dat &lt;- read_tsv(&quot;../input/20220306-summary-H2O2-time-course-gene-induction.tsv&quot;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGF0IDwtIHJlYWRfdHN2KFwiLi4vaW5wdXQvMjAyMjA1MDUtc3VtbWFyeS1IMk8yLXRpbWUtY291cnNlLWdlbmUtaW5kdWN0aW9uLnRzdlwiKVxuYGBgIn0= -->
+<pre class="r"><code>dat &lt;- read_tsv(&quot;../input/20220505-summary-H2O2-time-course-gene-induction.tsv&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiUm93czogMTA2IENvbHVtbnM6IDZcbuKUgOKUgCBDb2x1bW4gc3BlY2lmaWNhdGlvbiDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIBcbkRlbGltaXRlcjogXCJcXHRcIlxuY2hyICg0KTogZGF0ZSwgc3BlY2llcywgaDJvMiwgZ2VuZVxuZGJsICgyKTogdHJlYXRUaW1lLCBsb2cyRkNcblxu4oS5IFVzZSBgc3BlYygpYCB0byByZXRyaWV2ZSB0aGUgZnVsbCBjb2x1bW4gc3BlY2lmaWNhdGlvbiBmb3IgdGhpcyBkYXRhLlxu4oS5IFNwZWNpZnkgdGhlIGNvbHVtbiB0eXBlcyBvciBzZXQgYHNob3dfY29sX3R5cGVzID0gRkFMU0VgIHRvIHF1aWV0IHRoaXMgbWVzc2FnZS5cbiJ9 -->
+<pre><code>Rows: 106 Columns: 6
+── Column specification ─────────────────────────────────────────────────────────────────────────────────────────────────
+Delimiter: &quot;\t&quot;
+chr (4): date, species, h2o2, gene
+dbl (2): treatTime, log2FC
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGF0IDwtIGRhdCAlPiUgXG4gIG11dGF0ZShGQyA9IDJebG9nMkZDLFxuICAgICAgICAgdGltZSA9IGZhY3Rvcih0cmVhdFRpbWUpLFxuICAgICAgICAgSDJPMiA9IG9yZGVyZWQoaDJvMiwgbGV2ZWxzID0gcGFzdGUoYygwLjIsIDAuNSwgMSwgMS41LCA1LCAxMCwgNTAsIDEwMCksIFwibU1cIikpKVxuXG5gYGAifQ== -->
+<pre class="r"><code>dat &lt;- dat %&gt;% 
+  mutate(FC = 2^log2FC,
+         time = factor(treatTime),
+         H2O2 = ordered(h2o2, levels = paste(c(0.2, 0.5, 1, 1.5, 5, 10, 50, 100), &quot;mM&quot;)))
+</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -1866,42 +1931,42 @@ the time course RNAseq.</p>
 <div id="plot" class="section level2">
 <h2>Plot</h2>
 <!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGF0MSA8LSBkYXQgJT4lIFxuICBtdXRhdGUoRkMgPSAyXmxvZzJGQyxcbiAgICAgICAgIHRpbWUgPSBmYWN0b3IodHJlYXRUaW1lKSxcbiAgICAgICAgIEgyTzIgPSBvcmRlcmVkKGgybzIsIGxldmVscyA9IHBhc3RlKGMoMC4yLCAwLjUsIDEsIDUsIDEwLCAxMDApLCBcIm1NXCIpKSlcblxuZGF0MSAlPiUgZmlsdGVyKGdlbmUgJWluJSBjKFwiQ1RBMVwiLCBcIkNUVDFcIiwgXCJHUkUyXCIpKSAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHRpbWUsIHkgPSBGQywgY29sb3IgPSBIMk8yLCBncm91cCA9IEgyTzIpKSArXG4gIGdlb21fcG9pbnQoKSArIHN0YXRfc3VtbWFyeShnZW9tID0gXCJsaW5lXCIsIGZ1bi55ID0gbWVhbikgK1xuICBzY2FsZV9jb2xvcl9tYW51YWwodmFsdWVzID0gYyhcbiAgICBcIjAuMiBtTVwiID0gXCJ5ZWxsb3czXCIsXG4gICAgXCIwLjUgbU1cIiA9IFwib3JhbmdlMlwiLFxuICAgIFwiMSBtTVwiID0gXCJkYXJrcmVkXCIsXG4gICAgXCI1IG1NXCIgPSBcImxpbWVncmVlblwiLFxuICAgIFwiMTAgbU1cIiA9IFwiZGFya2dyZWVuXCIsXG4gICAgXCIxMDAgbU1cIiA9IFwicHVycGxlNFwiXG4gICkpICtcbiAgZmFjZXRfd3JhcCh+IHBhc3RlKHNwZWNpZXMsIGdlbmUsIHNlcCA9IFwiIC0gXCIpKSArXG4gIHlsYWIoXCJGb2xkIGluZHVjdGlvblwiKSArIHhsYWIoXCJUaW1lIChtaW4pXCIpICtcbiAgdGhlbWVfY293cGxvdCgpICsgcGFuZWxfYm9yZGVyKCkgKyBiYWNrZ3JvdW5kX2dyaWQobWFqb3IgPSBcInlcIikgK1xuICB0aGVtZShzdHJpcC50ZXh0ID0gZWxlbWVudF90ZXh0KGZhY2UgPSAzKSlcbmBgYCJ9 -->
-<pre class="r"><code>dat1 &lt;- dat %&gt;% 
-  mutate(FC = 2^log2FC,
-         time = factor(treatTime),
-         H2O2 = ordered(h2o2, levels = paste(c(0.2, 0.5, 1, 5, 10, 100), &quot;mM&quot;)))
-
-dat1 %&gt;% filter(gene %in% c(&quot;CTA1&quot;, &quot;CTT1&quot;, &quot;GRE2&quot;)) %&gt;% 
-  ggplot(aes(x = time, y = FC, color = H2O2, group = H2O2)) +
-  geom_point() + stat_summary(geom = &quot;line&quot;, fun.y = mean) +
-  scale_color_manual(values = c(
-    &quot;0.2 mM&quot; = &quot;yellow3&quot;,
-    &quot;0.5 mM&quot; = &quot;orange2&quot;,
-    &quot;1 mM&quot; = &quot;darkred&quot;,
-    &quot;5 mM&quot; = &quot;limegreen&quot;,
-    &quot;10 mM&quot; = &quot;darkgreen&quot;,
-    &quot;100 mM&quot; = &quot;purple4&quot;
-  )) +
-  facet_wrap(~ paste(species, gene, sep = &quot; - &quot;)) +
-  ylab(&quot;Fold induction&quot;) + xlab(&quot;Time (min)&quot;) +
-  theme_cowplot() + panel_border() + background_grid(major = &quot;y&quot;) +
-  theme(strip.text = element_text(face = 3))</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
+<!-- rnb-text-begin -->
+<p>Plot the two species separately</p>
+<!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZ2dzYXZlKFwiLi4vb3V0cHV0LzIwMjIwMzA3LXFSVC1QQ1ItU2MtQ2ctdGltZS1jb3Vyc2UucG5nXCIsIHdpZHRoID0gNywgaGVpZ2h0ID0gNSwgYmcgPSBcIndoaXRlXCIpXG5gYGAifQ== -->
-<pre class="r"><code>ggsave(&quot;../output/20220307-qRT-PCR-Sc-Cg-time-course.png&quot;, width = 7, height = 5, bg = &quot;white&quot;)</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucDEgPC0gZGF0ICU+JSBcbiAgZmlsdGVyKGdlbmUgJWluJSBjKFwiQ1RBMVwiLCBcIkNUVDFcIiwgXCJHUkUyXCIpLCBzcGVjaWVzID09IFwiUy4gY2VyZXZpc2lhZVwiKSAlPiUgXG4gIGdncGxvdChhZXMoeCA9IHRpbWUsIHkgPSBGQywgY29sb3IgPSBIMk8yLCBncm91cCA9IEgyTzIpKSArXG4gIGdlb21fcG9pbnQoKSArIHN0YXRfc3VtbWFyeShnZW9tID0gXCJsaW5lXCIsIGZ1biA9IG1lYW4sIHNpemUgPSAxKSArXG4gIHNjYWxlX2NvbG9yX3ZpcmlkaXNfZChcIkg8c3ViPjI8XC9zdWI+TzxzdWI+MjxcL3N1Yj5cIiwgYmVnaW4gPSAwLjIpICtcbiAgZmFjZXRfd3JhcCh+IGdlbmUpICtcbiAgeWxhYihcIkZvbGQgaW5kdWN0aW9uXCIpICsgeGxhYihcIlRpbWUgKG1pbilcIikgK1xuICB0aGVtZV9jb3dwbG90KGZvbnRfc2l6ZSA9IDE2KSArIHBhbmVsX2JvcmRlcigpICsgYmFja2dyb3VuZF9ncmlkKG1ham9yID0gXCJ5XCIpICtcbiAgdGhlbWUoc3RyaXAudGV4dCA9IGVsZW1lbnRfdGV4dChmYWNlID0gMyksXG4gICAgICAgIGxlZ2VuZC50aXRsZSA9IGVsZW1lbnRfbWFya2Rvd24oKSlcbnAyIDwtIGRhdCAlPiUgXG4gIGZpbHRlcihnZW5lICVpbiUgYyhcIkNUQTFcIiwgXCJDVFQxXCIsIFwiR1JFMlwiKSwgc3BlY2llcyA9PSBcIkMuIGdsYWJyYXRhXCIsIGgybzIgIT0gXCIxMDAgbU1cIikgJT4lIFxuICBnZ3Bsb3QoYWVzKHggPSB0aW1lLCB5ID0gRkMsIGNvbG9yID0gSDJPMiwgZ3JvdXAgPSBIMk8yKSkgK1xuICBnZW9tX3BvaW50KCkgKyBzdGF0X3N1bW1hcnkoZ2VvbSA9IFwibGluZVwiLCBmdW4gPSBtZWFuLCBzaXplID0gMSkgK1xuICBzY2FsZV9jb2xvcl92aXJpZGlzX2QoXCJIPHN1Yj4yPFwvc3ViPk88c3ViPjI8XC9zdWI+XCIsIGJlZ2luID0gMC4yKSArXG4gIGZhY2V0X3dyYXAofiBnZW5lKSArXG4gIHlsYWIoXCJGb2xkIGluZHVjdGlvblwiKSArIHhsYWIoXCJUaW1lIChtaW4pXCIpICtcbiAgdGhlbWVfY293cGxvdChmb250X3NpemUgPSAxNikgKyBwYW5lbF9ib3JkZXIoKSArIGJhY2tncm91bmRfZ3JpZChtYWpvciA9IFwieVwiKSArXG4gIHRoZW1lKHN0cmlwLnRleHQgPSBlbGVtZW50X3RleHQoZmFjZSA9IDMpLFxuICAgICAgICBsZWdlbmQudGl0bGUgPSBlbGVtZW50X21hcmtkb3duKCkpXG5nZ3NhdmUoXCIuLi9vdXRwdXQvMjAyMjA0MTktcVJULVBDUi1TYy10aW1lLWNvdXJzZS5wbmdcIiwgcDEsIHdpZHRoID0gNywgaGVpZ2h0ID0gNClcbmdnc2F2ZShcIi4uL291dHB1dC8yMDIyMDQxOS1xUlQtUENSLUNnLXRpbWUtY291cnNlLnBuZ1wiLCBwMiwgd2lkdGggPSA3LCBoZWlnaHQgPSA0KVxuYGBgIn0= -->
+<pre class="r"><code>p1 &lt;- dat %&gt;% 
+  filter(gene %in% c(&quot;CTA1&quot;, &quot;CTT1&quot;, &quot;GRE2&quot;), species == &quot;S. cerevisiae&quot;) %&gt;% 
+  ggplot(aes(x = time, y = FC, color = H2O2, group = H2O2)) +
+  geom_point() + stat_summary(geom = &quot;line&quot;, fun = mean, size = 1) +
+  scale_color_viridis_d(&quot;H&lt;sub&gt;2&lt;/sub&gt;O&lt;sub&gt;2&lt;/sub&gt;&quot;, begin = 0.2) +
+  facet_wrap(~ gene) +
+  ylab(&quot;Fold induction&quot;) + xlab(&quot;Time (min)&quot;) +
+  theme_cowplot(font_size = 16) + panel_border() + background_grid(major = &quot;y&quot;) +
+  theme(strip.text = element_text(face = 3),
+        legend.title = element_markdown())
+p2 &lt;- dat %&gt;% 
+  filter(gene %in% c(&quot;CTA1&quot;, &quot;CTT1&quot;, &quot;GRE2&quot;), species == &quot;C. glabrata&quot;, h2o2 != &quot;100 mM&quot;) %&gt;% 
+  ggplot(aes(x = time, y = FC, color = H2O2, group = H2O2)) +
+  geom_point() + stat_summary(geom = &quot;line&quot;, fun = mean, size = 1) +
+  scale_color_viridis_d(&quot;H&lt;sub&gt;2&lt;/sub&gt;O&lt;sub&gt;2&lt;/sub&gt;&quot;, begin = 0.2) +
+  facet_wrap(~ gene) +
+  ylab(&quot;Fold induction&quot;) + xlab(&quot;Time (min)&quot;) +
+  theme_cowplot(font_size = 16) + panel_border() + background_grid(major = &quot;y&quot;) +
+  theme(strip.text = element_text(face = 3),
+        legend.title = element_markdown())
+ggsave(&quot;../output/20220419-qRT-PCR-Sc-time-course.png&quot;, p1, width = 7, height = 4)
+ggsave(&quot;../output/20220419-qRT-PCR-Cg-time-course.png&quot;, p2, width = 7, height = 4)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiRGV0ZXJtaW5lIHN0cmVzcyBjb25kaXRpb25zIGFuZCB0aW1lcG9pbnRzIGZvciBnZW5vbWljcyBwcm9maWxpbmciCmF1dGhvcjogQmluIEhlCmRhdGU6IDIwMjItMDMtMDcKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKYGBge3J9CnJlcXVpcmUodGlkeXZlcnNlKQpyZXF1aXJlKGNvd3Bsb3QpCmBgYAoKIyMgR29hbAoKU3VtbWFyaXplIHFSVC1QQ1IgYW5kIGdyb3d0aCBjdXJ2ZSByZXN1bHRzIHBlcmZvcm1lZCBieSBWS1MgZnJvbSBOb3YgMjAyMSB0byBKYW4gMjAyMiBpbiBvcmRlciB0byBkZXRlcm1pbmUgdGhlIHRpbWUgcG9pbnRzIGFuZCBbSDJPMl0gZm9yIHRoZSB0aW1lIGNvdXJzZSBSTkFzZXEuCgojIyBNYXRlcmlhbHMgYW5kIE1ldGhvZHMKCiMjIyBxUlQtUENSCnwgKipEYXRlKiogIHwgKipTcGVjaWVzKiogICB8ICoqW0gyTzJdIG1NKiogIHwgKipUaW1lIHBvaW50cyAobWluKSoqICB8ICoqVGFyZ2V0cyoqICAgICAgfAp8LS0tLS0tLS0tLS18LS0tLS0tLS0tLS0tLS0tfC0tLS0tLS0tLS0tLS0tLS18LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tfC0tLS0tLS0tLS0tLS0tLS0tLXwKfCAyMDIyLjAxICAgfCBfUy4gY2VyZXZpc2lhZV8gfCAwLCAwLjIsIDAuNSwgNSB8IDAsIDEwLCAyMCwgNDAsIDEyMCAgICAgfCBDVFQxLCBHUkUyICAgICAgIHwKfCAyMDIxLjEyICAgfCBfQy4gZ2xhYnJhdGFfICAgfCAwLCA1LCAxMCwgMTAwICB8IDAsIDEwLCAyMCwgNDAsIDgwLCAxMDAgfCBDVEExLCBHUkUyICAgICAgIHwKfCAyMDIxLjExICAgfCBfQy4gZ2xhYnJhdGFfICAgfCAwLCA1ICAgICAgICAgICB8IDQwICAgICAgICAgICAgICAgICAgICAgfCBDVEExLCBHUkUyLCBUUlgyIHwKCmBgYHtyfQpkYXQgPC0gcmVhZF90c3YoIi4uL2lucHV0LzIwMjIwMzA2LXN1bW1hcnktSDJPMi10aW1lLWNvdXJzZS1nZW5lLWluZHVjdGlvbi50c3YiKQpgYGAKCiMjIyBncm93dGggY3VydmUKfCAqKkRhdGUqKiAgfCAqKlNwZWNpZXMqKiAgIHwgKipbSDJPMl0gbU0qKiAgfCAqKlRpbWUgcG9pbnRzIChtaW4pKiogIHwgKipUYXJnZXRzKiogICAgICB8CnwtLS0tLS0tLS0tLXwtLS0tLS0tLS0tLS0tLS18LS0tLS0tLS0tLS0tLS0tLXwtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS18LS0tLS0tLS0tLS0tLS0tLS0tfAp8IDIwMjIuMDEgICB8IF9TLiBjZXJldmlzaWFlXyB8IDAsIDAuMiwgMC41LCA1IHwgMCwgMTAsIDIwLCA0MCwgMTIwICAgICB8IENUVDEsIEdSRTIgICAgICAgfAoKIyMgUGxvdApgYGB7cn0KZGF0MSA8LSBkYXQgJT4lIAogIG11dGF0ZShGQyA9IDJebG9nMkZDLAogICAgICAgICB0aW1lID0gZmFjdG9yKHRyZWF0VGltZSksCiAgICAgICAgIEgyTzIgPSBvcmRlcmVkKGgybzIsIGxldmVscyA9IHBhc3RlKGMoMC4yLCAwLjUsIDEsIDUsIDEwLCAxMDApLCAibU0iKSkpCgpkYXQxICU+JSBmaWx0ZXIoZ2VuZSAlaW4lIGMoIkNUQTEiLCAiQ1RUMSIsICJHUkUyIikpICU+JSAKICBnZ3Bsb3QoYWVzKHggPSB0aW1lLCB5ID0gRkMsIGNvbG9yID0gSDJPMiwgZ3JvdXAgPSBIMk8yKSkgKwogIGdlb21fcG9pbnQoKSArIHN0YXRfc3VtbWFyeShnZW9tID0gImxpbmUiLCBmdW4ueSA9IG1lYW4pICsKICBzY2FsZV9jb2xvcl9tYW51YWwodmFsdWVzID0gYygKICAgICIwLjIgbU0iID0gInllbGxvdzMiLAogICAgIjAuNSBtTSIgPSAib3JhbmdlMiIsCiAgICAiMSBtTSIgPSAiZGFya3JlZCIsCiAgICAiNSBtTSIgPSAibGltZWdyZWVuIiwKICAgICIxMCBtTSIgPSAiZGFya2dyZWVuIiwKICAgICIxMDAgbU0iID0gInB1cnBsZTQiCiAgKSkgKwogIGZhY2V0X3dyYXAofiBwYXN0ZShzcGVjaWVzLCBnZW5lLCBzZXAgPSAiIC0gIikpICsKICB5bGFiKCJGb2xkIGluZHVjdGlvbiIpICsgeGxhYigiVGltZSAobWluKSIpICsKICB0aGVtZV9jb3dwbG90KCkgKyBwYW5lbF9ib3JkZXIoKSArIGJhY2tncm91bmRfZ3JpZChtYWpvciA9ICJ5IikgKwogIHRoZW1lKHN0cmlwLnRleHQgPSBlbGVtZW50X3RleHQoZmFjZSA9IDMpKQpgYGAKCmBgYHtyfQpnZ3NhdmUoIi4uL291dHB1dC8yMDIyMDMwNy1xUlQtUENSLVNjLUNnLXRpbWUtY291cnNlLnBuZyIsIHdpZHRoID0gNywgaGVpZ2h0ID0gNSwgYmcgPSAid2hpdGUiKQpgYGAKCg==</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiRGV0ZXJtaW5lIHN0cmVzcyBjb25kaXRpb25zIGFuZCB0aW1lcG9pbnRzIGZvciBnZW5vbWljcyBwcm9maWxpbmciCmF1dGhvcjogQmluIEhlCmRhdGU6ICIyMDIyLTAzLTA3ICh1cGRhdGVkIGByIFN5cy5EYXRlKClgKSIKb3V0cHV0OiBodG1sX25vdGVib29rCi0tLQoKYGBge3J9CnJlcXVpcmUodGlkeXZlcnNlKQpyZXF1aXJlKGNvd3Bsb3QpCnJlcXVpcmUoZ2d0ZXh0KQpgYGAKCiMjIEdvYWwKClN1bW1hcml6ZSBxUlQtUENSIGFuZCBncm93dGggY3VydmUgcmVzdWx0cyBwZXJmb3JtZWQgYnkgVktTIGZyb20gTm92IDIwMjEgdG8gSmFuIDIwMjIgaW4gb3JkZXIgdG8gZGV0ZXJtaW5lIHRoZSB0aW1lIHBvaW50cyBhbmQgW0gyTzJdIGZvciB0aGUgdGltZSBjb3Vyc2UgUk5Bc2VxLgoKIyMgTWF0ZXJpYWxzIGFuZCBNZXRob2RzCgojIyMgcVJULVBDUgp8ICoqRGF0ZSoqICB8ICoqU3BlY2llcyoqICAgfCAqKltIMk8yXSBtTSoqICB8ICoqVGltZSBwb2ludHMgKG1pbikqKiAgfCAqKlRhcmdldHMqKiAgICAgIHwKfC0tLS0tLS0tLS0tfC0tLS0tLS0tLS0tLS0tLXwtLS0tLS0tLS0tLS0tLS0tfC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLXwtLS0tLS0tLS0tLS0tLS0tLS18CnwgMjAyMS4xMSAgIHwgX0MuIGdsYWJyYXRhXyAgIHwgMCwgNSAgICAgICAgICAgfCA0MCAgICAgICAgICAgICAgICAgICAgIHwgQ1RBMSwgR1JFMiwgVFJYMiB8CnwgMjAyMS4xMiAgIHwgX0MuIGdsYWJyYXRhXyAgIHwgMCwgNSwgMTAsIDEwMCAgfCAwLCAxMCwgMjAsIDQwLCA4MCwgMTAwIHwgQ1RBMSwgR1JFMiAgICAgICB8CnwgMjAyMi4wMSAgIHwgX1MuIGNlcmV2aXNpYWVfIHwgMCwgMC4yLCAwLjUsIDUgfCAwLCAxMCwgMjAsIDQwLCAxMjAgICAgIHwgQ1RUMSwgR1JFMiAgICAgICB8CnwgMjAyMi4wNCogIHwgX0MuIGdsYWJyYXRhXyAgIHwgMCwgMS41LCA1MCAgICAgfCAwLCAxMCwgMjAsIDQwLCA4MCwgMTAwIHwgQ1RBMSwgR1JFMiAgICAgICB8CnwgMjAyMi4wNSAgIHwgX0MuIGdsYWJyYXRhXyAgIHwgMCwgMS41LCA1MCAgICAgfCAwLCAxMCwgMjAsIDQwLCA4MCwgMTAwIHwgQ1RBMSwgR1JFMiAgICAgICB8CgoqaGFzIE5vUlQgaXNzdWVzCgpgYGB7cn0KZGF0IDwtIHJlYWRfdHN2KCIuLi9pbnB1dC8yMDIyMDUwNS1zdW1tYXJ5LUgyTzItdGltZS1jb3Vyc2UtZ2VuZS1pbmR1Y3Rpb24udHN2IikKZGF0IDwtIGRhdCAlPiUgCiAgbXV0YXRlKEZDID0gMl5sb2cyRkMsCiAgICAgICAgIHRpbWUgPSBmYWN0b3IodHJlYXRUaW1lKSwKICAgICAgICAgSDJPMiA9IG9yZGVyZWQoaDJvMiwgbGV2ZWxzID0gcGFzdGUoYygwLjIsIDAuNSwgMSwgMS41LCA1LCAxMCwgNTAsIDEwMCksICJtTSIpKSkKCmBgYAoKIyMjIGdyb3d0aCBjdXJ2ZQp8ICoqRGF0ZSoqICB8ICoqU3BlY2llcyoqICAgfCAqKltIMk8yXSBtTSoqICB8ICoqVGltZSBwb2ludHMgKG1pbikqKiAgfCAqKlRhcmdldHMqKiAgICAgIHwKfC0tLS0tLS0tLS0tfC0tLS0tLS0tLS0tLS0tLXwtLS0tLS0tLS0tLS0tLS0tfC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLXwtLS0tLS0tLS0tLS0tLS0tLS18CnwgMjAyMi4wMSAgIHwgX1MuIGNlcmV2aXNpYWVfIHwgMCwgMC4yLCAwLjUsIDUgfCAwLCAxMCwgMjAsIDQwLCAxMjAgICAgIHwgQ1RUMSwgR1JFMiAgICAgICB8CgojIyBQbG90CgpgYGB7ciBldmFsPUZBTFNFLCBpbmNsdWRlPUZBTFNFfQpkYXQxIDwtIGRhdCAlPiUgCiAgbXV0YXRlKEZDID0gMl5sb2cyRkMsCiAgICAgICAgIHRpbWUgPSBmYWN0b3IodHJlYXRUaW1lKSwKICAgICAgICAgSDJPMiA9IG9yZGVyZWQoaDJvMiwgbGV2ZWxzID0gcGFzdGUoYygwLjIsIDAuNSwgMSwgNSwgMTAsIDEwMCksICJtTSIpKSkKCmRhdDEgJT4lIGZpbHRlcihnZW5lICVpbiUgYygiQ1RBMSIsICJDVFQxIiwgIkdSRTIiKSkgJT4lIAogIGdncGxvdChhZXMoeCA9IHRpbWUsIHkgPSBGQywgY29sb3IgPSBIMk8yLCBncm91cCA9IEgyTzIpKSArCiAgZ2VvbV9wb2ludCgpICsgc3RhdF9zdW1tYXJ5KGdlb20gPSAibGluZSIsIGZ1bi55ID0gbWVhbikgKwogIHNjYWxlX2NvbG9yX21hbnVhbCh2YWx1ZXMgPSBjKAogICAgIjAuMiBtTSIgPSAieWVsbG93MyIsCiAgICAiMC41IG1NIiA9ICJvcmFuZ2UyIiwKICAgICIxIG1NIiA9ICJkYXJrcmVkIiwKICAgICI1IG1NIiA9ICJsaW1lZ3JlZW4iLAogICAgIjEwIG1NIiA9ICJkYXJrZ3JlZW4iLAogICAgIjEwMCBtTSIgPSAicHVycGxlNCIKICApKSArCiAgZmFjZXRfd3JhcCh+IHBhc3RlKHNwZWNpZXMsIGdlbmUsIHNlcCA9ICIgLSAiKSkgKwogIHlsYWIoIkZvbGQgaW5kdWN0aW9uIikgKyB4bGFiKCJUaW1lIChtaW4pIikgKwogIHRoZW1lX2Nvd3Bsb3QoKSArIHBhbmVsX2JvcmRlcigpICsgYmFja2dyb3VuZF9ncmlkKG1ham9yID0gInkiKSArCiAgdGhlbWUoc3RyaXAudGV4dCA9IGVsZW1lbnRfdGV4dChmYWNlID0gMykpCmBgYAoKYGBge3IgZXZhbD1GQUxTRSwgaW5jbHVkZT1GQUxTRX0KZ2dzYXZlKCIuLi9vdXRwdXQvMjAyMjAzMDctcVJULVBDUi1TYy1DZy10aW1lLWNvdXJzZS5wbmciLCB3aWR0aCA9IDcsIGhlaWdodCA9IDUsIGJnID0gIndoaXRlIikKYGBgCgpQbG90IHRoZSB0d28gc3BlY2llcyBzZXBhcmF0ZWx5CgpgYGB7cn0KcDEgPC0gZGF0ICU+JSAKICBmaWx0ZXIoZ2VuZSAlaW4lIGMoIkNUQTEiLCAiQ1RUMSIsICJHUkUyIiksIHNwZWNpZXMgPT0gIlMuIGNlcmV2aXNpYWUiKSAlPiUgCiAgZ2dwbG90KGFlcyh4ID0gdGltZSwgeSA9IEZDLCBjb2xvciA9IEgyTzIsIGdyb3VwID0gSDJPMikpICsKICBnZW9tX3BvaW50KCkgKyBzdGF0X3N1bW1hcnkoZ2VvbSA9ICJsaW5lIiwgZnVuID0gbWVhbiwgc2l6ZSA9IDEpICsKICBzY2FsZV9jb2xvcl92aXJpZGlzX2QoIkg8c3ViPjI8L3N1Yj5PPHN1Yj4yPC9zdWI+IiwgYmVnaW4gPSAwLjIpICsKICBmYWNldF93cmFwKH4gZ2VuZSkgKwogIHlsYWIoIkZvbGQgaW5kdWN0aW9uIikgKyB4bGFiKCJUaW1lIChtaW4pIikgKwogIHRoZW1lX2Nvd3Bsb3QoZm9udF9zaXplID0gMTYpICsgcGFuZWxfYm9yZGVyKCkgKyBiYWNrZ3JvdW5kX2dyaWQobWFqb3IgPSAieSIpICsKICB0aGVtZShzdHJpcC50ZXh0ID0gZWxlbWVudF90ZXh0KGZhY2UgPSAzKSwKICAgICAgICBsZWdlbmQudGl0bGUgPSBlbGVtZW50X21hcmtkb3duKCkpCnAyIDwtIGRhdCAlPiUgCiAgZmlsdGVyKGdlbmUgJWluJSBjKCJDVEExIiwgIkNUVDEiLCAiR1JFMiIpLCBzcGVjaWVzID09ICJDLiBnbGFicmF0YSIsIGgybzIgIT0gIjEwMCBtTSIpICU+JSAKICBnZ3Bsb3QoYWVzKHggPSB0aW1lLCB5ID0gRkMsIGNvbG9yID0gSDJPMiwgZ3JvdXAgPSBIMk8yKSkgKwogIGdlb21fcG9pbnQoKSArIHN0YXRfc3VtbWFyeShnZW9tID0gImxpbmUiLCBmdW4gPSBtZWFuLCBzaXplID0gMSkgKwogIHNjYWxlX2NvbG9yX3ZpcmlkaXNfZCgiSDxzdWI+Mjwvc3ViPk88c3ViPjI8L3N1Yj4iLCBiZWdpbiA9IDAuMikgKwogIGZhY2V0X3dyYXAofiBnZW5lKSArCiAgeWxhYigiRm9sZCBpbmR1Y3Rpb24iKSArIHhsYWIoIlRpbWUgKG1pbikiKSArCiAgdGhlbWVfY293cGxvdChmb250X3NpemUgPSAxNikgKyBwYW5lbF9ib3JkZXIoKSArIGJhY2tncm91bmRfZ3JpZChtYWpvciA9ICJ5IikgKwogIHRoZW1lKHN0cmlwLnRleHQgPSBlbGVtZW50X3RleHQoZmFjZSA9IDMpLAogICAgICAgIGxlZ2VuZC50aXRsZSA9IGVsZW1lbnRfbWFya2Rvd24oKSkKZ2dzYXZlKCIuLi9vdXRwdXQvMjAyMjA0MTktcVJULVBDUi1TYy10aW1lLWNvdXJzZS5wbmciLCBwMSwgd2lkdGggPSA3LCBoZWlnaHQgPSA0KQpnZ3NhdmUoIi4uL291dHB1dC8yMDIyMDQxOS1xUlQtUENSLUNnLXRpbWUtY291cnNlLnBuZyIsIHAyLCB3aWR0aCA9IDcsIGhlaWdodCA9IDQpCmBgYAoK</div>
 
 
 

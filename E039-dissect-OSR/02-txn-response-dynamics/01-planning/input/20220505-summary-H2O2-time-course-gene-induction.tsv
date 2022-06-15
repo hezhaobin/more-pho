@@ -63,7 +63,7 @@ date	species	h2o2	treatTime	gene	log2FC
 2022.04a	C. glabrata	1.5 mM	10	GRE2	5.059
 2022.04a	C. glabrata	50 mM	10	CTA1	0.33
 2022.04a	C. glabrata	50 mM	10	GRE2	0.846
-2022.04a	C. glabrata	1.5mM	20	CTA1	4.593
+2022.04a	C. glabrata	1.5 mM	20	CTA1	4.593
 2022.04a	C. glabrata	1.5 mM	20	GRE2	4.717
 2022.04a	C. glabrata	50 mM	20	CTA1	0.465
 2022.04a	C. glabrata	50 mM	20	GRE2	0.98
@@ -77,7 +77,7 @@ date	species	h2o2	treatTime	gene	log2FC
 2022.05a	C. glabrata	1.5 mM	10	GRE2	4.92
 2022.05a	C. glabrata	50 mM	10	CTA1	1.992
 2022.05a	C. glabrata	50 mM	10	GRE2	2.256
-2022.05a	C. glabrata	1.5mM	20	CTA1	4.662
+2022.05a	C. glabrata	1.5 mM	20	CTA1	4.662
 2022.05a	C. glabrata	1.5 mM	20	GRE2	5.369
 2022.05a	C. glabrata	50 mM	20	CTA1	2.754
 2022.05a	C. glabrata	50 mM	20	GRE2	3.238
@@ -93,9 +93,15 @@ for_plotting	S. cerevisiae	0.5 mM	0	CTT1	0
 for_plotting	S. cerevisiae	0.5 mM	0	GRE2	0
 for_plotting	S. cerevisiae	1 mM	0	CTT1	0
 for_plotting	S. cerevisiae	1 mM	0	GRE2	0
+for_plotting	S. cerevisiae	5 mM	0	CTT1	0
+for_plotting	S. cerevisiae	5 mM	0	GRE2	0
+for_plotting	C. glabrata	1.5 mM	0	GRE2	0
 for_plotting	C. glabrata	5 mM	0	GRE2	0
 for_plotting	C. glabrata	10 mM	0	GRE2	0
+for_plotting	C. glabrata	50 mM	0	GRE2	0
 for_plotting	C. glabrata	100 mM	0	GRE2	0
+for_plotting	C. glabrata	1.5 mM	0	CTA1	0
 for_plotting	C. glabrata	5 mM	0	CTA1	0
 for_plotting	C. glabrata	10 mM	0	CTA1	0
+for_plotting	C. glabrata	50 mM	0	CTA1	0
 for_plotting	C. glabrata	100 mM	0	CTA1	0

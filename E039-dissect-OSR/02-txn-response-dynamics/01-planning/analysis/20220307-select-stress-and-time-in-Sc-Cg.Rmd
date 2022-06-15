@@ -1,13 +1,14 @@
 ---
 title: "Determine stress conditions and timepoints for genomics profiling"
 author: Bin He
-date: 2022-03-07
+date: "2022-03-07 (updated `r Sys.Date()`)"
 output: html_notebook
 ---
 
 ```{r}
 require(tidyverse)
 require(cowplot)
+require(ggtext)
 ```
 
 ## Goal
@@ -19,12 +20,21 @@ Summarize qRT-PCR and growth curve results performed by VKS from Nov 2021 to Jan
 ### qRT-PCR
 | **Date**  | **Species**   | **[H2O2] mM**  | **Time points (min)**  | **Targets**      |
 |-----------|---------------|----------------|------------------------|------------------|
-| 2022.01   | _S. cerevisiae_ | 0, 0.2, 0.5, 5 | 0, 10, 20, 40, 120     | CTT1, GRE2       |
-| 2021.12   | _C. glabrata_   | 0, 5, 10, 100  | 0, 10, 20, 40, 80, 100 | CTA1, GRE2       |
 | 2021.11   | _C. glabrata_   | 0, 5           | 40                     | CTA1, GRE2, TRX2 |
+| 2021.12   | _C. glabrata_   | 0, 5, 10, 100  | 0, 10, 20, 40, 80, 100 | CTA1, GRE2       |
+| 2022.01   | _S. cerevisiae_ | 0, 0.2, 0.5, 5 | 0, 10, 20, 40, 120     | CTT1, GRE2       |
+| 2022.04*  | _C. glabrata_   | 0, 1.5, 50     | 0, 10, 20, 40, 80, 100 | CTA1, GRE2       |
+| 2022.05   | _C. glabrata_   | 0, 1.5, 50     | 0, 10, 20, 40, 80, 100 | CTA1, GRE2       |
+
+*has NoRT issues
 
 ```{r}
-dat <- read_tsv("../input/20220306-summary-H2O2-time-course-gene-induction.tsv")
+dat <- read_tsv("../input/20220505-summary-H2O2-time-course-gene-induction.tsv")
+dat <- dat %>% 
+  mutate(FC = 2^log2FC,
+         time = factor(treatTime),
+         H2O2 = ordered(h2o2, levels = paste(c(0.2, 0.5, 1, 1.5, 5, 10, 50, 100), "mM")))
+
 ```
 
 ### growth curve
@@ -33,7 +43,8 @@ dat <- read_tsv("../input/20220306-summary-H2O2-time-course-gene-induction.tsv")
 | 2022.01   | _S. cerevisiae_ | 0, 0.2, 0.5, 5 | 0, 10, 20, 40, 120     | CTT1, GRE2       |
 
 ## Plot
-```{r}
+
+```{r eval=FALSE, include=FALSE}
 dat1 <- dat %>% 
   mutate(FC = 2^log2FC,
          time = factor(treatTime),
@@ -56,30 +67,33 @@ dat1 %>% filter(gene %in% c("CTA1", "CTT1", "GRE2")) %>%
   theme(strip.text = element_text(face = 3))
 ```
 
-```{r}
+```{r eval=FALSE, include=FALSE}
 ggsave("../output/20220307-qRT-PCR-Sc-Cg-time-course.png", width = 7, height = 5, bg = "white")
 ```
 
 Plot the two species separately
+
 ```{r}
-p1 <- dat1 %>% 
+p1 <- dat %>% 
   filter(gene %in% c("CTA1", "CTT1", "GRE2"), species == "S. cerevisiae") %>% 
   ggplot(aes(x = time, y = FC, color = H2O2, group = H2O2)) +
   geom_point() + stat_summary(geom = "line", fun = mean, size = 1) +
-  scale_color_viridis_d(begin = 0.2) + #scale_y_sqrt() +
+  scale_color_viridis_d("H<sub>2</sub>O<sub>2</sub>", begin = 0.2) +
   facet_wrap(~ gene) +
   ylab("Fold induction") + xlab("Time (min)") +
   theme_cowplot(font_size = 16) + panel_border() + background_grid(major = "y") +
-  theme(strip.text = element_text(face = 3))
-p2 <- dat1 %>% 
-  filter(gene %in% c("CTA1", "CTT1", "GRE2"), species == "C. glabrata") %>% 
+  theme(strip.text = element_text(face = 3),
+        legend.title = element_markdown())
+p2 <- dat %>% 
+  filter(gene %in% c("CTA1", "CTT1", "GRE2"), species == "C. glabrata", h2o2 != "100 mM") %>% 
   ggplot(aes(x = time, y = FC, color = H2O2, group = H2O2)) +
   geom_point() + stat_summary(geom = "line", fun = mean, size = 1) +
-  scale_color_viridis_d(begin = 0.2) + #scale_y_sqrt() +
+  scale_color_viridis_d("H<sub>2</sub>O<sub>2</sub>", begin = 0.2) +
   facet_wrap(~ gene) +
   ylab("Fold induction") + xlab("Time (min)") +
   theme_cowplot(font_size = 16) + panel_border() + background_grid(major = "y") +
-  theme(strip.text = element_text(face = 3))
+  theme(strip.text = element_text(face = 3),
+        legend.title = element_markdown())
 ggsave("../output/20220419-qRT-PCR-Sc-time-course.png", p1, width = 7, height = 4)
 ggsave("../output/20220419-qRT-PCR-Cg-time-course.png", p2, width = 7, height = 4)
 ```
