@@ -35,3 +35,5 @@ plasmid	symbol	letter	full
 255	CSSscC	AbcdDE	Cg(1-44) Sc(43-204) Cg(328-533)
 257	CCCscC	ABCdDE	Cg (1-282) Sc(177-204) Cg(328-533)
 258	CCCcsC	ABCDdE	Cg(1-327) Sc(205-242) Cg(459-533)
+265	SSSscC	abcdDE	Sc(1-204) Cg(328-533)
+266	SSscCC	abcCDE	Sc(1-153) Cg(250-533)

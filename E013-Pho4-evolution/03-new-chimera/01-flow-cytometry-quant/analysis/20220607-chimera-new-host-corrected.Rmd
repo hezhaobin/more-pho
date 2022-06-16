@@ -52,6 +52,7 @@ dat <- bind_rows(raw, .id = "date") %>%
   separate(col = sample, sep = "-", into = c("plasmid", "host", "rep"))
 ```
 
+
 # QC
 ## 1. Number of events per sample
 ```{r}
@@ -68,6 +69,7 @@ dat %>% filter(host != "blank", n_induction < 10000)
 > Nearly all samples with a low event count were in the 555 background. Emily repeated many of them.
 > Will remove all samples with lower than 7,000 events in the final gated population from further analysis.
 
+Flag samples that have a low event count, contain mutations or show multiple populations.
 ```{r}
 event.th <- 7000
 
@@ -106,7 +108,7 @@ bg <- dat %>%
 
 dat1 <- dat %>% 
   filter(host != "blank") %>% 
-  select(date:host, FSC.H:nRFP) %>%
+  select(date:host, FSC.H:nRFP, low_event_count:mutation) %>%
   mutate(
     BL1.H = BL1.H - bg[date, "BL1.H"],
     YL2.H = YL2.H - bg[date, "YL2.H"],
@@ -304,7 +306,7 @@ tmp %>%
   pivot_longer(cols = BL1.H:nRvG, names_to = "parameter", values_to = "value") %>% 
   nest(data = c(-parameter)) %>% 
   mutate(
-    fit = map(data, ~anova(lm(value ~ date + block, dat = .x))),
+    fit = map(data, ~anova(lm(value ~ date + row + col, data = .x))),
     tidied = map(fit, broom::tidy)
   ) %>% 
   unnest(tidied) %>% 
@@ -319,11 +321,13 @@ tmp %>%
   filter(term != "Residuals") %>% 
   select(parameter, term, df, statistic, p.value, significant)
 ```
-> the date, row and column effects are significant for multiple variables.
+> There is a highly significant run (date) effect for all variables. The R/G and nR/G ratios show significant column effects.
+> I also tried using block (12 blocks on the plate) and most of the block effects are significant.
 
-Use dummy encoding in linear regression to view the effects of run and block.
+Use dummy encoding in linear regression to view the effects of run and well position.
 ```{r}
 tmp %>% 
+  mutate(row = factor(row, levels = c("G", "E", "C", "A"))) %>% 
   pivot_longer(cols = BL1.H:nRvG, names_to = "parameter", values_to = "value") %>% 
   nest(data = c(-parameter)) %>% 
   mutate(
@@ -340,12 +344,135 @@ tmp %>%
       p.value < 0.05  ~ "*",
       p.value < 0.1   ~ ".",
       TRUE ~ " "
-    )) %>% 
-  select(parameter, term, e = estimate, s = significant) %>% 
-  pivot_wider(names_from = parameter, values_from = c(e, s))
+    ),
+    eff = paste(estimate, significant, sep = "  ")
+  ) %>% 
+  select(parameter, term, eff) %>% 
+  pivot_wider(names_from = parameter, values_from = eff)# %>% 
+  #mutate(across(e_BL1:e_nRFP, ~ round(.x, digits = 0)))
 ```
+> - There is a significant run (date) effect for all variables. RvG ratio appears to be better than nRvG in terms of being less affected by either run or well positions.
+> - Row A has a higher fluorescence values overall. But the RvG ratios are not significantly higher in row A.
+> - Column 9 has a significantly higher RvG, because, for some reason, the RFP is higher but not the GFP.
+
+With the above observations, it is yet unclear to me (1) whether it is necessary to account for the run and position effects (if the effect sizes we are interested in are much larger than these, we may not care) and (2) if necessary, what's the best way to account for it. One idea I have is to use the common strains on each plate, e.g., the host strains (no Pho4) or CgPho4 and ScPho4 with and without Pho2, as normalizing factors. One can think of several ways of normalization, e.g., setting ScPho4 w/ Pho2's RvG as 100%. Will explore these ideas below.
 
 # Main
+## 1. Mutation effects
+Here we examine the effects of the mutations on the chimera activity. Emily remade `r length(list.mutations)` chimeric constructs to correct the non-synonymous mutations in them and reran those constructs in the May/Jun batch. While doing that, she encountered some issues with certain samples not growing well or the flow data showing multiple populations. She repeated some of those strains. As a result, we have more than two measurements for some of the strains. The goal in this analysis is to compare their measurements both with and without mutations, and also across the repeats.
+
+Read in the experimental flags for the May/Jun batch, for the multiple population labels
+```{r}
+multipop <- read_tsv("../data/20220614-EO-repeat-experiment-info.tsv", col_types = cols()) %>% 
+  filter(flag == "multi pop") %>% select(-flag) %>% 
+  separate(sample, into = c("plasmid", "host"), sep = "-") %>% 
+  mutate(host = ordered(host, levels = c("555", "373"), labels = c("PHO2", "pho2∆")), multi_pop = TRUE)
+```
+
+Create a flag variable
+```{r}
+datN <- datM %>% 
+  mutate(multi_pop = FALSE) %>% 
+  rows_update(multipop, by = c("date", "plasmid", "host")) %>% 
+  mutate(
+    RvG = ifelse(BL1.H > 0, YL2.H/BL1.H, NA),
+    #RvG = num(RvG, digits = 2),
+    flag = factor(mutation + multi_pop*2,
+                  levels = as.character(0:3),
+                  labels = c("pass", "mutation", "multi_pop", "mutation;multi_pop"))
+  ) %>% relocate(RvG, .after = nRFP)
+```
+
+Emily has included two old samples containing mutations (pH209, 210) along with the remade, mutation-free plasmids, in the new batch. Let's see how they compare with each other and with the March batch (with mutations).
+```{r}
+tmp <- filter(datN, plasmid %in% c("209", "210")) %>% 
+  mutate(
+    month = str_sub(date, 1, 2),
+    sample = ifelse(month == "03", "03-old", ifelse(mutation, "05-old", "05-new")),
+    sample = factor(sample, levels = c("03-old", "05-old", "05-new"))
+  )
+```
+
+First compare the same plasmids (with mutations) measured on different days
+```{r fig.width=6, fig.height=6}
+tmp %>% 
+  select(-FSC.H) %>% 
+  pivot_longer(BL1.H:RvG, names_to = "parameter", values_to = "value") %>%
+  mutate(parameter = factor(parameter, levels = c("BL1.H", "YL2.H", "nGFP", "nRFP", "RvG"))) %>% 
+  ggplot(aes(x = plasmid, y = value, group = sample)) +
+  geom_point(aes(color = sample), size = 1, position = position_dodge(0.7)) +
+  #stat_summary(aes(color = sample), fun.data = "mean_se", geom = "crossbar", width = 0.1,
+  #             position = position_dodge(0.7)) +
+  scale_color_manual(values = c("03-old" = "gray50", "05-old" = "gray30", "05-new" = "red2")) +
+  scale_y_continuous(n.breaks = 3) + expand_limits(y = 0) +
+  facet_grid(parameter~host, scales = "free_y") +
+  theme_bw(base_size = 14) + background_grid(major = "y")
+```
+
+```{r}
+tmp %>% 
+  select(-FSC.H) %>% 
+  pivot_longer(BL1.H:RvG, names_to = "parameter", values_to = "value") %>%
+  mutate(parameter = factor(parameter, levels = c("BL1.H", "YL2.H", "nGFP", "nRFP", "RvG"))) %>% 
+  nest(data = c(-parameter)) %>% 
+  mutate(
+    fit = map(data, ~anova(lm(value ~ sample + host, data = .x))),
+    tidied = map(fit, broom::tidy)
+  ) %>% 
+  unnest(tidied) %>% 
+  mutate(
+    significant = case_when(
+      p.value < 0.001 ~ "***",
+      p.value < 0.01  ~ "**",
+      p.value < 0.05  ~ "*",
+      p.value < 0.1   ~ ".",
+      TRUE ~ " "
+    )) %>% 
+  filter(term != "Residuals") %>% 
+  select(parameter, term, df, statistic, p.value, significant)
+```
+> For the RvG ratio, there is no significant difference between the 03-old, 05-old and 05-new. In other words, we don't have evidence that either the different runs or the correction of mutations impacted the behavior of the chimera in the case of pH209 and pH210.
+
+We will now move on to the rest of the plasmids that have been remade.
+```{r}
+pp <- theme(axis.title.x = element_blank(), legend.position = "none")
+myPlotMutEffect <- function(l){
+  even_numbers <- seq(2, length(l), 2) # used to draw stripes on even numbered x-values
+  df_tile <- tibble(plasmid = rep(sort(l)[even_numbers], times = 2),
+                    host = factor(rep(c("PHO2", "pho2∆"), each = length(even_numbers))))
+  datN %>% 
+    filter(!low_event_count, plasmid %in% l) %>% 
+    select(date:host, RvG, flag) %>%
+    ggplot(aes(x = plasmid, y = RvG)) +
+    # draw stripes on even columns,
+    # from: https://stackoverflow.com/questions/56961744/draw-alternate-rectangles-in-boxplots-with-facets-r-ggplot2'
+    geom_tile(aes(x = plasmid, y = 1), height = Inf, width = 1, data = df_tile, alpha = 0.3) +
+              #ymin = -Inf, ymax = Inf, fill = "grey80", color = NA, alpha = 0.5) +
+    geom_point(aes(color = flag, group = date), size = 1.5, position = position_dodge(0.7), shape = 19) +
+    #stat_summary(aes(color = sample), fun.data = "mean_se", geom = "crossbar", width = 0.1,
+    #             position = position_dodge(0.7)) +
+    scale_color_manual(values = c("pass" = "forestgreen", "mutation" = "purple", "multi_pop" = "steelblue3")) +
+    scale_y_continuous(n.breaks = 4) + expand_limits(y = 0) +
+    facet_grid(host~., scales = "free_y") +
+    theme_cowplot() + panel_border(color = "gray30") + 
+    theme(strip.text = element_text(face = 3))
+}
+```
+
+```{r warning=FALSE, fig.width = 5, fig.height = 7}
+lst <- split(list.mutations, f = ceiling(seq_along(list.mutations)/9))
+p <- lapply(lst, myPlotMutEffect)
+legend_p <- get_legend(p[[1]] + theme(legend.position = "bottom"))
+plot_grid(p[[1]] + pp, p[[2]] + pp, p[[3]] + theme(legend.position = "none"), legend_p, ncol = 1, rel_heights = c(1,1,1,.1))
+```
+
+Here are the ones that show obvious differences between the old and corrected constructs:
+```{r}
+ll <- c("215", "218", "227", "241", "257")
+myPlotMutEffect(ll) + scale_y_log10()
+```
+
+
 ## Plotting functions
 Here I'd like to develop a series of plotting functions that take the names or any part of the Pho4 chimera annotation as input and plot their results in a variety of ways
 Load the Pho4 plasmid information and merge with the reshaped data
