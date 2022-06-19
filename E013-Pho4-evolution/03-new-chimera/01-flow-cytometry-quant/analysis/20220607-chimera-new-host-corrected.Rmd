@@ -49,7 +49,8 @@ raw <- list(
 )
 dat <- bind_rows(raw, .id = "date") %>% 
   #separate(col = well, sep = 1, into = c("row", "col")) %>% 
-  separate(col = sample, sep = "-", into = c("plasmid", "host", "rep"))
+  separate(col = sample, sep = "-", into = c("plasmid", "host", "rep")) %>% 
+  mutate(plasmid = na_if(plasmid, "NA"))
 ```
 
 
@@ -239,8 +240,8 @@ datM %>%
                position = position_dodge(0.7)) +
   facet_grid(parameter~., scale = "free_y") +
   expand_limits(y = 0) +
-  theme_bw(base_size = 14) + labs(subtitle = "in _PHO2_ background") +
-  theme(plot.subtitle = element_markdown())
+  theme_bw(base_size = 14) + labs(subtitle = "in PHO2 background")# +
+  #theme(plot.subtitle = element_markdown())
 ```
 
 > CgPho4 and ScPho4 values track each other -- on days (runs) where one is high, the other one also tends to be high. On the 05/31 run, ScPho4 is significantly higher than CgPho4.
@@ -261,8 +262,8 @@ datM %>%
                position = position_dodge(0.7)) +
   facet_grid(parameter~., scale = "free_y") +
   expand_limits(y = 0) +
-  theme_bw(base_size = 14) + labs(subtitle = "in _PHO2_ background") +
-  theme(plot.subtitle = element_markdown())
+  theme_bw(base_size = 14) + labs(subtitle = "in PHO2 background")# +
+  #theme(plot.subtitle = element_markdown())
 ```
 > The size normalized values show lower variance but a similar correlated pattern. Here, however, ScPho4 overtakes CgPho4 on the 03/22 and 05/17 runs.
 
@@ -284,8 +285,8 @@ datM %>%
                position = position_dodge(0.7)) +
   scale_color_manual(values = c("ScPho4" = "blue3", "CgPho4" = "forestgreen")) +
   facet_grid(parameter~.) + expand_limits(y = c(0,30)) +
-  theme_bw(base_size = 14) + labs(subtitle = "in _PHO2_ background") +
-  theme(plot.subtitle = element_markdown())
+  theme_bw(base_size = 14) + labs(subtitle = "in PHO2 background")# +
+  #theme(plot.subtitle = element_markdown())
 ```
 
  
@@ -441,6 +442,7 @@ myPlotMutEffect <- function(l){
   df_tile <- tibble(plasmid = rep(sort(l)[even_numbers], times = 2),
                     host = factor(rep(c("PHO2", "pho2∆"), each = length(even_numbers))))
   datN %>% 
+    #mutate(date = gsub("/22$", "", date)) %>% 
     filter(!low_event_count, plasmid %in% l) %>% 
     select(date:host, RvG, flag) %>%
     ggplot(aes(x = plasmid, y = RvG)) +
@@ -448,7 +450,8 @@ myPlotMutEffect <- function(l){
     # from: https://stackoverflow.com/questions/56961744/draw-alternate-rectangles-in-boxplots-with-facets-r-ggplot2'
     geom_tile(aes(x = plasmid, y = 1), height = Inf, width = 1, data = df_tile, alpha = 0.3) +
               #ymin = -Inf, ymax = Inf, fill = "grey80", color = NA, alpha = 0.5) +
-    geom_point(aes(color = flag, group = date), size = 1.5, position = position_dodge(0.7), shape = 19) +
+    geom_point(aes(color = flag, group = date), size = 1.5, shape = 19,
+               position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.7)) +
     #stat_summary(aes(color = sample), fun.data = "mean_se", geom = "crossbar", width = 0.1,
     #             position = position_dodge(0.7)) +
     scale_color_manual(values = c("pass" = "forestgreen", "mutation" = "purple", "multi_pop" = "steelblue3")) +
@@ -462,73 +465,119 @@ myPlotMutEffect <- function(l){
 ```{r warning=FALSE, fig.width = 5, fig.height = 7}
 lst <- split(list.mutations, f = ceiling(seq_along(list.mutations)/9))
 p <- lapply(lst, myPlotMutEffect)
-legend_p <- get_legend(p[[1]] + theme(legend.position = "bottom"))
-plot_grid(p[[1]] + pp, p[[2]] + pp, p[[3]] + theme(legend.position = "none"), legend_p, ncol = 1, rel_heights = c(1,1,1,.1))
+legend_p <- get_legend(p[[1]] + theme(legend.position = "bottom", legend.justification = "center"))
+plot_grid(p[[1]] + pp, p[[2]] + pp, p[[3]] + theme(legend.position = "none"), legend_p, ncol = 1, rel_heights = c(1,1,1,.15))
 ```
+> Samples showing multiple populations mostly agree with the latter measurements where the issue was ressolved, with the exception of one of the samples of 231 in _PHO2_ background.
+> 
 
 Here are the ones that show obvious differences between the old and corrected constructs:
 ```{r}
-ll <- c("215", "218", "227", "241", "257")
+ll <- c("215", "218", "227", "233", "241", "252", "257")
 myPlotMutEffect(ll) + scale_y_log10()
 ```
 
+## 2. Summarize results per chimera
+We will remove all the measurements made of chimeras with mutations. For the measurements made of remade, corrected chimeras, we will remove **one sample for pH231 from the 05/19 batch** (well C2, the other 2 replicates of the same strain in that batch were removed due to the presence of multiple populations and low event count in the gated population), as well as one sample for **pH233 from the 06/02 batch** (well D4, which showed overexpression of the chimera).
 
-## Plotting functions
-Here I'd like to develop a series of plotting functions that take the names or any part of the Pho4 chimera annotation as input and plot their results in a variety of ways
-Load the Pho4 plasmid information and merge with the reshaped data
+Number of replicates measured for each chimera x host combination:
 ```{r}
+datN %>% 
+  filter(!low_event_count, !mutation) %>% 
+  count(plasmid, host) %>% 
+  pivot_wider(names_from = host, values_from = n) %>% 
+  full_join(meta, by = "plasmid") %>% 
+  select(-letter, -genotype)
+```
+> pH211 was measured 9 times in the _PHO2_ background. The results were consistent.
+
+For each chimera, we would like to calculate **three values**:
+
+1. RvG in _pho2∆_: this is its base activity without Pho2
+1. RvG in _PHO2_: this is its full activity with Pho2
+1. RvG_PHO2 / RvG_pho2∆: this is the Pho2 enhancement of activity
+
+The first two values are further normalized against the corresponding ScPho4 measurements on the same plate.
+```{r}
+# filter data
+tmp <- filter(datN, !low_event_count, !mutation, !is.na(plasmid)) %>% select(date:host, BL1.H:RvG)
+
+# calculate the ScPho4 values per plate
+mScPho4 <- tmp %>% filter(plasmid == "194") %>% group_by(date, host) %>% summarize(mean = mean(RvG), .groups = "drop") %>% 
+  pivot_wider(names_from = host, values_from = mean) %>% column_to_rownames(var = "date")
+
+# normalize the values for non-ScPho4 with those of ScPho4 per plate
+datO <- tmp %>% mutate(sRvG = RvG / mScPho4[cbind(date, as.character(host))])
+
+# load genotype information
 meta <- read_tsv("../data/20220330-chimera-Pho4-makeup.tsv", col_types = "cccc")
+
+# summarize
+datsum <- datO %>% 
+  group_by(plasmid, host) %>% 
+  summarize(across(RvG:sRvG, mean), .groups = "drop") %>% 
+  pivot_wider(names_from = host, values_from = RvG:sRvG) %>% 
+  rename(`A_PHO2` = `RvG_PHO2`, `A_pho2` = `RvG_pho2∆`, full = sRvG_PHO2, base = `sRvG_pho2∆`) %>% 
+  mutate(boost = `A_PHO2` / `A_pho2`, across(`A_PHO2`:boost, ~ round(.x, digits = 3))) %>% 
+  full_join(meta, by = "plasmid")
 ```
 
-Plotting function
+Export the summary data
+```{r}
+write_tsv(datsum, file = "../output/20220619-chimera-summary-result.tsv")
+```
+
+Here are the chimera that have little full activity (with Pho2):
+`r datsum %>% filter(full < 0.2) %>% arrange(full) %>% select(-letter) %>% knitr::kable()`
+
+Here are the ones with the highest base activity (without Pho2):
+`r datsum %>% arrange(desc(base)) %>% select(-letter) %>% head(10) %>%  knitr::kable()`
+
+## 3. Plotting functions
+The goal here is to develop a set of plotting functions to visualize the results.
+
+For testing purposes, we will select a set of chimera along with the endogenous ScPho4 and CgPho4.
 ```{r}
 # extract ximera names
 refs <- c("CCCCC","SSSSS")
 ximeras <- setdiff(meta$symbol, refs)
 # make a test set
-test <- sample(ximeras, 6)
+test <- c(refs, filter(meta, plasmid %in% c("229", "250", "224", "257", "219", "266")) %>% pull(symbol))
 # subset data
-tmp <- meta %>% 
-  filter(symbol %in% c(refs,test)) %>% 
-  inner_join(dat1, by = "plasmid") %>% 
-  mutate(symbol = factor(symbol, levels = c(refs, test)))
+datT <- meta %>% 
+  filter(symbol %in% test) %>% 
+  inner_join(datO, by = "plasmid") %>% 
+  mutate(symbol = factor(symbol, levels = test))
+```
+
+Design a set of color palettes:
+```{r}
+# for two groups, e.g., with vs w/o Pho2
+cols.two <- c("PHO2" = "#457dbc", "pho2∆" = "#ea9e25")
 ```
 
 Plot individual components
-```{r}
-tmp %>% 
-  pivot_longer(nGFP:nRFP, names_to = "parameter", values_to = "intensity") %>% 
-  mutate(parameter = ordered(parameter, levels = c("nRFP", "nGFP"))) %>% 
+```{r fig.width=6, fig.height=6}
+datT %>% 
+  pivot_longer(c(nGFP, nRFP, RvG), names_to = "parameter", values_to = "intensity") %>% 
+  mutate(parameter = ordered(parameter, levels = c("nGFP", "nRFP", "RvG"),
+                             labels = c("Pho4-GFP", "_PHO5pr_ => RFP", "Activity = RFP/GFP"))) %>% 
   #pivot_longer(BL1.H:YL2.H, names_to = "parameter", values_to = "intensity") %>% 
   #mutate(parameter = ordered(parameter, levels = c("YL2.H", "BL1.H"))) %>% 
   ggplot(aes(x = symbol, y = intensity, group = host)) + 
-  geom_bar(aes(fill = host), width = 0.5, alpha = 0.8,
+  geom_bar(aes(fill = host), width = 0.5,# alpha = 0.8,
            stat = "summary", fun = "mean", position = position_dodge(0.5)) +
-  geom_point(aes(color = host), size = 1,
-             position = position_jitterdodge(dodge.width = 0.5)) + 
-  scale_color_manual(values = c("PHO2" = "gray20", "pho2∆" = "gray40")) +
-  scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+  geom_point(aes(color = host), size = 1, alpha = 0.9, shape = 3,
+             position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.5)) + 
+  scale_color_manual("co-TF", values = c("PHO2" = "gray30", "pho2∆" = "gray40")) +
+  scale_fill_manual("co-TF", values = cols.two) +
   #stat_summary(fun = "mean", geom = "crossbar", color = "red", width = 0.25,
   #             position = position_dodge(0.75), ) +
   facet_wrap(~parameter, scale = "free_y", ncol = 1) +
   xlab("Pho4 chimera") + expand_limits(y = 0) +
-  theme_gray(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1, family = "mono"))
-```
-```{r}
-tmp %>% 
-  #mutate(`YL2.H/BL1.H` = YL2.H/BL1.H,
-  mutate(`R/G` = nRFP/nGFP) %>% 
-  ggplot(aes(x = symbol, y = `R/G`, group = host)) + 
-  geom_bar(aes(fill = host), width = 0.5, alpha = 0.8,
-           stat = "summary", fun = "mean", position = position_dodge(0.5)) +
-  geom_point(aes(color = host), position = position_jitterdodge(dodge.width = 0.5)) + 
-  scale_color_manual(values = c("PHO2" = "gray20", "pho2∆" = "gray40")) +
-  scale_fill_viridis_d(begin = 0.2, end = 0.6) +
-  #stat_summary(fun = "mean", color = "red", geom = "crossbar", width = 0.2,
-  #             position = position_dodge(0.75), ) +
-  theme_gray(base_size = 14) + xlab("Pho4 chimera") +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1, family = "mono"))
+  theme_bw(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1, family = "mono"),
+        strip.text = element_markdown())
 ```
 
 Next idea is to plot the ratio between the mean R/G for _PHO2_ and mean R/G for _pho2∆_, over the mean R/G for _PHO2_

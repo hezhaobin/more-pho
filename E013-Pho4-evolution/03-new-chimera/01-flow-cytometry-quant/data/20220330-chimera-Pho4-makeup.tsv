@@ -1,4 +1,4 @@
-plasmid	symbol	letter	full
+plasmid	symbol	letter	genotype
 188	CCCCC	ABCDE	Cg(1-533)
 194	SSSSS	abcde	Sc(1-312)
 209	SCCCC	aBCDE	Sc(1-42) Cg(45-533)
