@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r echo = FALSE}
 suppressPackageStartupMessages(require(shinyWidgets))
+suppressPackageStartupMessages(require(DT))
 suppressPackageStartupMessages(require(plotly))
 suppressPackageStartupMessages(require(tidyverse))
 suppressPackageStartupMessages(require(cowplot))
@@ -26,8 +27,8 @@ For QC plots, see [here](https://rpubs.com/emptyhb/pho4-chimera-flow-040122).
 Prepare data
 ```{r echo=FALSE}
 # load data
-dat1 <- read_tsv("20220412-bg-sub-data.tsv", col_types = "cccfddddd")
-meta <- read_tsv("20220330-chimera-Pho4-makeup.tsv", col_types = "cccc")
+dat1 <- read_tsv("20220614-mar22-batch-bg-sub-data.tsv", col_types = "cccfddddd")
+meta <- read_tsv("20220621-chimera-Pho4-makeup.tsv", col_types = "ccccc") %>% select(-plasmid_wrong) %>% arrange(symbol)
 # extract ximera names
 ximeras <- sort(meta$symbol)
 # create summarized data
@@ -150,7 +151,7 @@ fluidPage(
 
 ### Chimera lookup
 ```{r}
-renderTable(meta)
+renderDT(meta, rownames = FALSE)
 ```
 
 ### Summary plot

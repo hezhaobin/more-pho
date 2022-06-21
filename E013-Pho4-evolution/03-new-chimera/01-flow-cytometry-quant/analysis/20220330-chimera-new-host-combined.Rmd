@@ -290,7 +290,7 @@ ndat2 %>%
 Here I'd like to develop a series of plotting functions that take the names or any part of the Pho4 chimera annotation as input and plot their results in a variety of ways
 Load the Pho4 plasmid information and merge with the reshaped data
 ```{r}
-meta <- read_tsv("../data/20220330-chimera-Pho4-makeup.tsv", col_types = "cccc")
+meta <- read_tsv("../data/20220621-chimera-Pho4-makeup.tsv", col_types = "ccccc")
 ```
 
 Plotting function

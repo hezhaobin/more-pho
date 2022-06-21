@@ -5,9 +5,9 @@ account: binhe-lab
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6077090
-bundleId: 5798459
+bundleId: 6027886
 url: https://binhe-lab.shinyapps.io/Pho4-chimera-data-plotter/
-when: 1649944940.16975
-lastSyncTime: 1649944940.16977
+when: 1655822757.95416
+lastSyncTime: 1655822757.95417
 asMultiple: FALSE
 asStatic: FALSE
