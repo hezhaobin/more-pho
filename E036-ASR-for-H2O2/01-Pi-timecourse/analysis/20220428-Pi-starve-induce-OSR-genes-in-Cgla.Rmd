@@ -230,9 +230,11 @@ myCompare <- function(genes = "YML123C"){
     print("The following S. cerevisiae genes are not included on the microarray chip.")
     print(setdiff(genes, scerArray))
   }else if(any(!genes %in% re.scToCg$ScerID)){
+    # additionally check if the genes have a C. glabrata ortholog
     print("The following S. cerevisiae genes do not have a C. glabrata ortholog.")
     print(setdiff(genes, re.scToCg$ScerID))
   }
+  # construct a gene set tibble that includes orthologous gene names in both species
   geneSet <- rowData(gse) %>% 
     as_tibble(rownames = NULL) %>% 
     filter(ORF %in% genes) %>% 
@@ -241,7 +243,7 @@ myCompare <- function(genes = "YML123C"){
   
   # extract Scer data
   probes <- rowData(gse1) %>% as_tibble() %>% filter(ORF %in% geneSet$ScerID) %>% select(ID, ORF)
-  scerDat <- assay(gse1)[probes$ID,] %>% 
+  scerDat <- assay(gse1)[probes$ID,,drop=FALSE] %>% 
     as_tibble(rownames = "ID") %>% 
     left_join(probes, by = "ID") %>% 
     pivot_longer(cols = starts_with("GSM"), names_to = NULL, values_to = "log2FC") %>% 
@@ -294,3 +296,34 @@ for (i in seq_along(geneList)){
          width = 6, height = 4)
 }
 ```
+
+Plot for the grant, combining antioxidant and TF
+```{r}
+# add a fourth category, namely TFs with known roles in oxidative stress response
+list.TF <- c(YAP1 = "YML007W", SKN7 = "YHR206W", MSN2 = "YMR037C", MSN4 = "YKL062W")
+Dat <- bind_rows(
+  list(
+    Antioxidant = myCompare(geneList$antioxidant)$data,
+    TF = myCompare(list.TF)$data
+  ),
+  .id = "category"
+)
+
+ggplot(Dat, aes(x = ScerName, y = log2FC, group = species)) +
+    geom_bar(aes(fill = species), stat = "summary", fun = "mean",
+             position = position_dodge(0.9)) +
+    geom_point(aes(color = species), position = position_dodge(0.9), size = 1) +
+    geom_hline(yintercept = 0, linetype = 1, color = "gray20") +
+    geom_hline(yintercept = 1, linetype = 2, color = "gray50") +
+    scale_color_manual(values = c("S. cerevisiae" = "gray30", "C. glabrata" = "orange2"), guide = NULL) +
+    scale_fill_manual("Species", values = c("S. cerevisiae" = "yellowgreen", "C. glabrata" = "royalblue2")) +
+    labs(x = expression(paste(italic("S. cerevisiae"), " gene names")),
+         y = "log2 Fold Change") +
+    facet_grid(.~category, space = "free_x", scales = "free_x") +
+    theme_cowplot() + panel_border() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, size = rel(0.8)),
+          legend.text = element_text(face = 3), legend.position = "top") +
+    background_grid(major = "y", minor = "none")
+ggsave(paste0("../output/", gsub("-", "", Sys.Date()), "-antioxidant-TF-for-grant.pdf"), width = 6, height = 4)
+```
+
