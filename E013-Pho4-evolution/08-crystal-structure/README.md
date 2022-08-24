@@ -1,1 +1,0 @@
-The goal of this experiment is to solve the crystal structure of CgPho4 DBD and compare it to that of ScPho4 DBD to formulate hypotheses about their functional differences. We will potentially work on other parts of either ScPho4 or CgPho4, with or without DNA and Pho2 fragments. 
