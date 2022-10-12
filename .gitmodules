@@ -1,3 +1,6 @@
 [submodule "E013-Pho4-evolution"]
 	path = E013-Pho4-evolution
 	url = git@github.com:binhe-lab/E013-Pho4-evolution.git
+[submodule "E036-ASR-H2O2"]
+	path = E036-ASR-H2O2
+	url = git@github.com:binhe-lab/E036-ASR-H2O2.git
