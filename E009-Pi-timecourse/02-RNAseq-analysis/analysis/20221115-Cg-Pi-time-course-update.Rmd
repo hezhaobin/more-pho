@@ -1,0 +1,549 @@
+---
+title: "Cg -Pi time course analysis update"
+author: Bin He
+date: 'created on 2022-11-15 (updated `r Sys.Date()`)'
+output: 
+  html_notebook:
+    toc: true
+    toc_float: true
+---
+
+```{r load_libraries, message=FALSE}
+require(tidyverse)     ## for plotting
+require(cowplot)       ## for some useful defaults in ggplot2
+require(limma)         ## for differential gene expression analysis
+require(edgeR)         ## for DGEList()
+require(DESeq2)        ## for PCA plot
+require(GGally)        ## for pairs plot
+require(UpSetR)        ## for multi-set alternative to vennDiagram plots
+require(rtracklayer)   ## for importing gtf files
+#require(tximport)      ## for importing Kallisto and Salmon counts
+#require(Glimma)        ## for visually explore the results
+#require(NMF)           ## for heatmap plot
+#require(gplots)        ## for heatmap plot
+#require(aroma.light)   ## for exploratory analysis
+#source("../code/R_subfunctions_20171026.R")  ## custom defined functions
+```
+
+# Goal
+
+1. Characterize the **genome-wide** transcriptional response to inorganic phosphate starvation in _C. glabrata_. Identify the core and auxiliary response genes.
+    
+    > previously I used RNAseq in _pho80∆_ to identify genes induced by Pho4, while measuring Pho4 binding profile under physiological starvation conditions. This dataset will allow me to revisit some of the genes deemed bound but not induced by Pho4 in the previous dataset, to see if they are actually induced under starvation.
+
+1. In addition to identifying the genes that respond to the starvation, but also their kinetics.
+    
+    > this is motivated by Barkai group's Cell Reports study, where they showed that PHO genes in _S. cerevisiae_ were induced in two big waves following starvation. I want to see if similar dynamics can be observed in _C. glabrata_
+   
+1. Compare both the gene lists and temporal pattern in _C. glabrata_ with the equivalent data in _S. cerevisiae_ (later in _K. lactis_).
+
+# Experiment set up
+
+In E009, I performed time-course transcriptome profiling following inorganic phosphate starvation in two genetic background, namely the wild-type and _pho4∆_. The purpose of doing this in _pho4∆_ is to distinguish Pho4-dependent vs Pho4-independent gene induction. In the present analysis, I will focus on the wt dataset.
+
+The time-course includes a pre-stress (rich media) condition and a series of post-stress time points. The sampling density on the time axis is denser in the beginning, then gradually becoming sparser, in contrast to the regular interval designed used in Barkai's study. This is so that I can focus on the early time points while restricting the total number of samples I need to collect and process.
+
+The sample sheet is documented [here](../data/sample_sheet/Ex009_experiment_set_up_20171019.csv)
+
+Below is a simple chart to show the design:
+
+| Genotype | Time point  | Replicates | Comment |
+| -------- | :---------- | :--------: | ------- |
+| 80∆      | rich media  | 2          | for consistency check with my previous data |
+| 80∆ 4∆   | rich media  | 2          | for consistency check with my previous data |
+| wt-1     | pre, 20', 30', 45', 60', 90', 120', 150', 180', 240' | 1 | time course for wt  |
+| 4∆-1     | pre, 20', 30', 45', 60', 90', 120', 150', 180', 240' | 1 | time course for 4∆  | 
+| wt-2     | pre, 20', 30', 45', 60',      120',       180', 240' | 1 | biol. repl. for wt-1|
+| 4∆-2     | pre, 20', 30', 45', 60',      120',       180'       | 1 | biol. repl. for 4∆-1| 
+
+```{r}
+sample <- read_csv("../data/sample_sheet/Ex009_experiment_set_up_20171019.csv", col_types = cols())
+sp <- sample %>% filter(Genotype == "wt") %>% 
+  mutate(group = gsub("m$", "", Timepoint) %>% fct_recode(`0` = "pre") %>% fct_relevel(c("0", "20", "30", "45", "60", "90", "120", "150", "180", "240", "del80"))) %>% 
+  select(Sample, group) %>% 
+  column_to_rownames(var = "Sample")
+```
+
+
+# Analysis notes
+In this re-analysis, I made a few changes to the pipeline. First, I updated the genome reference to the latest long read-based assembly from the Cormack lab (downloaded from [NCBI assembly database](https://www.ncbi.nlm.nih.gov/assembly/GCA_014217725.1)). Because of the change in genome assembly and the corresponding annotation, it will take a bit of effort to compare the new set of read counts to the old one I obtained in 2017, using the CBS138 refseq assembly and genome annotation available with it.
+
+Second, I followed a [Galaxy tutorial](https://training.galaxyproject.org/training-material/topics/transcriptomics/tutorials/ref-based/tutorial.html) to perform a number of quality controls on the raw fastq. The results were generally very good. See [here](../output/QC/README.md) for details. 
+
+Lastly, I also took this opportunity to update the mapping and gene-counting pipelines using tools available in [Galaxy](usegalaxy.org). In particular, I used the new BG2 genome sequence and annotation from . I then tested three pipelines for mapping + read counting:
+
+1. `HISAT2` + `featureCounts`
+1. `Kallisto`
+1. `Salmon`
+
+For the first pipeline, I also tested `RNA STAR` instead of `HISAT2` for mapping. On a subset of the data, the two tools performed very similarly. The second and third are both pseudo-alignment based.
+## Variable name glossory
+| VarName | Type | Description |
+|---------|------|-------------|
+| `cts` | list | list of count matrices. individual elements correspond to different mapping+counting pipelines|
+| `dh`  | DGElist | from HISAT2+featureCounts pipeline |
+| `f.dh` | DGEList | `dh` with lowly expressed genes filtered out |
+| `hcpm` | Matrix | count per million values from HISAT2+featureCounts counts |
+| `hlcpm` | Matrix | log2 transformed `hcpm` |
+| `f.hlcpm` | DGEList | `hlcpm` with lowly expressed genes filtered out |
+| `f.dhx` | DGEList | `f.dh` with `del80` sample removed |
+
+# Mapping-based pipeline
+`HISAT2`->`featureCounts`->`LIMMA` or `EdgeR`
+
+## Gene annotation and homology
+Read and format the gene annotation file
+```{r}
+# feature table
+anno <- read_tsv("../data/annotation/GCA_014217725.1_ASM1421772v1_feature_table.txt.gz", col_types = cols()) %>% 
+  filter(`# feature` %in% c("mRNA", "rRNA", "tRNA")) %>% 
+  select(chromosome, genomic_accession, start, end, strand, pid = related_accession, name, locus_tag, slen = feature_interval_length, attributes)
+
+# to match the locus tags to the CAGL systematic IDs, we will import the GTF file, which contains the latter in the comment column
+gtf <- import("../data/annotation/GCA_014217725.1_ASM1421772v1_genomic.gtf.gz") %>% 
+  elementMetadata() %>% as_tibble() %>% 
+  filter(type == "transcript") %>% 
+  select(locus_tag, type = transcript_biotype, note) %>% 
+  separate(note, into = c("gid", "description", "comment"), sep = "~", fill = "right")
+```
+
+### Scer homologs for Cgla genes
+*copied from `E036/01-Pi-timecourse`*
+
+Mapping between the two species are downloaded from [CGD](www.candidagenome.org). Two types of mappings are available: [orthology](http://www.candidagenome.org/download/homology/orthologs/) is based on the [Yeast Gene Order Browser](http://ygob.ucd.ie/); [best hits](http://www.candidagenome.org/download/homology/best_hits/) is based on `blastp` and is only performed for genes lacking a credible ortholog. Note that because both mappings start from _C. glabrata_, they are not the ideal mapping to use for identifying the _C. glabrata_ ortholog for _S. cerevisiae_ genes, but should be sufficient for the current purpose. This is because most of the genes do have 1-to-1 orthologs between the two species and thus starting from either species should yield the same mapping.
+
+Below our goal is to identify the _S. cerevisiae_ ortholog for each _C. glabrata_ gene.
+```{r}
+# read the orthology map
+cgToSc <- read_tsv("../data/annotation/C_glabrata_CBS138_S_cerevisiae_orthologs.txt", comment = "#",
+                   col_names = c("CglaID","CglaName","Cgla.id","ScerID","ScerName","Scer.id"))
+
+# read the best hit mapping
+cgToSc.bh <- read_tsv("../data/annotation/C_glabrata_CBS138_S_cerevisiae_best_hits.txt", 
+                           comment = "#", col_types = cols(), 
+                           col_names = c("CglaID","CglaName","Cgla.id","ScerID","ScerName","Scer.id")) %>% 
+  select(CglaID, CglaName, ScerID, ScerName)
+
+cgToSc.both <- bind_rows(
+  ortholog = cgToSc, 
+  # only include the rows in the best hit table if the Scer gene is not already in the orthology mapping
+  # for Scer genes with more than one Cgla genes mapped to it by blastp, randomly pick the first one
+  `best hit` = cgToSc.bh %>% filter(!ScerID %in% cgToSc$ScerID) %>% group_by(ScerID) %>% filter(row_number() == 1),
+  .id = "mapping")
+```
+
+Add the Scer homolog name to the annotation object
+```{r}
+tag2id <- left_join(select(gtf, locus_tag, gid, description, type),
+                    select(cgToSc.both, gid = CglaID, ScerID, ScerName), by = "gid")
+```
+
+
+## Count data
+```{r}
+cts <- list()
+cts$hisat2 <- read.delim("../data/gene_count/HISAT2-featureCounts-joined.tsv", row.names = "Geneid") %>% as.matrix()
+colnames(cts$hisat2) <- gsub("\\.fastq\\.gz", "", colnames(cts$hisat2))
+cts$hisat2 <- cts$hisat2[,rownames(sp)] # reorder the columns
+head(cts$hisat2)
+```
+
+Check to make sure the row and column metadata matches the row- and column names of the count matrix
+```{r}
+all(colnames(cts$hisat2) == rownames(sp))
+all(rownames(cts$hisat2) == tag2id$locus_tag)
+all(rownames(cts$hisat2) %in% tag2id$locus_tag)
+```
+
+The order of the gene names are different. We can fix that at the time of constructing the DGEList
+```{r}
+dh <- DGEList(counts = cts$hisat2, 
+              samples = sp,
+              genes = tag2id[match(tag2id$locus_tag, rownames(cts$hisat2)),]) # the match() function ensures the gene order is the same
+dh$samples
+```
+## Data pre-processing
+### Library size normalization
+Convert counts to counts per million (normalize by library size) and log counts per million. The latter will be used for exploratory analysis.
+```{r}
+hcpm <- cpm(dh); hlcpm <- cpm(dh, log = TRUE)
+```
+
+    **RLE**: log ratio of read count per gene to median read count of the gene across all samples, plotted as the distribution of the ratios for each gene within a sample relative to the median expression. It visualizes two types of variation between samples: first one is the sequencing depth, reflected by the mean postion of the boxes, and the second one the normalized transcriptome variance as compared to the median of all samples, reflected by the width of the boxes.
+
+    Note that the resulting distribution has different meaning from a simple boxplot of the read counts in each sample. In RLE plot, the values represent the deviation of the read count of a gene in that sample from the median of all samples.
+
+_Reference_
+
+[RUVSeq manual on Bioconductor](http://bioconductor.org/packages/release/bioc/vignettes/RUVSeq/inst/doc/RUVSeq.pdf)
+
+```{r}
+myPlotRLE <- function(x,...) {
+  # this source code is copied from the EDASeq package (https://github.com/drisso/EDASeq/blob/master/R/methods-SeqExpressionSet.R)
+  y <- log(x+1)
+  median <- apply(y, 1, median)
+  rle <- apply(y, 2, function(x) x - median)
+  
+  boxplot(rle, ...)
+  abline(h=0, lty=2)
+  invisible(rle)
+}
+```
+
+```{r}
+myPlotRLE(cts$hisat2, outline=FALSE, ylim=c(-3, 3), las = 3)
+```
+
+Use count per million to normalize the library size
+```{r}
+cpm(dh, normalized.lib.sizes = FALSE, log = FALSE) %>% 
+  myPlotRLE(., outline=FALSE, ylim=c(-3, 3), las = 3)
+```
+
+Library size normalized data already look good (probably no significant compositional differences).
+
+### Biological variability vs treatment
+Examine variations between biological replicates and between different treatment (unstressed, time points)
+```{r, fig.width=7, fig.height=7}
+tmp.list <- c("S3", "S4", "S7", "S8", "S11", "S12", "S37")
+#tmp.label <- as.character(sp[tmp.list, "group"])
+#pairs(hlcpm[,tmp.list], labels = tmp.label, cex = 0.4, col = alpha(1, 0.5), pch = 16)
+as_tibble(hlcpm[,tmp.list]) %>%
+  rename_with(~ paste(as.character(sp[tmp.list, "group"]), .x, sep = "_")) %>% 
+  GGally::ggpairs(.,lower = list(continuous = wrap("points", alpha = 0.3, size = 0.1)), progress = FALSE) +
+  theme_bw(base_size = 12) + background_grid(major = "none", minor = "none")
+```
+
+Biological replicates are highly correlated. A large number of genes in the middle (of log scale) are DE.
+
+### Remove lowly expressed genes
+Number of genes with less than ten counts in all samples 
+```{r}
+table(rowSums(dh$counts<=10) == 20)
+```
+
+Filter genes using the `EdgeR` package
+```{r}
+keep.exprs <- filterByExpr(dh)
+summary(keep.exprs)
+f.dh <- dh[keep.exprs, keep.lib.sizes = FALSE]
+```
+Very few genes would have been removed. Probably OK to skip this step.
+
+Plot the log cpm distribution before and after the filtering, following https://master.bioconductor.org/packages/release/workflows/vignettes/RNAseq123/inst/doc/limmaWorkflow.html
+```{r}
+L <- mean(dh$samples$lib.size) * 1e-6
+M <- median(dh$samples$lib.size) * 1e-6
+lcpm.cutoff <- log2(10/M + 2/L)
+```
+
+```{r}
+nsamples <- ncol(dh)
+col <- viridis::viridis(nsamples)
+par(mfrow=c(1,2))
+plot(density(hlcpm[,1]), col=col[1], lwd=2, ylim=c(0,0.28), las=2, main="", xlab="")
+title(main="A. Raw data", xlab="Log-cpm")
+abline(v=lcpm.cutoff, lty=3)
+for (i in 2:nsamples){
+  den <- density(hlcpm[,i])
+  lines(den$x, den$y, col=col[i], lwd=2)
+}
+legend("topright", colnames(dh), text.col=col, bty="n", cex = 0.7)
+f.hlcpm <- cpm(f.dh, log=TRUE)
+plot(density(f.hlcpm[,1]), col=col[1], lwd=2, ylim=c(0,0.28), las=2, main="", xlab="")
+title(main="B. Filtered data", xlab="Log-cpm")
+abline(v=lcpm.cutoff, lty=3)
+for (i in 2:nsamples){
+  den <- density(f.hlcpm[,i])
+  lines(den$x, den$y, col=col[i], lwd=2)
+}
+legend("topright", colnames(f.dh), text.col=col, bty="n", cex = 0.7)
+```
+Genes that are not expressed are removed here.
+
+### Normalizing gene expression distributions
+Distributions of log-CPM values are similar throughout the experiment (shown above). Normalization by TMM is optional but shouldn't hurt. I expect the calculated scaling factors to be very similar across the samples
+```{r}
+f.dh <- calcNormFactors(f.dh, method = "TMM")
+f.dh$samples$norm.factors %>% hist(main = "Histogram of normalization factors using TMM method")
+```
+## Exploratory analysis
+### Unsupervised clustering using MDS
+```{r}
+par(mfrow=c(1,2))
+col.group <- f.dh$samples$group
+levels(col.group) <-  viridis::inferno(nlevels(col.group), end = 0.8)
+col.group <- as.character(col.group)
+plotMDS(f.hlcpm, labels=f.dh$samples$group, col=col.group)
+title(main="A. First two dimensions")
+plotMDS(f.hlcpm, labels=f.dh$samples$group, col=col.group, dim=c(3,4))
+title(main="B. 3rd and 4th dimensions")
+```
+_**Discussion**_
+
+The first dimension separates the samples into ~3 groups: [del80 and 0'], [20'], [30'-240']. Within the last group, the [45'-90'] samples appear to be slightly more advanced than the remaining ones. My interpretation of this pattern is that
+
+1. the fact that del80 groups with pre-stress suggests that the genes driving this dimension are not the PHO genes (since those genes should be turned on in _pho80∆_). These are likely to be growth genes, e.g., ribosomal genes being down regulated, and general stress genes being induced.
+1. 20' represents a clear intermediate time point, suggesting most of the genes behind this dimension reached peak or bottom by 30'
+1. the slight separation of the 45'-90' time points from the other 30'+ ones may be indicating a sizable group of the genes behind this dimension reached their top/bottom values during the 45'-90' period, but not by much compared with 30'. there is probably a slight drop (or rise) towards the baseline after 90'.
+
+The second dimension separates the early time points (20'-60') and the late time points (90'-240'). The pre-stress sample grouped is closer to the first than to the second group, while the `del80` sample is closer to the second group. The meaning of this is unclear to me right now.
+
+Note that in both 
+### PCA with DESeq2
+To double check the result above, I decide to use `DESeq2` to conduct a PCA analysis.
+
+First, we will construct a data object
+```{r}
+dds <- DESeqDataSetFromMatrix(countData = cts$hisat2,
+                              colData = sp,
+                              design = ~ group)
+mcols(dds) <- DataFrame(mcols(dds), tag2id[match(tag2id$locus_tag, rownames(cts$hisat2)),])
+mcols(dds)
+```
+
+Estimate the size factors and disperions
+```{r}
+dds <- estimateSizeFactors(dds)
+dds <- estimateDispersions(dds)
+plotDispEsts(dds)
+```
+
+Next, we can conduct a PCA analysis
+```{r}
+rld <- rlog(dds, blind = FALSE)
+plotPCA(rld, intgroup = "group") +
+  geom_text(aes(color = group, label = group), nudge_x = 2, nudge_y = 2)
+```
+The result is highly similar to the MDS plot above. Note that the `DESeq2` objects created above will be used later to test an alternative DEG workflow.
+
+Further check the sample correlations
+```{r}
+require(pheatmap)
+require(RColorBrewer)
+sampleDists <- dist(t(assay(rld)))
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- paste(colnames(rld), rld$group, sep = "-")
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+         clustering_distance_rows=sampleDists,
+         clustering_distance_cols=sampleDists,
+         col=colors)
+```
+From this correlation structure, we should probably combine 45' and 60', then 90'-240'
+
+
+## Clustering gene expression patterns
+The goal is to 1) identify the genes whose expression changed significantly over a certain threshold and 2) cluster those genes based on their expression pattern (dynamics). Note that as we can see from the plots above, there are 4 effective time points: 20', 30', 45'-60', 90'-240'. Combining the groups that don't show strong differences could increase the power to detect DGEs.
+
+An alternative to working with all the time points at once is to do pairwise comparisons to identify the early (20'), early-middle (30'), middle (45'-60') and late (90'-240') genes. We can then examine their overlaps and perform independent downstream analyses.
+
+We will implement the first approach first.
+
+To remove genes that don't respond to the stimulus in meaningful ways, one way is to identify genes that significantly changed their expression by some threshold in at least one time point. We can achieve this using a F-test on a linear or generalized linear model:
+    - using limma-trend or limma-voom and perform the F-test for all time points compared with 0'
+    - using EdgeR or DESeq2's GLM framework to perform the same test
+    - in either case, further filter the gene list by log2FC
+    - with the resulting gene list, consider clustering or GO term / molecular pathway analysis
+
+An alternative, as recommended by Limma or EdgeR, is to use a spline with n degrees of freedom (n < # of time points). This is useful when there are many (effective time points) and the response variable (gene expression) changes continuously. In our case, this may not be necessary.
+
+Based on the results above, I will recode the groups of the samples into 0', 20', 30', 45-60' and 90-240'. We will exclude the `del80` group as it is not part of the time course.
+```{r}
+# f.dhx: filtered
+f.dhx <- f.dh[,f.dh$samples$group != "del80"]
+f.dhx$samples <- f.dhx$samples %>% 
+  mutate(time = group,
+         group = fct_recode(time, t0 = "0", t20 = "20", t30 = "30", t60 = "45", t60 = "60",
+                            t90 = "90", t90 = "120", t90 = "150", t90 = "180", t90 = "240"))
+f.dhx <- calcNormFactors(f.dhx, method = "TMM")
+```
+
+### LIMMA-voom
+#### Testing
+```{r}
+design <- model.matrix(~group, data = f.dhx$samples)
+colnames(design) <- gsub("group", "", colnames(design))
+design
+```
+Remove heteroscedascity from count data
+```{r}
+par(mfrow = c(1,2))
+f.dhv <- voom(f.dhx, design, plot=TRUE)
+f.dhv
+vfit <- lmFit(f.dhv, design)
+#vfit <- contrasts.fit(vfit, contrasts=contr.matrix)
+efit <- eBayes(vfit)
+plotSA(efit, main="Final model: Mean-variance trend")
+```
+
+The `eBayes()` function uses an empirical Bayes procedure to calculate a moderated t-statistics and the corresponding p-values
+```{r}
+names(efit)
+```
+
+Identify the subset of genes with significant DGE at any of the time points through the time course. This is done by calling `topTable()` on the `eBayes()` fitted object. One can either manually remove the intercept term using `efit[,-1]`, or use `coef = NULL`, in which case the function will calculate the F-statstics for all the coefficients combined except for the intercept (=expression level at 0'). This is equivalent to testing the fold change at all time points compared with 0' and assessing the evidence for at least one of them being significant.
+```{r}
+topTable(efit[, -1], number = 20) %>% select(-locus_tag, -type, -ScerID)
+```
+How many genes show evidence of significant DGE in at least one time point?
+```{r}
+res.F.test <- topTable(efit[,-1], number = Inf, sort.by = "none")
+with(res.F.test, table(sig = adj.P.Val < 0.01, lfc = ifelse(t60 > 1, "> 1", ifelse(t60 < -1, "< -1", "[-1,1]"))))
+```
+
+We can see that many genes have relatively small fold changes at 60' despite having significant P-values for the F-test. We could further filter for effect size to get at fewer genes for downstream analysis.
+
+How does the F-test classification of gene compare with the individual time point results? The idea is to identify genes significant at each time point and examine their overlap among the time points and with the overall F-test result.
+```{r}
+res.t.test <- decideTests(efit[, -1], method = "separate", p.value = 0.05, lfc = 1)
+all(rownames(res.t.test) == rownames(res.F.test))
+resAll <- cbind(F = with(res.F.test, (adj.P.Val < 0.05) * ifelse(t60 > 1, 1, ifelse(t60 < -1, -1, 0))),
+                res.t.test[,c("t90", "t60", "t30", "t20")])
+resUp <- ifelse(resAll == 1, 1, 0)
+resDn <- ifelse(resAll == -1, 1, 0)
+```
+
+UpSet plot for the up-regulated genes
+```{r}
+# for reasons not completely clear to me, I have to convert the matrix above to
+# to a data frame for the upset() function to work
+upset(as.data.frame(resUp), order.by = "freq", keep.order = TRUE, sets = c("t20", "t30", "t60", "t90", "F"))
+```
+> the most frequent three classes represent those genes that are up-regulated more than 2 fold starting at 30', 20' or 60' time points and stay on throughout the rest of the time course.
+>
+> 1. the fourth class is odd, representing genes whose expression only went up at 90'. worth looking into.
+> 2. fifth and sixth classes represent genes that probably pass the threshold only at 30'+60' or 60' alone.
+> 3. an eighth class represent 31 genes whose expression went up by 20' but already dropped below the cutoff at 90'
+> 4. the remaining classes contain very few genes.
+
+UpSet plot for the down-regulated genes
+```{r}
+# for reasons not completely clear to me, I have to convert the matrix above to
+# to a data frame for the upset() function to work
+upset(as.data.frame(resDn), order.by = "freq", keep.order = TRUE, sets = c("t20", "t30", "t60", "t90", "F"))
+```
+> the overall pattern is very similar to the up-regulated genes. differences include:
+>
+> 1. the most frequent class are the genes that are consistently down-regulated starting at 20' and throughout the rest of the time course, followed by those that are down-regulated starting at 30' and 60'.
+> 2. the third class represents genes whose expression only went down at 90'. I start to suspect that these genes overlap with those that are up-regulated at earlier time points?
+> 3. 5th-7th are similar to 1st, 2nd and 4th, except that 90' time point wasn't significant.
+> the remaining classes contain very few genes.
+
+Check the 90' alone class
+```{r}
+as_tibble(resAll) %>% filter(t90 == 1, F != 1, t60 != 1) %>% 
+  dplyr::count(F, t90, t60, t30, t20) %>% 
+  select(n, t20, t30, t60, t90, F) %>% 
+  arrange(desc(n))
+```
+> my guess was wrong: the 132 genes that are induced at 90' alone are not down-regulated at earlier time points. instead, this may represent a delayed response?
+
+
+```{r}
+as_tibble(resAll) %>% filter(t90 == -1, F != -1, t60 != -1) %>% 
+  dplyr::count(F, t90, t60, t30, t20) %>% 
+  select(n, t20, t30, t60, t90, F) %>% 
+  arrange(desc(n))
+```
+> similar for the 90' down alone class.
+
+Check some of the 90'-only genes
+```{r}
+geneList <- list()
+geneList$`90up` <- names(which(rowSums(resAll) == 1 & resAll[,"t90"] == 1))
+coef(efit)[geneList$`90up`,] %>% round(2) %>% head(10)
+```
+
+```{r}
+geneList$`90dn` <- names(which(rowSums(resAll) == -1 & resAll[,"t90"] == -1))
+coef(efit)[geneList$`90dn`,] %>% round(2) %>% head(10)
+```
+Looks like this group of genes are approaching significance at the earlier time point. So they seem to represent genuine late genes. The reason that the F-test was insignificant for them was not immediately clear to me.
+
+#### Conclusion
+
+1. Using a combination of individual time point testing and an F-test that simultaneously evaluate all four time points (20', 30', 45'-60', 90'-240'), and requiring a minimum fold change of 2 fold, we can identify roughly 1000 genes in each direction
+    `r table(resAll[, "F"])`
+2. The most prominent pattern of gene expression changes are those that get up- or down-regulated starting at different time points, e.g., 20', 30' or 60', and stay up- or down-regulated throughout the rest of the time course. Some genes start to return to the base line after 90', constituting a smaller but still sizable class.
+3. We could take the combination of the ~2000 genes (still a huge list!) and perform K-means clustering. Or, as the UpSet plots show, the intersections between the individual time point test results already gave us natural clusters, e.g., (t20, t30, t60, t90) = (1,1,1,1) or (0, 1, 1, 1) or (0, 0, 1, 1) or (0, 1, 1, 0)!
+
+#### Patterns of expression
+Here we would like to visualize the expression dynamics for different groups of genes. We combined several time points in the testing procedure above. Here we would like to visualize the fine-grained time course. To do so, we will fit the linear model to the data using the complete design
+```{r}
+design2 <- model.matrix(~time, data = f.dhx$samples)
+colnames(design2) <- gsub("time", "", colnames(design2))
+design2
+```
+```{r}
+# we are not conducting statistical test here. it's ok to use the same voom
+# fitted object above
+lfc <- lmFit(f.dhv, design2) %>% coef()
+dat <- lfc[, -1]
+```
+
+Define gene sets
+```{r}
+gs <- list() # gene set
+gs$up <- as_tibble(resUp, rownames = "locus_tag") %>% 
+  mutate(
+    s_0111 = !t20 & t30 & t60 & t90,
+    s_1111 = t20 & t30 & t60 & t90,
+    s_0011 = !t20 & !t30 & t60 & t90,
+    s_0001 = !t20 & !t30 & !t60 & t90,
+    s_0110 = !t20 & t30 & t60 & !t90,
+    s_0010 = !t20 & !t30 & t60 & !t90,
+  )
+
+gs$dn <- as_tibble(resDn, rownames = "locus_tag") %>% 
+  mutate(
+    s_1111 = t20 & t30 & t60 & t90,
+    s_0111 = !t20 & t30 & t60 & t90,
+    s_0011 = !t20 & !t30 & t60 & t90,
+    s_0001 = !t20 & !t30 & !t60 & t90,
+    s_0110 = !t20 & t30 & t60 & !t90,
+    s_0010 = !t20 & !t30 & t60 & !t90,
+  )
+
+all(gs$up$locus_tag == rownames(dat))
+```
+
+Plotting function
+```{r}
+myPlotSet <- function(dt, gs){
+  # given a data set containing log2FC for the time points, and a list of
+  # gene sets in the form of T/F for each gene as a vector or a list of vectors
+  # produce a line plot visualizing the time course fold changes of all genes
+  # in the set
+  tb <- cbind(`0` = 0, dt[gs,]) %>% 
+    as_tibble(rownames = "locus_tag") %>% 
+    pivot_longer(!locus_tag, names_to = "time", values_to = "lfc") %>% 
+    mutate(time = as.integer(time))
+  p <- ggplot(tb, aes(x = time, y = lfc)) +
+    geom_line(aes(group = locus_tag), color = "steelblue", alpha = 0.6, linewidth = 0.5) +
+    stat_summary(fun = "mean", geom = "line", color = "red4", linewidth = 1.5) +
+    labs(x = "Time (min)", y = "log2FC", title = paste(sum(gs), "genes", sep = " ")) +
+    theme_cowplot()
+}
+```
+
+```{r}
+pp <- lapply(select(gs$up, s_0111:s_0010), function(i) myPlotSet(dat, i))
+plot_grid(plotlist = pp)
+```
+```{r}
+pp <- lapply(select(gs$dn, s_1111:s_0010), function(i) myPlotSet(dat, i))
+plot_grid(plotlist = pp)
+```
+## Salmon
+```{r}
+files <- file.path("../output/read-count/salmon", paste0(rownames(sp), ".sf.gz"))
+names(files) <- rownames(sp)
+salmon <- tximport(files, type = "salmon", txOut = TRUE)
+# convert gene names
+tid2gid <- tibble(tid = rownames(salmon$counts)) %>% 
+  separate(tid, into = c("chr", "type", "pid", "index"), sep = "_")
+
+```
+

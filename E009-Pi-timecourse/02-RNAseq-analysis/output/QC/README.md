@@ -89,7 +89,7 @@ These tests are based on the STAR mapped reads. Given the similarity in % reads 
 
 - ~20% of the reads map to "other intergenic" regions. Note that when viewing in IGV, it is clear the genic regions in the yeast genome annotation contains only the CDS. 5'UTR and 3'UTR were not annotated. So the "Other_intergenic" should contain those.
 
-## Counting stats
+## Read counting
 
 ### RNA STAR
 
@@ -98,3 +98,27 @@ These tests are based on the STAR mapped reads. Given the similarity in % reads 
 ### HISAT2
 
 ![hisat2 featureCounts](HISAT2-featureCounts_assignment_plot.png)
+
+### Kallisto
+
+Pseudo-alignment based, parameters
+
+- average fragment length (--fragment-length): 200
+- sd of fragment length (--sd): 20
+- perform sequence based length correction (--bias): yes
+- library strandedness: unstranded
+
+fraction of pseudo-aligned ~75%
+
+downloaded the hdf5 binary result files
+
+### Salmon
+
+Similar to `kallisto`. Parameters:
+
+- Kmer length: 31
+- --libtype: reverse strand (SR)
+- --type: quasi
+- --validate-mapping: yes
+- perform GC bias correction (--gc): yes
+- 
