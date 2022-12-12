@@ -68,7 +68,7 @@ Parameters:
 | S7_fastq_gz       | 98.2%     |
 | S8_fastq_gz       | 99.0%     |
 
-![chr distr](HISAT2-featurecounts-chr-distribution.png)
+![chr distr](HISAT2-map-samtools-idxstats.png)
 
 - One sample, **S19**, seems to be an outlier!
 
