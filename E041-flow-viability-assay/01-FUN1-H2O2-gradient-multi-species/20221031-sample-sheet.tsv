@@ -1,0 +1,19 @@
+file	species	group
+Cg_20mM	103122_FUN1_H2O2_Experiment_Live_Dead_Cg_20mM.fcs	C. glabrata	20mM
+Cg_40mM	103122_FUN1_H2O2_Experiment_Live_Dead_Cg_40mM.fcs	C. glabrata	40mM
+Cg_60mM	103122_FUN1_H2O2_Experiment_Live_Dead_Cg_60mM.fcs	C. glabrata	60mM
+Cg_80mM	103122_FUN1_H2O2_Experiment_Live_Dead_Cg_80mM.fcs	C. glabrata	80mM
+Cg_Live	103122_FUN1_H2O2_Experiment_Live_Dead_Cg_Live.fcs	C. glabrata	Live
+Cg_Mixed	103122_FUN1_H2O2_Experiment_Live_Dead_Cg_Mixed.fcs	C. glabrata	Mixed
+Kl_1mM	103122_FUN1_H2O2_Experiment_Live_Dead_Kl_1mM.fcs	K. lactis	1mM
+Kl_2mM	103122_FUN1_H2O2_Experiment_Live_Dead_Kl_2mM.fcs	K. lactis	2mM
+Kl_4mM	103122_FUN1_H2O2_Experiment_Live_Dead_Kl_4mM.fcs	K. lactis	4mM
+Kl_6mM	103122_FUN1_H2O2_Experiment_Live_Dead_Kl_6mM.fcs	K. lactis	6mM
+Kl_Live	103122_FUN1_H2O2_Experiment_Live_Dead_Kl_Live.fcs	K. lactis	Live
+Kl_Mixed	103122_FUN1_H2O2_Experiment_Live_Dead_Kl_Mixed.fcs	K. lactis	Mixed
+Sc_1mM	103122_FUN1_H2O2_Experiment_Live_Dead_Sc_1mM.fcs	S. cerevisiae	1mM
+Sc_2mM	103122_FUN1_H2O2_Experiment_Live_Dead_Sc_2mM.fcs	S. cerevisiae	2mM
+Sc_4mM	103122_FUN1_H2O2_Experiment_Live_Dead_Sc_4mM.fcs	S. cerevisiae	4mM
+Sc_6mM	103122_FUN1_H2O2_Experiment_Live_Dead_Sc_6mM.fcs	S. cerevisiae	6mM
+Sc_Live	103122_FUN1_H2O2_Experiment_Live_Dead_Sc_Live.fcs	S. cerevisiae	Live
+Sc_Mixed	103122_FUN1_H2O2_Experiment_Live_Dead_Sc_Mixed.fcs	S. cerevisiae	Mixed

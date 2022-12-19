@@ -1,0 +1,22 @@
+file	species	group
+Cg 1M	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg 1M.fcs	Cg 1M	NA
+Cg_100mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg_100mM.fcs	C. glabrata	100mM
+Cg_10mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg_10mM.fcs	C. glabrata	10mM
+Cg_1mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg_1mM.fcs	C. glabrata	1mM
+Cg_5M	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg_5M.fcs	C. glabrata	5M
+Cg_heated	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg_heated.fcs	C. glabrata	heated
+Cg_mock	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg_mock.fcs	C. glabrata	mock
+Kl_0.1mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Kl_0.1mM.fcs	K. lactis	0.1mM
+Kl_100mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Kl_100mM.fcs	K. lactis	100mM
+Kl_1M	121422_varied H2O2 FUN1_Experiment_Live Dead_Kl_1M.fcs	K. lactis	1M
+Kl_1mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Kl_1mM.fcs	K. lactis	1mM
+Kl_5M	121422_varied H2O2 FUN1_Experiment_Live Dead_Kl_5M.fcs	K. lactis	5M
+Kl_heated	121422_varied H2O2 FUN1_Experiment_Live Dead_Kl_heated.fcs	K. lactis	heated
+Kl_mock	121422_varied H2O2 FUN1_Experiment_Live Dead_Kl_mock.fcs	K. lactis	mock
+Sc_0.1mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Sc_0.1mM.fcs	S. cerevisiae	0.1mM
+Sc_100mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Sc_100mM.fcs	S. cerevisiae	100mM
+Sc_1M	121422_varied H2O2 FUN1_Experiment_Live Dead_Sc_1M.fcs	S. cerevisiae	1M
+Sc_1mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Sc_1mM.fcs	S. cerevisiae	1mM
+Sc_5M	121422_varied H2O2 FUN1_Experiment_Live Dead_Sc_5M.fcs	S. cerevisiae	5M
+Sc_heated	121422_varied H2O2 FUN1_Experiment_Live Dead_Sc_heated.fcs	S. cerevisiae	heated
+Sc_mock	121422_varied H2O2 FUN1_Experiment_Live Dead_Sc_mock.fcs	S. cerevisiae	mock
