@@ -3,6 +3,17 @@ author: Bin He
 date: 14 sep 2017
 ---
 
+# Sample collection qPCR test
+
+22 aout 2017
+
+## Goal
+
+Work through the sample collection (by methanol quenching), RNA extraction and qPCR protocols. Test various RNA extraction methods.
+
+## Notes
+
+# Library prep and QC
 ## Summary
 
 This is batch 1 of the RNA-seq time-course experiment. In this batch, the goal is to work through the RNA extraction and library prep protocol.
@@ -27,3 +38,4 @@ S29-36, late time points in the time-course, high OD thus have back up vials
 
 - Use the 1/3 protocol on no more than 16 samples at any time
 - Epicentre RNA extraction kit is super. Stick to it. The 100 rxn kit seems to have enough reagent for 200 extractions. The components are very sturdy (most are stored RT, Prot. K is at -20, but the enzyme is very stable to freeze-thaw).
+
