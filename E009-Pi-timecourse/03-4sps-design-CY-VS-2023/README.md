@@ -1,0 +1,3 @@
+Chris Youngstrom and Varshu Saravanakumar are working on designing a time-course experiment to compare the transcriptional response to low / no phosphate in multiple species, including _S. cerevisiae_, _C. glabrata_, _K. lactis_ and _C. albicans_. Although we already had data for the first two species, the one for _S. cerevisiae_ was produced by a different lab using a non-conventional design, and was not replicated. The one for _C. glabrata_ was produced by Bin He in 2017. Repeating both species in the current experiment is key to ensuring a consistent experimental framework.
+
+This folder contains miscellaneous results and analyses when setting up the experiment.
