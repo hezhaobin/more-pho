@@ -1,0 +1,194 @@
+---
+title: "Staining intensity with recovery after H2O2, long pass filter"
+author: Bin He
+date: "2023-01-20 (updated `r Sys.Date()`)"
+output:
+  html_notebook:
+    toc: true
+    toc_depth: 4
+    code_folding: hide
+---
+
+```{r setup, message=FALSE}
+require(tidyverse)
+require(flowCore)
+require(flowClust)
+require(openCyto)
+require(ggcyto)
+require(cowplot)
+require(ggridges)
+```
+
+## Background
+Hanxi performed flow cytometry using a new filter setting that collected light between 503 nm to 650 nm, effectively combining the green and red channels. Using this new setting, she quantified live, dead (9.2M H2O2 treated for 2 hr) and 60 mM H2O2, 2hr treated cells. The last group was divided into three sets, depending on the amount of time they were incubated after the oxidative stress treatment, including 0, 1, 2, 3, 4 and 24 hrs. The goal is to determine if the FUN-1 stained cells exhibit a shift in their intensity after the 60 mM H2O2 treatment, using the live and dead cells as ref points, and whether / how the time period of incubation affected the stain intensity.
+
+## 2022-12-14 (old settings)
+For comparison, we first import and analyze a previous H2O2 gradient data. The flow cytometry setting was the default fluorescent panel, which collected 510±15 nm for BL1 (green) and ?? (red) separately. The reason for including this data is because we saw some shift in the green channel at that time.
+
+### Import data and edit the meta data
+import the data from the RDSS (just once) and then write it to the local disk
+```{r eval=FALSE, include=FALSE}
+data.path = "/Volumes/rdss_bhe2/Project/E041-flow-viability-assay/flow-cytometry/20221214-HT-FUN1-H2O2-varied/"
+fs <- read.flowSet(path = data.path, pattern = "*.fcs",
+                   transformation = FALSE,  # the original values are already linearized. 
+                   emptyValue = FALSE,  alter.names = TRUE,   # change parameter names to R format
+                   column.pattern = ".H|FSC|SSC") # only load the height variables for the fluorescent parameters
+oriNames <- sampleNames(fs)
+```
+
+Simplify the sample names
+```{r}
+# import the longest substring function from the PTXQC package (https://rdrr.io/cran/PTXQC/man/LCSn.html)
+source("../00-shared/script/20220326-simplify-names-subroutine.R")
+shortNames <- simplifyNames(oriNames) %>% 
+  gsub(".fcs","",.) %>% gsub(" ", "_", .)
+sampleNames(fs) <- shortNames
+```
+
+Metadata
+
+```{r}
+sample <- tibble(file = oriNames, name = shortNames) %>% 
+  separate(name, into = c("species", "group"), sep = "_", remove = FALSE) %>% 
+  mutate(species = recode(species, Cg = "C. glabrata", Kl = "K. lactis", Sc = "S. cerevisiae")) %>% 
+  column_to_rownames(var = "name")
+pData(fs) <- sample
+write.table(sample, file = "20221214-sample-sheet.tsv", sep = "\t", row.names = TRUE, quote = FALSE)
+```
+
+### Plotting
+```{r}
+p0 <- list(
+  geom_density_ridges(aes(y = name)), 
+  scale_x_flowjo_biexp(),
+  facet_null(),
+  theme_bw(base_size = 12)
+)
+p01 <- list(
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank())
+)
+p1 <- ggcyto(fs, aes(x = FSC.H)) + p0[-2]
+p2 <- ggcyto(fs, aes(x = SSC.H)) + p0 + p01
+p3 <- ggcyto(fs, aes(x = BL1.H)) + p0 + p01
+p4 <- ggcyto(fs, aes(x = BL2.H)) + p0 + p01
+plot_grid(as.ggplot(p1), 
+          #as.ggplot(p2), 
+          as.ggplot(p3), 
+          as.ggplot(p4), 
+          nrow = 1, rel_widths = c(1.5, 1, 1))
+```
+
+> We can see, after staring at the plot for a while, that BL1.H distribution did change for each species depending on the level of the stress.
+
+## 2023-01-18 (LP setting)
+### Import data
+import the data from the RDSS (just once) and then write it to the local disk
+```{r eval=FALSE, include=FALSE}
+data.path = "/Volumes/rdss_bhe2/Project/E041-flow-viability-assay/flow-cytometry/20230118-HT-FUN1-LP-filter-with-recovery/"
+fs1 <- read.flowSet(path = data.path, pattern = "*.fcs",
+                   transformation = FALSE,  # the original values are already linearized. 
+                   emptyValue = FALSE,  alter.names = TRUE,   # change parameter names to R format
+                   column.pattern = ".H|FSC|SSC") # only load the height variables for the fluorescent parameters
+oriNames1 <- sampleNames(fs1)
+```
+
+Simplify the sample names
+```{r}
+shortNames1 <- simplifyNames(oriNames1) %>% 
+  gsub(".fcs","",.) %>% 
+  gsub("cg", "Cg", .) %>% 
+  gsub("sc", "Sc", .) %>% 
+  gsub("kl", "Kl", .)
+sampleNames(fs1) <- shortNames1
+```
+
+Metadata
+
+```{r}
+sample1 <- tibble(file = oriNames1, name = shortNames1) %>% 
+  separate(name, into = c("species", "group"), sep = " ", remove = FALSE) %>% 
+  mutate(species = recode(species, Cg = "C. glabrata", Kl = "K. lactis", Sc = "S. cerevisiae"))
+  
+pData(fs1) <- column_to_rownames(sample1, var = "name")
+write_tsv(sample1, file = "20230118-sample-sheet.tsv")
+```
+
+### Plotting
+```{r}
+p0 <- list(
+  geom_density_ridges(aes(y = name)), 
+  scale_x_flowjo_biexp(),
+  facet_null(),
+  theme_bw(base_size = 12)
+)
+p01 <- list(
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank())
+)
+p1 <- ggcyto(fs1, aes(x = FSC.H)) + p0[-2]
+#p2 <- ggcyto(fs1, aes(x = SSC.H)) + p0 + p01
+#p3 <- ggcyto(fs1, aes(x = BL1.H)) + p0 + p01
+p2 <- ggcyto(fs1, aes(x = BL2.H)) + p0 + p01
+plot_grid(as.ggplot(p1), 
+          as.ggplot(p2), 
+          #as.ggplot(p3), 
+          #as.ggplot(p4), 
+          nrow = 1, rel_widths = c(1.2, 1))
+```
+
+## 2023-01-20 (LP filter)
+### Import data
+import the data from the RDSS (just once) and then write it to the local disk
+```{r eval=FALSE, include=FALSE}
+data.path = "/Volumes/rdss_bhe2/Project/E041-flow-viability-assay/flow-cytometry/20230120-HT-FUN1-LP-filter-repeat"
+fs2 <- read.flowSet(path = data.path, pattern = "*.fcs",
+                   transformation = FALSE,  # the original values are already linearized. 
+                   emptyValue = FALSE,  alter.names = TRUE,   # change parameter names to R format
+                   column.pattern = ".H|FSC|SSC") # only load the height variables for the fluorescent parameters
+oriNames2 <- sampleNames(fs2)
+```
+
+Simplify the sample names
+```{r}
+shortNames2 <- simplifyNames(oriNames2) %>% 
+  gsub(".fcs","",.) %>% 
+  gsub("cg", "Cg", .) %>% 
+  gsub("sc", "Sc", .) %>% 
+  gsub("kl", "Kl", .)
+sampleNames(fs2) <- shortNames2
+```
+
+Metadata
+
+```{r}
+sample2 <- tibble(file = oriNames2, name = shortNames2) %>% 
+  separate(name, into = c("species", "group"), sep = " ", remove = FALSE) %>% 
+  mutate(species = recode(species, Cg = "C. glabrata", Kl = "K. lactis", Sc = "S. cerevisiae"))
+  
+pData(fs2) <- column_to_rownames(sample2, var = "name")
+write_tsv(sample2, file = "20230120-sample-sheet.tsv")
+```
+
+### Plotting
+```{r}
+p0 <- list(
+  geom_density_ridges(aes(y = name)), 
+  scale_x_flowjo_biexp(),
+  facet_null(),
+  theme_bw(base_size = 12)
+)
+p01 <- list(
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank())
+)
+p1 <- ggcyto(fs2, aes(x = FSC.H)) + p0[-2]
+#p2 <- ggcyto(fs1, aes(x = SSC.H)) + p0 + p01
+#p3 <- ggcyto(fs1, aes(x = BL1.H)) + p0 + p01
+p2 <- ggcyto(fs2, aes(x = BL2.H)) + p0 + p01
+plot_grid(as.ggplot(p1), 
+          as.ggplot(p2), 
+          #as.ggplot(p3), 
+          #as.ggplot(p4), 
+          nrow = 1, rel_widths = c(1.2, 1))
+```

@@ -1,5 +1,5 @@
 file	species	group
-Cg 1M	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg 1M.fcs	Cg 1M	NA
+Cg_1M	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg 1M.fcs	C. glabrata	1M
 Cg_100mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg_100mM.fcs	C. glabrata	100mM
 Cg_10mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg_10mM.fcs	C. glabrata	10mM
 Cg_1mM	121422_varied H2O2 FUN1_Experiment_Live Dead_Cg_1mM.fcs	C. glabrata	1mM

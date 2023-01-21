@@ -1,0 +1,22 @@
+file	name	species	group
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_cg 0hr.fcs	Cg 0hr	C. glabrata	0hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Cg 1hr.fcs	Cg 1hr	C. glabrata	1hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_cg 2hr.fcs	Cg 2hr	C. glabrata	2hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Cg 3hr.fcs	Cg 3hr	C. glabrata	3hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Cg 4hr.fcs	Cg 4hr	C. glabrata	4hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Cg dead.fcs	Cg dead	C. glabrata	dead
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_cg live.fcs	Cg live	C. glabrata	live
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Kl 0hr.fcs	Kl 0hr	K. lactis	0hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Kl 1hr.fcs	Kl 1hr	K. lactis	1hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Kl 2hr.fcs	Kl 2hr	K. lactis	2hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Kl 3hr.fcs	Kl 3hr	K. lactis	3hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Kl 4hr.fcs	Kl 4hr	K. lactis	4hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Kl dead.fcs	Kl dead	K. lactis	dead
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Kl live.fcs	Kl live	K. lactis	live
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Sc 0hr.fcs	Sc 0hr	S. cerevisiae	0hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Sc 1hr.fcs	Sc 1hr	S. cerevisiae	1hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Sc 2hr.fcs	Sc 2hr	S. cerevisiae	2hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Sc 3hr.fcs	Sc 3hr	S. cerevisiae	3hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Sc 4hr.fcs	Sc 4hr	S. cerevisiae	4hr
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_sc dead.fcs	Sc dead	S. cerevisiae	dead
+0118_Cg Sc KlCtrls, 0-4hr_Experiment_Plate_Sc live.fcs	Sc live	S. cerevisiae	live

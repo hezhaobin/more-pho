@@ -1,0 +1,12 @@
+file	name	species	group
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Cg 0hr.fcs	Cg 0hr	C. glabrata	0hr
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Cg 4hr.fcs	Cg 4hr	C. glabrata	4hr
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Cg dead.fcs	Cg dead	C. glabrata	dead
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Cg live.fcs	Cg live	C. glabrata	live
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Kl 0hr.fcs	Kl 0hr	K. lactis	0hr
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Kl 4hr.fcs	Kl 4hr	K. lactis	4hr
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Kl dead.fcs	Kl dead	K. lactis	dead
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Kl live.fcs	Kl live	K. lactis	live
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Sc 0hr.fcs	Sc 0hr	S. cerevisiae	0hr
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Sc 4hr.fcs	Sc 4hr	S. cerevisiae	4hr
+0120_LP Cg Sc Kl Ctrls, 0-4hr_Experiment_Plate_Sc dead.fcs	Sc dead	S. cerevisiae	dead
